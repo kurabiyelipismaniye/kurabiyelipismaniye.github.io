@@ -37,6 +37,7 @@
   <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></symbol>
   <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></symbol>
   <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
   <symbol id="i-pad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10a5 5 0 0 1 4.8 6.3l-1 3.6a2.6 2.6 0 0 1-4.4 1.1L14 15.5h-4L7.6 18a2.6 2.6 0 0 1-4.4-1.1l-1-3.6A5 5 0 0 1 7 7z"/><path d="M7.5 10v3M6 11.5h3"/><circle cx="16" cy="10.5" r=".6" fill="currentColor"/><circle cx="17.6" cy="12.6" r=".6" fill="currentColor"/></symbol>
 </svg>
 
@@ -89,6 +90,15 @@
       </article>
       <div class="now-more" id="nowMore" hidden></div>
     </div>
+  </section>
+
+  <section class="sched" id="schedSection" aria-labelledby="schedTitle" hidden>
+    <div class="sched-head">
+      <h2 class="eyebrow sched-title" id="schedTitle"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Yakında</h2>
+      <span class="sched-count" id="schedCount"></span>
+    </div>
+    <ol class="sched-list" id="schedList"></ol>
+    <button type="button" class="btn btn-ghost btn-sm sched-toggle" id="schedToggle" aria-controls="schedList" aria-expanded="false" hidden></button>
   </section>
 
   <section class="latest" id="latestSection" aria-labelledby="latestTitle" hidden>

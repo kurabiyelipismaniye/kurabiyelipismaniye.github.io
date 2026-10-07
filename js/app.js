@@ -471,6 +471,10 @@
     nowPlayer: $('#nowPlayer'),
     nowInfo: $('#nowInfo'),
     nowMore: $('#nowMore'),
+    schedSection: $('#schedSection'),
+    schedCount: $('#schedCount'),
+    schedList: $('#schedList'),
+    schedToggle: $('#schedToggle'),
     latestSection: $('#latestSection'),
     latestTitle: $('#latestTitle'),
     latestBody: $('#latestBody'),
@@ -741,6 +745,7 @@
     renderEditing();
     renderTabs();
     renderNowPlaying();
+    renderSchedule();
     if (latest) renderLatest();
     if (suggestions) renderSuggestions();
   }
@@ -2114,6 +2119,94 @@
     const game = e.target.closest('[data-now-game]');
     if (game) openDetail(game.dataset.nowGame);
   });
+
+  /* ---------- yakında (yayın takvimi) ---------- */
+  // Tüm oyunların ileri tarihli bölümleri tarihe göre sıralanır (aynı gün olanlar oyun adına ve bölüm
+  // sırasına göre). İlk SCHED_LIMIT tanesi gösterilir; fazlası "Tümünü göster" ile açılır.
+  const SCHED_LIMIT = 4;
+  let schedExpanded = false;
+  let schedHTML = '';
+
+  function upcomingEpisodes() {
+    const list = [];
+    for (const g of data.games) {
+      g.episodes.forEach((e, i) => {
+        if (isUpcoming(e)) list.push({ g, e, n: i + 1 });
+      });
+    }
+    return list.sort((a, b) => a.e.date.localeCompare(b.e.date) || a.g.title.localeCompare(b.g.title, 'tr') || a.n - b.n);
+  }
+
+  function renderSchedule() {
+    const list = upcomingEpisodes();
+    if (!list.length) {
+      el.schedSection.hidden = true;
+      el.schedList.innerHTML = '';
+      schedHTML = '';
+      schedExpanded = false;
+      return;
+    }
+    const shown = schedExpanded ? list : list.slice(0, SCHED_LIMIT);
+    const html = shown.map(({ g, e, n }) => {
+      const d = parseDay(e.date);
+      const day = d.toLocaleDateString('tr-TR', { day: 'numeric' });
+      const month = d.toLocaleDateString('tr-TR', { month: 'short' });
+      const weekday = d.toLocaleDateString('tr-TR', { weekday: 'short' });
+      const link = episodeLink(e);
+      const where = isYoutubeUrl(e.url) ? "YouTube'da aç" : 'yeni sekmede aç';
+      return `<li class="sched-item">
+        <time class="sched-date" datetime="${esc(e.date)}" title="${esc(formatDate(e.date))}">
+          <b>${esc(day)}</b><span>${esc(month)}</span><small>${esc(weekday)}</small>
+        </time>
+        <div class="sched-main">
+          <span class="sched-when">${esc(relativeDay(e.date))}</span>
+          <button type="button" class="sched-game" data-sched-game="${esc(g.id)}">${esc(g.title)}</button>
+          <span class="sched-ep">${episodeName(n)}${e.title ? ` · ${esc(e.title)}` : ''}</span>
+        </div>
+        ${link ? `<a class="ep-ext sched-link" href="${esc(link)}" target="_blank" rel="noopener" aria-label="${esc(g.title)}: ${episodeAcc(n)} ${where}">${icon('external')}</a>` : ''}
+      </li>`;
+    }).join('');
+    if (html !== schedHTML) {
+      el.schedList.innerHTML = html;
+      schedHTML = html;
+    }
+    el.schedCount.textContent = `${list.length} bölüm`;
+    const extra = list.length - SCHED_LIMIT;
+    el.schedToggle.hidden = extra <= 0;
+    if (extra > 0) {
+      el.schedToggle.textContent = schedExpanded ? 'Daha az göster' : `Tümünü göster (${extra} bölüm daha)`;
+      el.schedToggle.setAttribute('aria-expanded', String(schedExpanded));
+    } else {
+      schedExpanded = false;
+    }
+    el.schedSection.hidden = false;
+  }
+
+  el.schedList.addEventListener('click', (e) => {
+    const game = e.target.closest('[data-sched-game]');
+    if (game) openDetail(game.dataset.schedGame);
+  });
+  el.schedToggle.addEventListener('click', () => {
+    schedExpanded = !schedExpanded;
+    renderSchedule();
+  });
+
+  // Gün dönünce (sayfa açık kalmışsa) yarınki bölümler yayınlanmış sayılır: tarihe bağlı her şey yenilenir.
+  // Video oynayan bölümler (vitrin, son video, açık oyun penceresi) o sırada atlanır; iframe yeniden
+  // çizilirse video baştan başlar ya da durur. Onlar bir sonraki çizimde güncellenir.
+  let renderedDay = todayISO();
+  setInterval(() => {
+    if (todayISO() === renderedDay) return;
+    renderedDay = todayISO();
+    renderSite();
+    renderStats();
+    renderFilters();
+    renderGrid();
+    renderSchedule();
+    if (!nowPlaying) renderNowPlaying();
+    if (latest && !$('#latestPlayer iframe', el.latestBody)) renderLatest();
+    if (el.detailDialog.open && findGame(detailId) && !$('#detailPlayer iframe', el.detailContent)) refreshDetail();
+  }, 60000);
 
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).

@@ -1125,6 +1125,65 @@ code {
 .now-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .now-more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); }
 
+/* ---------- yakında (yayın takvimi) ---------- */
+.sched { display: flex; flex-direction: column; gap: 12px; }
+.sched-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sched-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+.sched-title .icon { width: 15px; height: 15px; color: var(--accent-text); }
+.sched-count { font: 600 .78rem/1.2 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sched-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 10px;
+}
+.sched-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.sched-date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  padding: 7px 0 6px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  text-align: center;
+}
+.sched-date b { font: 800 1.35rem/1 var(--font-display); letter-spacing: -.02em; color: var(--fg); }
+.sched-date span { font: 700 .68rem/1.3 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.sched-date small { font: 500 .66rem/1.2 var(--font-mono); color: var(--muted); }
+.sched-main { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; flex: 1; }
+.sched-when { font: 700 .66rem/1.3 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
+.sched-game {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: 600 1rem/1.25 var(--font-display);
+  letter-spacing: -.01em;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.sched-game:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--accent); }
+.sched-ep { max-width: 100%; font-size: .85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sched-link { flex: none; }
+.sched-toggle { align-self: flex-start; }
+
 /* ---------- kanaldaki son video ---------- */
 .latest { display: flex; flex-direction: column; gap: 12px; }
 .latest-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }

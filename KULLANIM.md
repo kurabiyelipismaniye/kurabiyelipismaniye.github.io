@@ -9,6 +9,9 @@ her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayın
 - **Şimdi oynuyorum:** sayfanın en üstünde, devam eden oyunlardan son bölümü en yeni olanı büyük kapağıyla,
   son bölümüyle ve “Son bölümü izle” düğmesiyle gösterir; kapağa basınca son bölüm site içinde oynar. Başka devam eden
   oyun varsa altında küçük düğmeler olarak listelenir. Devam eden oyun yoksa bu bölüm görünmez.
+- **Yakında:** ileri tarihli (henüz yayınlanmamış) bölümlerin hepsini tarihe göre sıralar: gün, ay, haftanın günü,
+  “yarın / 3 gün sonra”, oyunun adı ve bölümü. İlk 4'ü görünür, fazlası “Tümünü göster” ile açılır. Bölümün linki varsa
+  yanındaki simgeyle açılır (ör. YouTube prömiyer sayfası). İleri tarihli bölüm yoksa bu bölüm görünmez.
 - **Kayıt dosyası:** kaç oyunu bitirdiğin, kaçının devam ettiği, kaçının sırada olduğu, toplam bölüm sayısı ve yüzde olarak ilerleme çubuğu
 - **Arama:** oyun adı, kategori, platform, açıklama ya da bölüm başlıklarında arar
 - **Filtreler:** Tümü / Oynadıklarım / Devam edenler / Sıradakiler, kategori düğmeleri, sıralama (son eklenen, son yayınlanan bölüm, A–Z, puan, son bitirilen)
@@ -49,7 +52,7 @@ Durumu elle seçmen gerekmez:
 3. **Değişiklikleri kaydet**, sonra herkesin görmesi için **Yayınla**.
 
 İleri bir tarih girersen (planlanmış video ya da prömiyer) bölüm listede **Yayınlanacak** olarak, seri özetinde
-**Sıradaki bölüm** olarak görünür. O gün gelince kendiliğinden yayınlanmış sayılır.
+**Sıradaki bölüm** olarak, sayfanın üstündeki **Yakında** listesinde de tarihiyle görünür. O gün gelince kendiliğinden yayınlanmış sayılır.
 
 Seriyi bitirdiysen “Bu oyunu oynadım” kutusunu işaretle; bitirme tarihi olarak son bölümün tarihi önerilir.
 
