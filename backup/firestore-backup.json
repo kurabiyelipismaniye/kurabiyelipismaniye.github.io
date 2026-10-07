@@ -1,7 +1,5 @@
-// Oyun Arşivi verisi. Firebase'deki listeden otomatik oluşturulur (scripts/sync.mjs); elle düzenlemene gerek yok.
-// Site Firebase'e ulaşamadığında bu liste gösterilir. Yüklenen kapak görselleri dosya küçük kalsın diye buraya alınmaz.
-window.SITE_DATA = {
-  "version": 1791405003434,
+{
+  "exportedAt": "2026-10-07T20:30:03.432Z",
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -34,7 +32,8 @@ window.SITE_DATA = {
           "url": "https://www.youtube.com/watch?v=9id4JDGosco",
           "date": "2026-10-02"
         }
-      ]
+      ],
+      "images": []
     },
     {
       "id": "muyigv8z98m65",
@@ -54,7 +53,9 @@ window.SITE_DATA = {
           "url": "https://www.youtube.com/watch?v=oYz5CR3vPp0",
           "date": "2026-10-04"
         }
-      ]
+      ],
+      "images": []
     }
-  ]
-};
+  ],
+  "suggestions": []
+}
