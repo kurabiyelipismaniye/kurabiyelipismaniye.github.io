@@ -115,14 +115,27 @@
     return /^https?:\/\/[^\s<>"']+$/i.test(u) ? u : '';
   };
 
+  // embed kodunda & işareti &amp; olarak yazılır
+  const unescapeAmp = (s) => String(s || '').replace(/&amp;/gi, '&');
+
   function youtubeId(url) {
-    const m = String(url || '').match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{11})/);
+    // "videoseries" (oynatma listesi) ve "live_stream" 11 harfli olsa da video kimliği değildir
+    const m = unescapeAmp(url).match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))(?!videoseries|live_stream)([A-Za-z0-9_-]{11})/);
     return m ? m[1] : '';
+  }
+
+  const isYoutubeUrl = (url) => /(?:youtube(?:-nocookie)?\.com|youtu\.be)\//i.test(String(url || ''));
+
+  // Şeması yazılmamış tek parça adres (ör. "youtube.com/@kanal") için başına https:// eklenir
+  function withScheme(url) {
+    const u = String(url || '').trim();
+    if (!u || /^[a-z][a-z0-9+.-]*:/i.test(u) || !/^[^\s<>"']+$/.test(u)) return u;
+    return /^(?:\/\/)?[\w-]+(?:\.[\w-]+)+(?:[/?#]|$)/.test(u) ? `https://${u.replace(/^\/+/, '')}` : u;
   }
 
   // Linkteki başlangıç zamanı (t=95, t=95s, t=1h2m3s ya da start=95) saniye olarak
   function youtubeStart(url) {
-    const m = String(url || '').match(/[?&#](?:t|start)=([0-9hms]+)/i);
+    const m = unescapeAmp(url).match(/[?&#](?:t|start)=([0-9hms]+)/i);
     if (!m) return 0;
     const v = m[1].toLowerCase();
     if (/^\d+s?$/.test(v)) return parseInt(v, 10);
@@ -139,6 +152,26 @@
     if (!vid) return '';
     const t = youtubeStart(url);
     return `https://www.youtube.com/watch?v=${vid}${t ? `&t=${t}s` : ''}`;
+  }
+
+  // Bölüm alanına yapıştırılanı tek bir linke çevirir:
+  // şemasız adres → https:// eklenir (list, index, t gibi parametreler korunur); embed kodu → izleme ya da liste adresi;
+  // linkli paylaşım metni → metindeki link. Çevrilemezse olduğu gibi döner (doğrulama uyarır).
+  function cleanEpisodeUrl(raw) {
+    const u = String(raw || '').trim();
+    if (!u || safeLink(u)) return u;
+    const schemed = withScheme(u);
+    if (safeLink(schemed)) return schemed;
+    const text = unescapeAmp(u);
+    if (!/<iframe/i.test(text)) {
+      const inText = text.match(/https?:\/\/[^\s<>"']+/i);
+      if (inText) return inText[0];
+    }
+    const video = canonicalYoutube(text);
+    if (video) return video;
+    const list = (text.match(/[?&]list=([A-Za-z0-9_-]+)/) || [])[1];
+    if (list && isYoutubeUrl(text)) return `https://www.youtube.com/playlist?list=${list}`;
+    return u;
   }
 
   function hashHue(str) {
@@ -619,7 +652,7 @@
   const episodeAcc = (n) => `${n}. bölümü`;
   const episodeGen = (n) => `${n}. bölümün`;
   const episodeNo = (g, e) => g.episodes.indexOf(e) + 1;
-  const openLabel = (e, n) => (hasVideo(e) ? `${episodeAcc(n)} YouTube'da aç` : `${episodeAcc(n)} yeni sekmede aç`);
+  const openLabel = (e, n) => (isYoutubeUrl(e.url) ? `${episodeAcc(n)} YouTube'da aç` : `${episodeAcc(n)} yeni sekmede aç`);
 
   function playerHTML(g, ep) {
     const vid = youtubeId(ep.url);
@@ -737,7 +770,7 @@
     const dated = withLink.filter((e) => e.date);
     const ep = ongoing ? (dated[dated.length - 1] || withLink[withLink.length - 1]) : withLink[0];
     const n = episodeNo(g, ep);
-    const where = hasVideo(ep) ? "YouTube'da izle" : 'izle';
+    const where = isYoutubeUrl(ep.url) ? "YouTube'da izle" : 'izle';
     const airedDated = airedEpisodes(g).filter((e) => e.date);
     const isNewest = ep === airedDated[airedDated.length - 1];
     const label = ongoing && isNewest ? `Son bölümü ${where}` : `${episodeAcc(n)} ${where}`;
@@ -1005,7 +1038,8 @@
   async function suggestEpisodeTitle(row) {
     const urlInput = $('.ep-url', row);
     const titleInput = $('.ep-title-input', row);
-    const url = urlInput.value.trim();
+    const raw = urlInput.value.trim();
+    const url = cleanEpisodeUrl(raw);
     if (!youtubeId(url) || titleInput.value.trim() || typeof fetch !== 'function') return;
     const controller = typeof AbortController === 'function' ? new AbortController() : null;
     const timer = controller ? setTimeout(() => controller.abort(), 5000) : null;
@@ -1015,7 +1049,7 @@
       if (!res.ok) return;
       const info = await res.json();
       // kullanıcı bu arada yazdıysa ya da link değiştiyse dokunma
-      if (info && info.title && !titleInput.value.trim() && urlInput.value.trim() === url) {
+      if (info && info.title && !titleInput.value.trim() && urlInput.value.trim() === raw) {
         titleInput.value = String(info.title).slice(0, 120);
       }
     } catch (e) {
@@ -1051,9 +1085,10 @@
   }
 
   function clearErrors() {
-    for (const id of ['f-title-error', 'f-category-error']) $(`#${id}`).hidden = true;
+    for (const id of ['f-title-error', 'f-category-error', 'f-played-at-error']) $(`#${id}`).hidden = true;
     setValid(f.title);
     setValid(f.category);
+    setValid(f.playedAt);
     clearEpisodeErrors();
   }
 
@@ -1096,13 +1131,19 @@
   }
 
   // yazmaya başlayınca o alanın hata mesajı kalksın
-  for (const [input, errorId] of [[f.title, 'f-title-error'], [f.category, 'f-category-error']]) {
+  for (const [input, errorId] of [[f.title, 'f-title-error'], [f.category, 'f-category-error'], [f.playedAt, 'f-played-at-error']]) {
     input.addEventListener('input', () => {
       setValid(input);
       $(`#${errorId}`).hidden = true;
     });
   }
-  f.played.addEventListener('change', syncPlayedAt);
+  f.played.addEventListener('change', () => {
+    if (!f.played.checked) {
+      setValid(f.playedAt);
+      $('#f-played-at-error').hidden = true;
+    }
+    syncPlayedAt();
+  });
   f.title.addEventListener('input', updateCoverPreview);
 
   f.addEpisode.addEventListener('click', () => {
@@ -1207,6 +1248,12 @@
       showError(f.category, 'f-category-error');
       firstInvalid = firstInvalid || f.category;
     }
+    // yarım yazılmış bitirme tarihi sessizce başka bir tarihle değiştirilmesin
+    if (f.played.checked && ((f.playedAt.validity && f.playedAt.validity.badInput) ||
+        (f.playedAt.value && !isValidDay(f.playedAt.value)))) {
+      showError(f.playedAt, 'f-played-at-error');
+      firstInvalid = firstInvalid || f.playedAt;
+    }
     // dokunulmamış boş satırlar yok sayılır (bkz. readEpisodeRows)
     const rows = readEpisodeRows().filter((r) => r.counts);
     for (const r of rows) {
@@ -1215,8 +1262,8 @@
       const errorId = $('.ep-row-error', r.row).id;
       // şemasız link ("youtube.com/watch?v=…"), YouTube'un embed kodu ya da linkli paylaşım metni
       // yapıştırılırsa içindeki video temiz bir izleme adresine çevrilir
-      if (r.url && !safeLink(r.url) && youtubeId(r.url)) {
-        r.url = canonicalYoutube(r.url);
+      if (r.url && !safeLink(r.url)) {
+        r.url = cleanEpisodeUrl(r.url);
         urlInput.value = r.url;
       }
       if (r.url && !safeLink(r.url)) {
@@ -1304,18 +1351,30 @@
     openDialog(el.settingsDialog);
   }
   function clearSettingsErrors() {
-    $('#s-youtube-error').hidden = true;
-    s.youtube.classList.remove('is-invalid');
+    for (const [input, id] of [[s.youtube, 's-youtube-error'], [s.github, 's-github-error']]) {
+      $(`#${id}`).hidden = true;
+      setValid(input);
+    }
   }
 
   el.settingsForm.addEventListener('submit', (e) => {
     e.preventDefault();
     clearSettingsErrors();
+    // "youtube.com/@kanal" gibi şemasız yazılan linkler tamamlanır
+    s.youtube.value = withScheme(s.youtube.value);
+    s.github.value = withScheme(s.github.value);
     const youtube = s.youtube.value.trim();
-    if (youtube && !safeLink(youtube)) {
-      s.youtube.classList.add('is-invalid');
-      $('#s-youtube-error').hidden = false;
-      s.youtube.focus();
+    const github = s.github.value.trim();
+    let invalid = null;
+    for (const [input, value, id] of [[s.youtube, youtube, 's-youtube-error'], [s.github, github, 's-github-error']]) {
+      if (value && !safeLink(value)) {
+        setInvalid(input, id);
+        $(`#${id}`).hidden = false;
+        invalid = invalid || input;
+      }
+    }
+    if (invalid) {
+      invalid.focus();
       return;
     }
     data.site = {
@@ -1323,7 +1382,7 @@
       title: s.title.value.trim() || SITE_DEFAULTS.title,
       tagline: s.tagline.value.trim(),
       youtubeUrl: youtube,
-      githubEditUrl: s.github.value.trim()
+      githubEditUrl: github
     };
     closeDialog(el.settingsDialog);
     commit();

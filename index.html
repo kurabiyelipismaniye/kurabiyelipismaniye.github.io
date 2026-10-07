@@ -205,7 +205,8 @@
         </label>
         <div class="field">
           <label for="f-played-at">Bitirdiğim tarih</label>
-          <input id="f-played-at" name="playedAt" type="date">
+          <input id="f-played-at" name="playedAt" type="date" min="2005-04-23" max="9999-12-31">
+          <p class="field-error" id="f-played-at-error" hidden>Geçerli bir tarih seç (gün.ay.yıl).</p>
         </div>
       </div>
     </div>
@@ -248,6 +249,7 @@
         <label for="s-github">GitHub’daki veri dosyasının düzenleme linki</label>
         <input id="s-github" type="url" inputmode="url" placeholder="https://github.com/kullanici/repo/edit/main/data/games.js">
         <p class="hint">“Yayınla” penceresindeki kısayol bu linke gider.</p>
+        <p class="field-error" id="s-github-error" hidden>Link https:// ile başlamalı.</p>
       </div>
     </div>
     <div class="dialog-foot">
