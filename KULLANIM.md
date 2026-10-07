@@ -65,12 +65,12 @@ yedeği **Dosya seç** ile geri yükleyebilirsin.
 
 ## Siteyi GitHub Pages'te yayına almak
 
-1. GitHub'da bu deponun **Settings → Pages** sayfasına git.
-2. **Source:** “Deploy from a branch”. **Branch:** sitenin bulunduğu dal (ör. `main`), klasör `/ (root)` → **Save**.
-3. Birkaç dakika sonra site `https://ibrahimeserocak.github.io/ibrahimeserocak/` adresinde açılır.
+1. GitHub'da bu deponun (`ibrahimeserocak/Youtube`) **Settings → Pages** sayfasına git.
+2. **Source:** “Deploy from a branch”. **Branch:** `main`, klasör `/ (root)` → **Save**.
+3. Birkaç dakika sonra site `https://ibrahimeserocak.github.io/Youtube/` adresinde açılır.
 
-Dalın adı `main` değilse “Site ayarları”ndaki **GitHub'daki veri dosyasının düzenleme linki** alanını
-o dala göre güncelle (ör. `.../edit/DAL-ADI/data/games.js`).
+Siteyi başka bir depoya ya da dala taşırsan “Site ayarları”ndaki **GitHub'daki veri dosyasının düzenleme linki**
+alanını da ona göre güncelle (ör. `https://github.com/KULLANICI/DEPO/edit/DAL/data/games.js`).
 
 ## Kapak görselleri
 

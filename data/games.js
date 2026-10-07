@@ -9,7 +9,7 @@ window.SITE_DATA = {
     "title": "Oyun Arşivi",
     "tagline": "Kanalda oynadığım ve sırada bekleyen oyunlar. Tikli olanları bitirdim, gerisi sıradaki videolarda.",
     "youtubeUrl": "",
-    "githubEditUrl": "https://github.com/ibrahimeserocak/ibrahimeserocak/edit/main/data/games.js"
+    "githubEditUrl": "https://github.com/ibrahimeserocak/Youtube/edit/main/data/games.js"
   },
   "games": [
     {
