@@ -109,11 +109,36 @@
     if (/^[a-z][a-z0-9+.-]*:/i.test(u) || u.startsWith('//')) return '';
     return u;
   }
-  const safeLink = (url) => (/^https?:\/\//i.test(String(url || '').trim()) ? String(url).trim() : '');
+  // Tek parça bir http(s) adresi (boşluk ya da HTML içermeyen)
+  const safeLink = (url) => {
+    const u = String(url || '').trim();
+    return /^https?:\/\/[^\s<>"']+$/i.test(u) ? u : '';
+  };
 
   function youtubeId(url) {
     const m = String(url || '').match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{11})/);
     return m ? m[1] : '';
+  }
+
+  // Linkteki başlangıç zamanı (t=95, t=95s, t=1h2m3s ya da start=95) saniye olarak
+  function youtubeStart(url) {
+    const m = String(url || '').match(/[?&#](?:t|start)=([0-9hms]+)/i);
+    if (!m) return 0;
+    const v = m[1].toLowerCase();
+    if (/^\d+s?$/.test(v)) return parseInt(v, 10);
+    const part = (unit) => {
+      const x = v.match(new RegExp(`(\\d+)${unit}`));
+      return x ? parseInt(x[1], 10) : 0;
+    };
+    return part('h') * 3600 + part('m') * 60 + part('s');
+  }
+
+  // YouTube linkini temiz bir izleme adresine çevirir; başlangıç zamanını korur.
+  function canonicalYoutube(url) {
+    const vid = youtubeId(url);
+    if (!vid) return '';
+    const t = youtubeStart(url);
+    return `https://www.youtube.com/watch?v=${vid}${t ? `&t=${t}s` : ''}`;
   }
 
   function hashHue(str) {
@@ -205,8 +230,7 @@
   const coverVideo = (episodes) => (episodes || []).find(hasVideo) || null;
   // YouTube linkleri şeması eksik yazılmış olsa da (youtube.com/...) düzgün bir adrese çevrilir.
   function episodeLink(e) {
-    const vid = youtubeId(e.url);
-    return safeLink(e.url) || (vid ? `https://www.youtube.com/watch?v=${vid}` : '');
+    return safeLink(e.url) || canonicalYoutube(e.url);
   }
 
   function normalizeData(d) {
@@ -236,7 +260,7 @@
           if (!lg || typeof lg !== 'object' || 'episodes' in lg || lg.video) continue;
           const pg = published.games.find((p) => p.id === lg.id && p.example);
           // kullanıcı örneği kendi oyununa çevirdiyse (ad, açıklama, puan… değiştiyse) dokunma
-          const untouched = pg && ['title', 'category', 'platform', 'description', 'cover', 'rating']
+          const untouched = pg && ['title', 'category', 'platform', 'description', 'cover', 'rating', 'played', 'playedAt']
             .every((k) => String(lg[k] ?? '').trim() === String(pg[k] ?? '').trim());
           if (untouched) {
             lg.episodes = clone(pg.episodes);
@@ -599,7 +623,8 @@
 
   function playerHTML(g, ep) {
     const vid = youtubeId(ep.url);
-    return `<div class="cover"><iframe src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0" title="${esc(g.title)} · ${episodeName(episodeNo(g, ep))}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+    const start = youtubeStart(ep.url);
+    return `<div class="cover"><iframe src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0${start ? `&start=${start}` : ''}" title="${esc(g.title)} · ${episodeName(episodeNo(g, ep))}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
   }
 
   // Üstteki büyük oynatıcı seriye baştan başlatır (ilk yayınlanmış bölüm).
@@ -713,7 +738,9 @@
     const ep = ongoing ? (dated[dated.length - 1] || withLink[withLink.length - 1]) : withLink[0];
     const n = episodeNo(g, ep);
     const where = hasVideo(ep) ? "YouTube'da izle" : 'izle';
-    const label = ongoing ? `Son bölümü ${where}` : `${episodeAcc(n)} ${where}`;
+    const airedDated = airedEpisodes(g).filter((e) => e.date);
+    const isNewest = ep === airedDated[airedDated.length - 1];
+    const label = ongoing && isNewest ? `Son bölümü ${where}` : `${episodeAcc(n)} ${where}`;
     return `<a class="btn btn-yt" href="${esc(episodeLink(ep))}" target="_blank" rel="noopener">${icon('youtube')}<span>${label}</span></a>`;
   }
 
@@ -894,11 +921,13 @@
         id: row.dataset.id,
         url: $('.ep-url', row).value.trim(),
         title: $('.ep-title-input', row).value.trim(),
-        date: $('.ep-date-input', row).value
+        date: $('.ep-date-input', row).value,
+        // yarım yazılmış ya da takvimde olmayan tarih: değer boş görünür ama alan dolu
+        badDate: Boolean($('.ep-date-input', row).validity && $('.ep-date-input', row).validity.badInput)
       };
       const kept = row.dataset.existing === '1' || row.dataset.touched === '1';
       // linki, başlığı ve tarihi tamamen silinen satır da kaldırılmış sayılır
-      r.counts = Boolean(r.url || r.title || (kept && r.date));
+      r.counts = Boolean(r.url || r.title || (kept && (r.date || r.badDate)));
       return r;
     });
   }
@@ -1087,7 +1116,8 @@
     const next = row.nextElementSibling || row.previousElementSibling;
     row.remove();
     renumberEpisodeRows();
-    clearEpisodeErrors();
+    // diğer satırların hataları yeni numaralarıyla görünmeye devam etsin
+    for (const other of $$('.ep-row', f.episodes)) updateRowError(other);
     updateCoverPreview();
     (next ? $('.ep-url', next) : f.addEpisode).focus();
   });
@@ -1183,16 +1213,20 @@
       const urlInput = $('.ep-url', r.row);
       const dateInput = $('.ep-date-input', r.row);
       const errorId = $('.ep-row-error', r.row).id;
-      // "youtube.com/watch?v=…" gibi şemasız YouTube linkleri sessizce tamamlanır
-      if (r.url && !/^[a-z][a-z0-9+.-]*:/i.test(r.url) && youtubeId(r.url)) {
-        r.url = `https://${r.url.replace(/^\/+/, '')}`;
+      // şemasız link ("youtube.com/watch?v=…"), YouTube'un embed kodu ya da linkli paylaşım metni
+      // yapıştırılırsa içindeki video temiz bir izleme adresine çevrilir
+      if (r.url && !safeLink(r.url) && youtubeId(r.url)) {
+        r.url = canonicalYoutube(r.url);
         urlInput.value = r.url;
       }
       if (r.url && !safeLink(r.url)) {
         setInvalid(urlInput, errorId, 'Link https:// ile başlamalı.');
         firstInvalid = firstInvalid || urlInput;
       }
-      if (!r.date && r.row.dataset.undatedOk !== '1') {
+      if (r.badDate) {
+        setInvalid(dateInput, errorId, 'Geçerli bir tarih seç (gün.ay.yıl).');
+        firstInvalid = firstInvalid || dateInput;
+      } else if (!r.date && r.row.dataset.undatedOk !== '1') {
         setInvalid(dateInput, errorId, 'Yayın tarihini seç.');
         firstInvalid = firstInvalid || dateInput;
       } else if (r.date && !isValidDay(r.date)) {
