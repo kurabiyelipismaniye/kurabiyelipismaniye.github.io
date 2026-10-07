@@ -29,6 +29,7 @@
   <symbol id="i-youtube" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4.5" fill="currentColor"/><path d="M10 9.2v5.6l4.8-2.8z" style="fill: var(--yt)"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
   <symbol id="i-pad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10a5 5 0 0 1 4.8 6.3l-1 3.6a2.6 2.6 0 0 1-4.4 1.1L14 15.5h-4L7.6 18a2.6 2.6 0 0 1-4.4-1.1l-1-3.6A5 5 0 0 1 7 7z"/><path d="M7.5 10v3M6 11.5h3"/><circle cx="16" cy="10.5" r=".6" fill="currentColor"/><circle cx="17.6" cy="12.6" r=".6" fill="currentColor"/></symbol>
 </svg>
 
@@ -59,12 +60,14 @@
         </div>
         <div class="save-pct"><span id="savePct">%0</span><small>tamamlandı</small></div>
         <div class="xp" id="xpBar" role="progressbar" aria-label="Oynanan oyun oranı" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span class="xp-ongoing" id="xpOngoing"></span>
           <span class="xp-fill" id="xpFill"></span>
         </div>
         <dl class="save-stats">
-          <div><dt>Oynandı</dt><dd id="statPlayed">0</dd></div>
+          <div class="stat-played"><dt>Oynandı</dt><dd id="statPlayed">0</dd></div>
+          <div class="stat-ongoing"><dt>Devam</dt><dd id="statOngoing">0</dd></div>
           <div><dt>Sırada</dt><dd id="statTodo">0</dd></div>
-          <div><dt>Kategori</dt><dd id="statCats">0</dd></div>
+          <div><dt>Bölüm</dt><dd id="statEpisodes">0</dd></div>
         </dl>
       </section>
     </div>
@@ -79,6 +82,7 @@
       <button type="button" class="btn btn-primary btn-sm" id="addBtn"><svg class="icon"><use href="#i-plus"/></svg><span>Oyun ekle</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn"><svg class="icon"><use href="#i-sliders"/></svg><span>Site ayarları</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="publishBtn"><svg class="icon"><use href="#i-upload"/></svg><span>Yayınla / Yedekle</span></button>
+      <button type="button" class="btn btn-ghost btn-sm" id="clearExamples" hidden><svg class="icon"><use href="#i-trash"/></svg><span>Örnekleri sil</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="editDone">Bitti</button>
     </div>
   </div>
@@ -93,12 +97,14 @@
       <div class="segmented" role="radiogroup" aria-label="Duruma göre filtrele" id="statusFilter">
         <input type="radio" name="status" id="st-all" value="all" checked><label for="st-all">Tümü <b data-count="all">0</b></label>
         <input type="radio" name="status" id="st-played" value="played"><label for="st-played">Oynadıklarım <b data-count="played">0</b></label>
+        <input type="radio" name="status" id="st-ongoing" value="ongoing"><label for="st-ongoing">Devam edenler <b data-count="ongoing">0</b></label>
         <input type="radio" name="status" id="st-todo" value="todo"><label for="st-todo">Sıradakiler <b data-count="todo">0</b></label>
       </div>
       <label class="sort">
         <span class="visually-hidden">Sırala</span>
         <select id="sortSelect">
           <option value="recent">Son eklenen</option>
+          <option value="episode">Son yayınlanan bölüm</option>
           <option value="az">İsme göre (A–Z)</option>
           <option value="rating">Puanıma göre</option>
           <option value="finished">Son bitirilen</option>
@@ -155,12 +161,15 @@
         <label for="f-desc">Açıklama</label>
         <textarea id="f-desc" name="description" rows="4" maxlength="2000" placeholder="Oyun ne anlatıyor, neden oynuyorsun?"></textarea>
       </div>
-      <div class="field">
-        <label for="f-video">YouTube video linki</label>
-        <input id="f-video" name="video" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…">
-        <p class="hint">Bu oyunu oynadığın video. Ayrıntı penceresinde oynatılır, kapak boşsa küçük resmi kullanılır.</p>
-        <p class="field-error" id="f-video-error" hidden>Link https:// ile başlamalı.</p>
-      </div>
+      <fieldset class="field episodes-field" aria-describedby="episodesHint">
+        <legend>Bölümler</legend>
+        <p class="hint" id="episodesHint">Bu oyunu oynadığın her video için bir satır ekle: YouTube linki, yayın tarihi ve istersen bölüm başlığı. Kaydedince tarihe göre sıralanır; ilk bölüm tarihi oyunun ayrıntısında görünür.</p>
+        <ol class="ep-editor" id="epEditor"></ol>
+        <p class="field-error" id="f-episodes-error" hidden></p>
+        <div>
+          <button type="button" class="btn btn-ghost btn-sm" id="addEpisode"><svg class="icon"><use href="#i-plus"/></svg><span>Bölüm ekle</span></button>
+        </div>
+      </fieldset>
       <div class="field">
         <span class="label" id="coverLabel">Kapak görseli</span>
         <div class="cover-field">
@@ -174,7 +183,7 @@
               </label>
               <button type="button" class="btn btn-ghost btn-sm" id="coverClear">Kaldır</button>
             </div>
-            <p class="hint" id="coverHint">Boş bırakırsan otomatik bir kapak çizilir.</p>
+            <p class="hint" id="coverHint">Boş bırakırsan ilk bölümün küçük resmi, o da yoksa otomatik bir kapak kullanılır.</p>
           </div>
         </div>
       </div>

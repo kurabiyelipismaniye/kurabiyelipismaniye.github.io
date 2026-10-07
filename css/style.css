@@ -271,12 +271,17 @@ a { color: var(--accent-text); }
   background: var(--surface-2);
   overflow: hidden;
 }
-.xp-fill {
+.xp-fill, .xp-ongoing {
   position: absolute;
   inset: 0 auto 0 0;
   width: 0;
-  background: var(--accent);
   transition: width .7s cubic-bezier(.2, .8, .2, 1);
+}
+.xp-fill { background: var(--accent); }
+/* devam eden oyunlar: oynananların arkasında taralı ikinci katman */
+.xp-ongoing {
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 3px, var(--accent-soft) 3px 7px);
+  opacity: .55;
 }
 /* on bölmeli XP çubuğu: bölme çizgileri kartın rengiyle çiziliyor */
 .xp::after {
@@ -288,7 +293,7 @@ a { color: var(--accent-text); }
 
 .save-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin: 4px 0 0;
 }
@@ -301,7 +306,8 @@ a { color: var(--accent-text); }
 }
 .save-stats dt { font: 700 .66rem/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .save-stats dd { margin: 0; font: 600 1.35rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.save-stats div:first-child dd { color: var(--done); }
+.save-stats .stat-played dd { color: var(--done); }
+.save-stats .stat-ongoing dd { color: var(--accent-text); }
 
 /* ---------- düzenleme çubuğu ---------- */
 .edit-bar {
@@ -634,6 +640,20 @@ main { display: flex; flex-direction: column; gap: 14px; }
 }
 .status .icon { width: 15px; height: 15px; }
 .status.is-played { background: var(--done-soft); color: var(--done); }
+.status.is-ongoing { background: var(--accent-soft); color: var(--accent-text); }
+
+.example-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px dashed var(--muted);
+  color: var(--muted);
+  font: 700 .62rem/1 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
 
 /* tik düğmesi (düzenleme modu) ve form onay kutusu ortak kutu */
 .tick {
@@ -798,6 +818,46 @@ main { display: flex; flex-direction: column; gap: 14px; }
 .star-input input:checked + .star-none { background: var(--surface-2); color: var(--fg); }
 .star-input input:focus-visible + label { outline: 2px solid var(--accent-text); outline-offset: 1px; }
 
+.episodes-field legend { margin-bottom: 2px; }
+.ep-editor { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ep-editor:empty { display: none; }
+.ep-row {
+  display: grid;
+  grid-template-columns: 1.8rem minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.ep-row-no {
+  padding-top: 12px;
+  font: 700 .9rem/1 var(--font-mono);
+  color: var(--muted);
+  text-align: center;
+}
+.ep-row-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10.5rem;
+  gap: 8px;
+  min-width: 0;
+}
+.ep-row-fields .ep-url { grid-column: 1 / -1; }
+.ep-row-fields input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font: 400 .9rem/1.3 var(--font-body);
+}
+.ep-row-fields input:focus { outline: none; border-color: var(--accent-text); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ep-row-fields .is-invalid { border-color: var(--danger); }
+.ep-remove { margin-top: 2px; }
+
 .played-row { align-items: end; }
 .check {
   display: inline-flex;
@@ -859,6 +919,95 @@ main { display: flex; flex-direction: column; gap: 14px; }
 .detail-facts dt { font: 700 .66rem/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .detail-facts dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
 .detail-facts .done { color: var(--done); }
+.detail-facts .ongoing { color: var(--accent-text); }
+.detail-title { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+/* seri özeti: ilk / son bölüm ve tarihe göre yerleşen bölüm noktaları */
+.series {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.series-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.series-head .eyebrow { margin: 0; }
+.series-meta { font: 700 .8rem/1.2 var(--font-mono); font-variant-numeric: tabular-nums; }
+.series-track { position: relative; height: 18px; margin-inline: 7px; }
+.series-line {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.series-dot {
+  position: absolute;
+  top: 50%;
+  width: 14px; height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--surface-2);
+  box-sizing: border-box;
+}
+.series-ends { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.series-end { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.series-end.is-last { text-align: right; align-items: flex-end; }
+.series-label { font: 700 .66rem/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.series-end b { font: 600 clamp(.92rem, 2.6vw, 1.05rem)/1.25 var(--font-display); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.series-rel { font-size: .82rem; color: var(--muted); }
+.series-note { font-size: .82rem; color: var(--muted); }
+
+/* bölüm listesi */
+.episodes { display: flex; flex-direction: column; gap: 10px; }
+.episodes h3 { display: flex; align-items: baseline; gap: 8px; font: 700 1rem/1.2 var(--font-display); }
+.episodes h3 b { font: 700 .8rem/1 var(--font-mono); color: var(--muted); }
+.ep-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 23rem;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.ep {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.ep + .ep { border-top: 1px solid var(--line); }
+.ep.is-playing { background: var(--accent-soft); }
+.ep-no {
+  font: 700 .95rem/1 var(--font-mono);
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ep.is-playing .ep-no { color: var(--accent-text); }
+.ep-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ep-name { font-weight: 500; overflow-wrap: anywhere; }
+.ep-date { font: 500 .8rem/1.2 var(--font-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ep-actions { display: flex; align-items: center; gap: 4px; }
+.ep-play, .ep-ext {
+  display: grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.ep-play { background: var(--yt); color: var(--yt-ink); }
+.ep-play .icon { width: 16px; height: 16px; }
+.ep-ext { background: transparent; color: var(--muted); }
+.ep-ext:hover { color: var(--fg); background: var(--surface-2); }
+.ep-ext .icon { width: 16px; height: 16px; }
 .detail-desc { white-space: pre-line; max-width: 65ch; overflow-wrap: anywhere; }
 .detail-desc.is-empty { color: var(--muted); }
 .detail-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -943,8 +1092,8 @@ code {
   .banner-actions .btn-sm { padding: 0 11px; }
   .toolbar-row { gap: 8px; }
   .search { flex-basis: 100%; }
-  .segmented { flex: 1 1 auto; }
-  .segmented label { padding: 0 11px; }
+  .segmented { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; border-radius: 16px; }
+  .segmented label { justify-content: center; padding: 0 8px; border-radius: 13px; }
   .sort { flex: 1 1 auto; }
   .sort select { width: 100%; }
   .field-row { grid-template-columns: minmax(0, 1fr); }
@@ -952,6 +1101,11 @@ code {
   .dialog-body { padding: 16px; }
   .dialog-foot { padding: 12px 16px; }
   .detail-body { padding: 16px 16px 20px; }
+  .ep { grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 10px; }
+  .ep-date { grid-column: 2; grid-row: 2; }
+  .ep-actions { grid-column: 3; grid-row: 1 / span 2; }
+  .ep-row-fields { grid-template-columns: minmax(0, 1fr); }
+  .save-stats dd { font-size: 1.15rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

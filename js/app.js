@@ -38,12 +38,36 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  function formatDate(iso) {
-    if (!iso) return '';
-    const d = new Date(String(iso).length === 10 ? `${iso}T12:00:00` : iso);
-    if (Number.isNaN(d.getTime())) return '';
-    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+  const DAY_MS = 86400000;
+
+  function parseDay(iso) {
+    if (!iso) return null;
+    const d = new Date(ISO_DAY.test(String(iso)) ? `${iso}T12:00:00` : iso);
+    return Number.isNaN(d.getTime()) ? null : d;
   }
+
+  function formatDate(iso, month = 'long') {
+    const d = parseDay(iso);
+    return d ? d.toLocaleDateString('tr-TR', { day: 'numeric', month, year: 'numeric' }) : '';
+  }
+
+  // "bugün", "3 gün önce", "2 ay önce", "yarın" gibi göreli zaman
+  const relFormat = typeof Intl !== 'undefined' && Intl.RelativeTimeFormat
+    ? new Intl.RelativeTimeFormat('tr', { numeric: 'auto' })
+    : null;
+  function relativeDay(iso) {
+    const d = parseDay(iso);
+    if (!d || !relFormat) return '';
+    const days = Math.round((d - parseDay(todayISO())) / DAY_MS);
+    const abs = Math.abs(days);
+    if (abs < 7) return relFormat.format(days, 'day');
+    if (abs < 45) return relFormat.format(Math.round(days / 7), 'week');
+    if (abs < 365) return relFormat.format(Math.round(days / 30), 'month');
+    return relFormat.format(Math.round(days / 365), 'year');
+  }
+
+  const daysBetween = (a, b) => Math.round((parseDay(b) - parseDay(a)) / DAY_MS);
 
   function storageGet(key) {
     try {
@@ -87,9 +111,32 @@
   }
 
   /* ---------- veri ---------- */
+  function normalizeEpisode(e) {
+    e = e && typeof e === 'object' ? e : {};
+    const date = String(e.date || '').trim();
+    return {
+      id: String(e.id || uid()),
+      title: String(e.title || '').trim(),
+      url: String(e.url || '').trim(),
+      date: ISO_DAY.test(date) ? date : ''
+    };
+  }
+
+  // Bölümler yayın tarihine göre sıralanır; tarihi olmayanlar sona kalır (aynı tarihliler yerini korur).
+  function sortEpisodes(list) {
+    const key = (e) => e.date || '9999-99-99';
+    return list
+      .map((e, i) => [e, i])
+      .sort(([a, i], [b, j]) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : i - j))
+      .map(([e]) => e);
+  }
+
   function normalizeGame(g) {
     g = g && typeof g === 'object' ? g : {};
     const played = Boolean(g.played);
+    let episodes = Array.isArray(g.episodes) ? g.episodes.map(normalizeEpisode) : [];
+    // eski sürümdeki tek "video" alanı ilk bölüm olarak taşınır
+    if (!episodes.length && g.video) episodes = [normalizeEpisode({ url: g.video })];
     return {
       id: String(g.id || uid()),
       title: String(g.title || '').trim() || 'İsimsiz oyun',
@@ -97,13 +144,29 @@
       platform: String(g.platform || '').trim(),
       description: String(g.description || '').trim(),
       cover: String(g.cover || '').trim(),
-      video: String(g.video || '').trim(),
       rating: Math.max(0, Math.min(5, Math.round(Number(g.rating) || 0))),
       played,
       playedAt: played && g.playedAt ? String(g.playedAt) : null,
-      addedAt: String(g.addedAt || new Date().toISOString())
+      addedAt: String(g.addedAt || new Date().toISOString()),
+      episodes: sortEpisodes(episodes),
+      ...(g.example === true ? { example: true } : {})
     };
   }
+
+  // Oyunun durumu: bittiyse "played", bölümü varsa "ongoing", hiç başlanmadıysa "todo"
+  const gameState = (g) => (g.played ? 'played' : g.episodes.length ? 'ongoing' : 'todo');
+
+  function seriesInfo(g) {
+    const dated = g.episodes.filter((e) => e.date);
+    return {
+      count: g.episodes.length,
+      first: dated.length ? dated[0].date : '',
+      last: dated.length ? dated[dated.length - 1].date : '',
+      dated
+    };
+  }
+
+  const firstVideo = (episodes) => (episodes || []).find((e) => youtubeId(e.url)) || null;
 
   function normalizeData(d) {
     d = d && typeof d === 'object' ? d : {};
@@ -161,6 +224,7 @@
     { editing: false, theme: '', status: 'all', category: 'all', sort: 'recent' },
     storageGet(PREFS_KEY) || {}
   );
+  if (!['all', 'played', 'ongoing', 'todo'].includes(prefs.status)) prefs.status = 'all';
   const savePrefs = () => storageSet(PREFS_KEY, prefs);
   let searchText = '';
   let justToggled = null;
@@ -179,9 +243,12 @@
     savePct: $('#savePct'),
     xpBar: $('#xpBar'),
     xpFill: $('#xpFill'),
+    xpOngoing: $('#xpOngoing'),
     statPlayed: $('#statPlayed'),
+    statOngoing: $('#statOngoing'),
     statTodo: $('#statTodo'),
-    statCats: $('#statCats'),
+    statEpisodes: $('#statEpisodes'),
+    clearExamples: $('#clearExamples'),
     search: $('#searchInput'),
     sort: $('#sortSelect'),
     chips: $('#categoryChips'),
@@ -217,7 +284,8 @@
 
   /* ---------- çizim ---------- */
   function coverHTML(g) {
-    const vid = youtubeId(g.video);
+    const ep = firstVideo(g.episodes);
+    const vid = ep ? youtubeId(ep.url) : '';
     const src = safeImage(g.cover) || (vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : '');
     const gen = `<div class="gen-cover" style="--h:${hashHue(g.title)}" aria-hidden="true"><span>${esc(g.title)}</span></div>`;
     return src ? `${gen}<img src="${esc(src)}" alt="" loading="lazy" decoding="async">` : gen;
@@ -239,9 +307,10 @@
         </button>
       </div>`;
     }
-    return g.played
-      ? `<span class="status is-played">${icon('check')}Oynandı</span>`
-      : '<span class="status">Sırada</span>';
+    const state = gameState(g);
+    if (state === 'played') return `<span class="status is-played">${icon('check')}Oynandı</span>`;
+    if (state === 'ongoing') return '<span class="status is-ongoing">Devam ediyor</span>';
+    return '<span class="status">Sırada</span>';
   }
 
   function cardHTML(g) {
@@ -251,13 +320,14 @@
     return `<article class="${classes.join(' ')}" data-id="${esc(g.id)}">
       <button type="button" class="cover" data-action="open" aria-label="${esc(g.title)}: ayrıntılar">
         ${coverHTML(g)}
-        ${youtubeId(g.video) ? `<span class="cover-video">${icon('play')}Video</span>` : ''}
+        ${g.episodes.length ? `<span class="cover-video">${icon('play')}${g.episodes.length} bölüm</span>` : ''}
         <span class="stamp" aria-hidden="true">${icon('check')}Oynandı</span>
       </button>
       <div class="card-body">
         <div class="card-meta">
           <button type="button" class="chip" data-action="category" data-category="${esc(g.category)}" aria-label="${esc(g.category)} kategorisini göster">${esc(g.category)}</button>
           ${g.platform ? `<span class="platform">${esc(g.platform)}</span>` : ''}
+          ${g.example ? '<span class="example-chip" title="Örnek olarak eklendi">Örnek</span>' : ''}
         </div>
         <h3 class="card-title">${esc(g.title)}</h3>
         ${g.description ? `<p class="card-desc">${esc(g.description)}</p>` : ''}
@@ -278,10 +348,12 @@
   function visibleGames() {
     const q = lower(searchText.trim());
     const list = data.games.filter((g) => {
-      if (prefs.status === 'played' && !g.played) return false;
-      if (prefs.status === 'todo' && g.played) return false;
+      if (prefs.status !== 'all' && gameState(g) !== prefs.status) return false;
       if (prefs.category !== 'all' && g.category !== prefs.category) return false;
-      if (q && !lower(`${g.title} ${g.category} ${g.platform} ${g.description}`).includes(q)) return false;
+      if (q) {
+        const episodeText = g.episodes.map((e) => e.title).join(' ');
+        if (!lower(`${g.title} ${g.category} ${g.platform} ${g.description} ${episodeText}`).includes(q)) return false;
+      }
       return true;
     });
     const byTitle = (a, b) => a.title.localeCompare(b.title, 'tr');
@@ -289,6 +361,7 @@
       recent: (a, b) => String(b.addedAt).localeCompare(String(a.addedAt)) || byTitle(a, b),
       az: byTitle,
       rating: (a, b) => b.rating - a.rating || byTitle(a, b),
+      episode: (a, b) => seriesInfo(b).last.localeCompare(seriesInfo(a).last) || byTitle(a, b),
       finished: (a, b) => String(b.playedAt || '').localeCompare(String(a.playedAt || '')) || byTitle(a, b)
     };
     return list.sort(sorters[prefs.sort] || sorters.recent);
@@ -312,26 +385,32 @@
     el.footerText.textContent = `© ${new Date().getFullYear()} ${s.channelName} · ${data.games.length} oyun`;
   }
 
+  function stateCounts() {
+    const counts = { all: data.games.length, played: 0, ongoing: 0, todo: 0 };
+    for (const g of data.games) counts[gameState(g)] += 1;
+    return counts;
+  }
+
   function renderStats() {
-    const total = data.games.length;
-    const played = data.games.filter((g) => g.played).length;
-    const pct = total ? Math.round((played / total) * 100) : 0;
-    el.saveCount.textContent = `${played} / ${total}`;
+    const c = stateCounts();
+    const pct = c.all ? Math.round((c.played / c.all) * 100) : 0;
+    const startedPct = c.all ? Math.round(((c.played + c.ongoing) / c.all) * 100) : 0;
+    el.saveCount.textContent = `${c.played} / ${c.all}`;
     el.savePct.textContent = `%${pct}`;
     el.xpFill.style.width = `${pct}%`;
+    el.xpOngoing.style.width = `${startedPct}%`;
     el.xpBar.setAttribute('aria-valuenow', String(pct));
-    el.xpBar.setAttribute('aria-valuetext', `${total} oyunun ${played} tanesi oynandı`);
-    el.statPlayed.textContent = played;
-    el.statTodo.textContent = total - played;
-    el.statCats.textContent = categoryCounts().length;
+    el.xpBar.setAttribute('aria-valuetext', `${c.all} oyunun ${c.played} tanesi oynandı, ${c.ongoing} tanesi devam ediyor`);
+    el.statPlayed.textContent = c.played;
+    el.statOngoing.textContent = c.ongoing;
+    el.statTodo.textContent = c.todo;
+    el.statEpisodes.textContent = data.games.reduce((n, g) => n + g.episodes.length, 0);
   }
 
   function renderFilters() {
-    const total = data.games.length;
-    const played = data.games.filter((g) => g.played).length;
-    $('[data-count="all"]').textContent = total;
-    $('[data-count="played"]').textContent = played;
-    $('[data-count="todo"]').textContent = total - played;
+    const c = stateCounts();
+    const total = c.all;
+    for (const key of Object.keys(c)) $(`[data-count="${key}"]`).textContent = c[key];
     const radio = $(`#statusFilter input[value="${prefs.status}"]`) || $('#st-all');
     radio.checked = true;
     el.sort.value = prefs.sort;
@@ -375,6 +454,9 @@
     const dirty = isDirty();
     el.dirtyPill.textContent = dirty ? 'Yayınlanmamış değişiklik var' : 'Yayındakiyle aynı';
     el.dirtyPill.classList.toggle('is-dirty', dirty);
+    const examples = data.games.filter((g) => g.example).length;
+    el.clearExamples.hidden = !examples;
+    el.clearExamples.querySelector('span').textContent = `Örnekleri sil (${examples})`;
   }
 
   function render() {
@@ -449,51 +531,153 @@
     try { return window.self === window.top; } catch (e) { return false; }
   })();
 
+  const episodeName = (n) => `${n}. bölüm`;
+
+  function playerHTML(g, ep) {
+    const vid = youtubeId(ep.url);
+    return `<div class="cover"><iframe src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0" title="${esc(g.title)} · ${episodeName(g.episodes.indexOf(ep) + 1)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+  }
+
+  function mediaHTML(g) {
+    const ep = firstVideo(g.episodes);
+    if (ep) {
+      const n = g.episodes.indexOf(ep) + 1;
+      const badge = `<span class="play-big">${icon('play')}</span><span class="cover-video">${episodeName(n)}</span>`;
+      if (canEmbed) {
+        return `<button type="button" class="cover" data-detail="play" data-ep="${esc(ep.id)}" aria-label="${episodeName(n)} oynat">${coverHTML(g)}${badge}</button>`;
+      }
+      return `<a class="cover" href="${esc(safeLink(ep.url))}" target="_blank" rel="noopener" aria-label="${episodeName(n)} YouTube'da aç">${coverHTML(g)}${badge}</a>`;
+    }
+    if (safeImage(g.cover)) return `<div class="cover">${coverHTML(g)}</div>`;
+    return `<div class="cover cover-banner">${coverHTML(g)}</div>`;
+  }
+
+  // Seri özeti: ilk ve son bölüm tarihi, bölüm sayısı ve bölümleri tarihine göre gösteren çizgi
+  function seriesHTML(g) {
+    const info = seriesInfo(g);
+    if (!info.count) return '';
+    const span = info.first && info.last ? daysBetween(info.first, info.last) : 0;
+    const meta = [`${info.count} bölüm`];
+    if (span > 0) meta.push(`${span} gün`);
+
+    const end = (label, iso, cls = '') => `<div class="series-end${cls}">
+        <span class="series-label">${label}</span>
+        <b>${esc(formatDate(iso))}</b>
+        <span class="series-rel">${esc(relativeDay(iso))}</span>
+      </div>`;
+
+    let ends = '';
+    let track = '';
+    if (info.first && info.first === info.last) {
+      ends = end(info.dated.length > 1 ? 'Yayınlandı' : 'İlk bölüm', info.first);
+    } else if (info.first) {
+      ends = end('İlk bölüm', info.first) + end('Son bölüm', info.last, ' is-last');
+      const total = daysBetween(info.first, info.last);
+      const dots = info.dated.map((e) => {
+        const n = g.episodes.indexOf(e) + 1;
+        const pct = (daysBetween(info.first, e.date) / total) * 100;
+        return `<span class="series-dot" style="left:${pct.toFixed(2)}%" title="${episodeName(n)} · ${esc(formatDate(e.date))}"></span>`;
+      }).join('');
+      track = `<div class="series-track" aria-hidden="true"><span class="series-line"></span>${dots}</div>`;
+    }
+    const undated = info.count - info.dated.length;
+    const note = undated ? `<p class="series-note">${undated} bölümün yayın tarihi girilmemiş.</p>` : '';
+
+    return `<section class="series" aria-labelledby="seriesTitle">
+      <div class="series-head">
+        <h3 class="eyebrow" id="seriesTitle">Kanaldaki seri</h3>
+        <span class="series-meta">${meta.join(' · ')}</span>
+      </div>
+      ${track}
+      ${ends ? `<div class="series-ends">${ends}</div>` : ''}
+      ${note}
+    </section>`;
+  }
+
+  function episodesHTML(g) {
+    if (!g.episodes.length) return '';
+    const rows = g.episodes.map((e, i) => {
+      const n = i + 1;
+      const link = safeLink(e.url);
+      let action = '';
+      if (youtubeId(e.url) && canEmbed) {
+        action = `<button type="button" class="ep-play" data-detail="play" data-ep="${esc(e.id)}" aria-label="${episodeName(n)} oynat">${icon('play')}</button>`;
+      } else if (link) {
+        action = `<a class="ep-play" href="${esc(link)}" target="_blank" rel="noopener" aria-label="${episodeName(n)} YouTube'da aç">${icon('play')}</a>`;
+      }
+      const external = link && canEmbed && youtubeId(e.url)
+        ? `<a class="ep-ext" href="${esc(link)}" target="_blank" rel="noopener" aria-label="${episodeName(n)} YouTube'da aç">${icon('external')}</a>`
+        : '';
+      return `<li class="ep" data-ep="${esc(e.id)}">
+        <span class="ep-no">${n}</span>
+        <div class="ep-main">
+          <span class="ep-name">${e.title ? esc(e.title) : episodeName(n)}</span>
+        </div>
+        <time class="ep-date" ${e.date ? `datetime="${esc(e.date)}"` : ''}>${e.date ? esc(formatDate(e.date, 'short')) : 'Tarih yok'}</time>
+        <span class="ep-actions">${external}${action}</span>
+      </li>`;
+    }).join('');
+    return `<section class="episodes" aria-labelledby="episodesTitle">
+      <h3 id="episodesTitle">Bölümler <b>${g.episodes.length}</b></h3>
+      <ol class="ep-list">${rows}</ol>
+    </section>`;
+  }
+
   function openDetail(id) {
     const g = findGame(id);
     if (!g) return;
     detailId = id;
-    const vid = youtubeId(g.video);
-    const link = safeLink(g.video);
-
-    let media;
-    if (vid && canEmbed) {
-      media = `<button type="button" class="cover" data-detail="play" aria-label="Videoyu oynat">${coverHTML(g)}<span class="play-big">${icon('play')}</span></button>`;
-    } else if (vid && link) {
-      media = `<a class="cover" href="${esc(link)}" target="_blank" rel="noopener" aria-label="Videoyu YouTube'da aç">${coverHTML(g)}<span class="play-big">${icon('play')}</span></a>`;
-    } else if (safeImage(g.cover)) {
-      media = `<div class="cover">${coverHTML(g)}</div>`;
-    } else {
-      media = `<div class="cover cover-banner">${coverHTML(g)}</div>`;
-    }
+    const state = gameState(g);
+    const status = {
+      played: `<span class="done">Oynandı${g.playedAt ? ` · ${esc(formatDate(g.playedAt))}` : ''}</span>`,
+      ongoing: '<span class="ongoing">Devam ediyor</span>',
+      todo: 'Sırada'
+    }[state];
 
     const facts = [
       ['Kategori', esc(g.category)],
       ['Platform', esc(g.platform || '—')],
       ['Puanım', g.rating ? starsHTML(g.rating) : 'Puan yok'],
-      ['Durum', g.played ? `<span class="done">Oynandı${g.playedAt ? ` · ${esc(formatDate(g.playedAt))}` : ''}</span>` : 'Sırada'],
+      ['Durum', status],
       ['Listeye eklendi', esc(formatDate(g.addedAt) || '—')]
     ];
 
     const actions = [];
-    if (link) actions.push(`<a class="btn btn-yt" href="${esc(link)}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a>`);
+    const ep = firstVideo(g.episodes);
+    if (ep && !prefs.editing) {
+      actions.push(`<a class="btn btn-yt" href="${esc(safeLink(ep.url))}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a>`);
+    }
     if (prefs.editing) {
       actions.push(`<button type="button" class="tick" data-detail="toggle" aria-pressed="${g.played}"><span class="tick-box">${icon('check')}</span>Oynadım</button>`);
+      actions.push(`<button type="button" class="btn btn-ghost" data-detail="add-episode">${icon('plus')}<span>Bölüm ekle</span></button>`);
       actions.push(`<button type="button" class="btn btn-ghost" data-detail="edit">${icon('edit')}<span>Düzenle</span></button>`);
     }
 
     el.detailContent.innerHTML = `
       <div class="detail-media">
-        ${media}
+        <div id="detailPlayer">${mediaHTML(g)}</div>
         <button type="button" class="icon-btn detail-close" data-close aria-label="Kapat">${icon('x')}</button>
       </div>
       <div class="detail-body">
-        <h2 id="detailTitle">${esc(g.title)}</h2>
+        <div class="detail-title">
+          ${g.example ? '<span class="example-chip">Örnek</span>' : ''}
+          <h2 id="detailTitle">${esc(g.title)}</h2>
+        </div>
         <dl class="detail-facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+        ${seriesHTML(g)}
         <p class="detail-desc${g.description ? '' : ' is-empty'}">${g.description ? esc(g.description) : 'Bu oyun için henüz açıklama yazılmadı.'}</p>
+        ${episodesHTML(g)}
         ${actions.length ? `<div class="detail-actions">${actions.join('')}</div>` : ''}
       </div>`;
     openDialog(el.detailDialog);
+  }
+
+  function playEpisode(g, epId) {
+    const ep = g.episodes.find((e) => e.id === epId);
+    if (!ep || !youtubeId(ep.url)) return;
+    $('#detailPlayer', el.detailContent).innerHTML = playerHTML(g, ep);
+    for (const row of $$('.ep', el.detailContent)) row.classList.toggle('is-playing', row.dataset.ep === epId);
+    el.detailDialog.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   el.detailContent.addEventListener('click', (e) => {
@@ -503,14 +687,13 @@
     if (!g) return;
     const action = btn.dataset.detail;
     if (action === 'play') {
-      const vid = youtubeId(g.video);
-      btn.outerHTML = `<div class="cover"><iframe src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0" title="${esc(g.title)} videosu" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+      playEpisode(g, btn.dataset.ep);
     } else if (action === 'toggle') {
       togglePlayed(g.id);
       openDetail(g.id);
-    } else if (action === 'edit') {
+    } else if (action === 'edit' || action === 'add-episode') {
       closeDialog(el.detailDialog);
-      openForm(g.id);
+      openForm(g.id, { addEpisode: action === 'add-episode' });
     }
   });
 
@@ -541,6 +724,23 @@
     });
   }
 
+  function clearExampleGames() {
+    const previous = data.games.slice();
+    const removed = previous.filter((g) => g.example).length;
+    if (!removed) return;
+    data.games = previous.filter((g) => !g.example);
+    commit();
+    toast(`${removed} örnek oyun silindi.`, {
+      action: {
+        label: 'Geri al',
+        run: () => {
+          data.games = previous;
+          commit();
+        }
+      }
+    });
+  }
+
   function setEditing(on) {
     prefs.editing = on;
     savePrefs();
@@ -554,7 +754,9 @@
     category: $('#f-category'),
     platform: $('#f-platform'),
     desc: $('#f-desc'),
-    video: $('#f-video'),
+    episodes: $('#epEditor'),
+    episodesError: $('#f-episodes-error'),
+    addEpisode: $('#addEpisode'),
     cover: $('#f-cover'),
     coverFile: $('#f-cover-file'),
     coverPreview: $('#coverPreview'),
@@ -587,20 +789,96 @@
   }
   f.stars.addEventListener('change', updateStars);
 
+  /* bölüm satırları */
+  function readEpisodeRows() {
+    return $$('.ep-row', f.episodes).map((row) => ({
+      row,
+      id: row.dataset.id,
+      url: $('.ep-url', row).value.trim(),
+      title: $('.ep-title-input', row).value.trim(),
+      date: $('.ep-date-input', row).value
+    }));
+  }
+
+  function renumberEpisodeRows() {
+    $$('.ep-row', f.episodes).forEach((row, i) => {
+      const n = i + 1;
+      $('.ep-row-no', row).textContent = n;
+      $('.ep-url', row).setAttribute('aria-label', `${episodeName(n)} YouTube linki`);
+      $('.ep-title-input', row).setAttribute('aria-label', `${episodeName(n)} başlığı`);
+      $('.ep-title-input', row).placeholder = `Başlık (boşsa “${episodeName(n)}”)`;
+      $('.ep-date-input', row).setAttribute('aria-label', `${episodeName(n)} yayın tarihi`);
+      $('.ep-remove', row).setAttribute('aria-label', `${episodeName(n)} satırını kaldır`);
+    });
+  }
+
+  function addEpisodeRow(ep = {}) {
+    const id = ep.id || uid();
+    const li = document.createElement('li');
+    li.className = 'ep-row';
+    li.dataset.id = id;
+    li.innerHTML = `
+      <span class="ep-row-no"></span>
+      <div class="ep-row-fields">
+        <input class="ep-url" id="ep-url-${esc(id)}" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" value="${esc(ep.url || '')}">
+        <input class="ep-title-input" id="ep-title-${esc(id)}" type="text" maxlength="120" value="${esc(ep.title || '')}">
+        <input class="ep-date-input" id="ep-date-${esc(id)}" type="date" value="${esc(ep.date || '')}">
+      </div>
+      <button type="button" class="icon-btn ep-remove">${icon('x')}</button>`;
+    f.episodes.append(li);
+    renumberEpisodeRows();
+    return li;
+  }
+
+  function clearEpisodeErrors() {
+    f.episodesError.hidden = true;
+    f.episodesError.textContent = '';
+    for (const node of $$('.is-invalid', f.episodes)) node.classList.remove('is-invalid');
+  }
+
+  // YouTube'un herkese açık oEmbed adresinden video başlığını dener; olmazsa sessizce geçer.
+  async function suggestEpisodeTitle(row) {
+    const urlInput = $('.ep-url', row);
+    const titleInput = $('.ep-title-input', row);
+    const url = urlInput.value.trim();
+    if (!youtubeId(url) || titleInput.value.trim() || typeof fetch !== 'function') return;
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), 5000) : null;
+    try {
+      const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`,
+        controller ? { signal: controller.signal } : undefined);
+      if (!res.ok) return;
+      const info = await res.json();
+      // kullanıcı bu arada yazdıysa ya da link değiştiyse dokunma
+      if (info && info.title && !titleInput.value.trim() && urlInput.value.trim() === url) {
+        titleInput.value = String(info.title).slice(0, 120);
+      }
+    } catch (e) {
+      /* ağ yok ya da tarayıcı izin vermedi; başlık elle yazılabilir */
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
   function updateCoverPreview() {
-    const preview = { title: f.title.value.trim() || 'Yeni oyun', cover: formCover, video: f.video.value };
+    const episodes = readEpisodeRows();
+    const preview = { title: f.title.value.trim() || 'Yeni oyun', cover: formCover, episodes };
     f.coverPreview.innerHTML = coverHTML(preview);
     const uploaded = formCover.startsWith('data:');
     if (uploaded) f.coverHint.textContent = 'Bilgisayardan yüklenen görsel kullanılıyor.';
     else if (formCover) f.coverHint.textContent = 'Linkteki görsel kullanılıyor.';
-    else if (youtubeId(f.video.value)) f.coverHint.textContent = 'Görsel yok; videonun küçük resmi kullanılıyor.';
-    else f.coverHint.textContent = 'Boş bırakırsan otomatik bir kapak çizilir.';
+    else if (firstVideo(episodes)) f.coverHint.textContent = 'Görsel yok; ilk bölümün küçük resmi kullanılıyor.';
+    else f.coverHint.textContent = 'Boş bırakırsan ilk bölümün küçük resmi, o da yoksa otomatik bir kapak kullanılır.';
     f.coverClear.hidden = !formCover;
   }
 
+  // Bitirme tarihi boşsa son bölümün tarihi, bölüm yoksa bugün önerilir.
   function syncPlayedAt() {
     f.playedAt.disabled = !f.played.checked;
-    if (f.played.checked && !f.playedAt.value) f.playedAt.value = todayISO();
+    if (f.played.checked && !f.playedAt.value) {
+      const dates = readEpisodeRows().map((r) => r.date).filter(Boolean).sort();
+      f.playedAt.value = dates.length ? dates[dates.length - 1] : todayISO();
+    }
   }
 
   function clearErrors() {
@@ -613,10 +891,11 @@
     $(`#${errorId}`).hidden = false;
   }
 
-  function openForm(id) {
+  function openForm(id, opts = {}) {
     const g = id ? findGame(id) : null;
     formId = g ? g.id : null;
     clearErrors();
+    clearEpisodeErrors();
     fillDatalist($('#categoryList'), CATEGORY_SUGGESTIONS, data.games.map((x) => x.category));
     fillDatalist($('#platformList'), PLATFORM_SUGGESTIONS, data.games.map((x) => x.platform));
 
@@ -627,7 +906,10 @@
     f.category.value = g ? g.category : (prefs.category !== 'all' ? prefs.category : '');
     f.platform.value = g ? g.platform : '';
     f.desc.value = g ? g.description : '';
-    f.video.value = g ? g.video : '';
+    f.episodes.innerHTML = '';
+    for (const ep of g ? g.episodes : []) addEpisodeRow(ep);
+    let focusTarget = f.title;
+    if (opts.addEpisode) focusTarget = $('.ep-url', addEpisodeRow({ date: todayISO() }));
     formCover = g ? g.cover : '';
     f.cover.value = formCover.startsWith('data:') ? '' : formCover;
     f.coverFile.value = '';
@@ -637,11 +919,14 @@
     syncPlayedAt();
     updateCoverPreview();
     openDialog(el.formDialog);
-    setTimeout(() => f.title.focus(), 30);
+    setTimeout(() => {
+      focusTarget.focus();
+      if (opts.addEpisode) focusTarget.scrollIntoView({ block: 'center' });
+    }, 30);
   }
 
   // yazmaya başlayınca o alanın hata mesajı kalksın
-  for (const [input, errorId] of [[f.title, 'f-title-error'], [f.category, 'f-category-error'], [f.video, 'f-video-error']]) {
+  for (const [input, errorId] of [[f.title, 'f-title-error'], [f.category, 'f-category-error']]) {
     input.addEventListener('input', () => {
       input.classList.remove('is-invalid');
       $(`#${errorId}`).hidden = true;
@@ -649,7 +934,30 @@
   }
   f.played.addEventListener('change', syncPlayedAt);
   f.title.addEventListener('input', updateCoverPreview);
-  f.video.addEventListener('input', updateCoverPreview);
+
+  f.addEpisode.addEventListener('click', () => {
+    const row = addEpisodeRow({ date: todayISO() });
+    $('.ep-url', row).focus();
+  });
+  f.episodes.addEventListener('click', (e) => {
+    const btn = e.target.closest('.ep-remove');
+    if (!btn) return;
+    const row = btn.closest('.ep-row');
+    const next = row.nextElementSibling || row.previousElementSibling;
+    row.remove();
+    renumberEpisodeRows();
+    clearEpisodeErrors();
+    updateCoverPreview();
+    (next ? $('.ep-url', next) : f.addEpisode).focus();
+  });
+  f.episodes.addEventListener('input', (e) => {
+    e.target.classList.remove('is-invalid');
+    if (!$('.is-invalid', f.episodes)) f.episodesError.hidden = true;
+    if (e.target.classList.contains('ep-url')) updateCoverPreview();
+  });
+  f.episodes.addEventListener('change', (e) => {
+    if (e.target.classList.contains('ep-url')) suggestEpisodeTitle(e.target.closest('.ep-row'));
+  });
   f.cover.addEventListener('input', () => {
     formCover = f.cover.value.trim();
     updateCoverPreview();
@@ -709,7 +1017,7 @@
     clearErrors();
     const title = f.title.value.trim();
     const category = f.category.value.trim();
-    const video = f.video.value.trim();
+    clearEpisodeErrors();
     let firstInvalid = null;
     if (!title) {
       showError(f.title, 'f-title-error');
@@ -719,9 +1027,27 @@
       showError(f.category, 'f-category-error');
       firstInvalid = firstInvalid || f.category;
     }
-    if (video && !safeLink(video)) {
-      showError(f.video, 'f-video-error');
-      firstInvalid = firstInvalid || f.video;
+    // tamamen boş bırakılan bölüm satırları yok sayılır
+    const rows = readEpisodeRows().filter((r) => r.url || r.title);
+    const problems = [];
+    for (const r of rows) {
+      const n = $$('.ep-row', f.episodes).indexOf(r.row) + 1;
+      const urlInput = $('.ep-url', r.row);
+      const dateInput = $('.ep-date-input', r.row);
+      if (r.url && !safeLink(r.url)) {
+        urlInput.classList.add('is-invalid');
+        problems.push(`${episodeName(n)}: link https:// ile başlamalı.`);
+        firstInvalid = firstInvalid || urlInput;
+      }
+      if (!r.date) {
+        dateInput.classList.add('is-invalid');
+        problems.push(`${episodeName(n)}: yayın tarihini seç.`);
+        firstInvalid = firstInvalid || dateInput;
+      }
+    }
+    if (problems.length) {
+      f.episodesError.textContent = problems.join(' ');
+      f.episodesError.hidden = false;
     }
     if (firstInvalid) {
       firstInvalid.focus();
@@ -735,7 +1061,7 @@
       category,
       platform: f.platform.value.trim(),
       description: f.desc.value.trim(),
-      video,
+      episodes: sortEpisodes(rows.map((r) => normalizeEpisode(r))),
       cover: formCover,
       rating: checked ? Number(checked.value) : 0,
       played,
@@ -746,13 +1072,14 @@
     if (existing) {
       if (values.played && !existing.played) justToggled = existing.id;
       Object.assign(existing, values);
+      delete existing.example; // elle düzenlenen oyun artık örnek sayılmaz
       toast(`“${title}” güncellendi.`);
     } else {
       const game = normalizeGame({ ...values, id: uid(), addedAt: new Date().toISOString() });
       data.games.push(game);
       if (game.played) justToggled = game.id;
       // yeni oyun filtrelerde gizli kalmasın
-      const hidden = (prefs.status === 'played' && !game.played) || (prefs.status === 'todo' && game.played) ||
+      const hidden = (prefs.status !== 'all' && prefs.status !== gameState(game)) ||
         (prefs.category !== 'all' && prefs.category !== game.category);
       if (hidden) {
         prefs.status = 'all';
@@ -1003,6 +1330,7 @@
   $('#addBtn').addEventListener('click', () => openForm(null));
   $('#settingsBtn').addEventListener('click', openSettings);
   $('#publishBtn').addEventListener('click', openDataDialog);
+  el.clearExamples.addEventListener('click', clearExampleGames);
 
   // Adres #duzenle ile açılırsa düzenleme modu açılır (ör. siteadresi/#duzenle)
   if (location.hash === '#duzenle') prefs.editing = true;
