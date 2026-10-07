@@ -1,0 +1,74 @@
+rules_version = '2';
+
+// Oyun Arşivi — Firestore güvenlik kuralları.
+// Herkes okuyabilir, yalnızca site sahibi yazabilir. Ziyaretçiler yalnızca oyun önerisi
+// ekleyebilir ve önerilere birer oy verebilir.
+// isOwner() içindeki e-posta, sahibin giriş e-postasıdır (küçük harfle). Sitenin kurulum
+// sayfası bu dosyayı e-posta yazılmış olarak hazır verir.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Giriş yapan kişi site sahibi mi (büyük/küçük harf fark etmez)
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email.lower() == 'SAHIBIN_EPOSTASI@ornek.com';
+    }
+
+    // Kapak görseli metin olarak saklanır; belge sınırını aşmasın
+    function coverOk(d) {
+      return !('cover' in d) || d.cover == null
+        || (d.cover is string && d.cover.size() < 400000);
+    }
+
+    // Ziyaretçinin gönderdiği yeni öneri: yalnızca bu alanlar, 0 oy, "new" durumu, sunucu saati
+    function newSuggestionOk(d) {
+      return d.keys().hasAll(['title', 'votes', 'status', 'createdAt'])
+        && d.keys().hasOnly(['title', 'note', 'name', 'category', 'votes', 'status', 'createdAt'])
+        && d.title is string && d.title.size() >= 1 && d.title.size() <= 80
+        && d.get('note', '') is string && d.get('note', '').size() <= 400
+        && d.get('name', '') is string && d.get('name', '').size() <= 40
+        && d.get('category', '') is string && d.get('category', '').size() <= 40
+        && d.votes is int && d.votes == 0
+        && d.status == 'new'
+        && d.createdAt == request.time;
+    }
+
+    // Oy: yalnızca "votes" değişir ve tam 1 artar
+    function isVote() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
+        && request.resource.data.votes is int
+        && request.resource.data.votes == resource.data.get('votes', 0) + 1;
+    }
+
+    // Site ayarları (başlık, kanal adı, YouTube linki…)
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // Oyunlar ve her oyunun görsel galerisi
+    match /games/{gameId} {
+      allow read: if true;
+      allow create, update: if isOwner() && coverOk(request.resource.data);
+      allow delete: if isOwner();
+
+      match /images/{imageId} {
+        allow read: if true;
+        allow create, update: if isOwner()
+          && request.resource.data.data is string
+          && request.resource.data.data.size() < 950000;
+        allow delete: if isOwner();
+      }
+    }
+
+    // Ziyaretçilerin oyun önerileri
+    match /suggestions/{suggestionId} {
+      allow read: if true;
+      allow create: if newSuggestionOk(request.resource.data);
+      allow update: if isOwner() || isVote();
+      allow delete: if isOwner();
+    }
+
+    // Burada adı geçmeyen her şey kapalıdır.
+  }
+}
