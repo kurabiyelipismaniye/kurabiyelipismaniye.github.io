@@ -217,6 +217,19 @@ function firestore(fb) {
   };
 }
 
+// Galeri görselleri büyük olduğu için her saat değil, günde bir kez (UTC 03:00 çalışmasında) ya da
+// elle çalıştırınca (FULL_BACKUP=1) indirilir; diğer saatlerde önceki yedekteki görseller korunur.
+const FULL_BACKUP = process.env.FULL_BACKUP === '1' || new Date().getUTCHours() === 3;
+
+function previousImages() {
+  const prev = readJson(FILES.backup);
+  const map = new Map();
+  if (prev && Array.isArray(prev.games)) {
+    for (const g of prev.games) if (isObj(g) && Array.isArray(g.images)) map.set(String(g.id), g.images);
+  }
+  return map;
+}
+
 async function readFirestore(fb) {
   const db = firestore(fb);
   // önce oyunlar: veritabanı hiç oluşturulmadıysa ya da kurallar okumayı engelliyorsa burada hata verir.
@@ -226,9 +239,14 @@ async function readFirestore(fb) {
   const site = siteDoc ? ordered(fromFields(siteDoc.fields), SITE_KEYS) : null;
 
   const games = [];
+  const prevImages = FULL_BACKUP ? null : previousImages();
   for (const doc of gameDocs) {
     const id = docId(doc);
     const game = gameShape({ ...fromFields(doc.fields), id });
+    if (prevImages) {
+      games.push({ ...game, images: prevImages.get(id) || [] });
+      continue;
+    }
     const images = (await db.list(['games', id, 'images'], 20))
       .map((d) => ordered({ createdAt: null, ...fromFields(d.fields), id: docId(d) }, IMAGE_KEYS))
       .sort((a, b) => {
@@ -259,6 +277,11 @@ function gameShape(g) {
 }
 
 function writeBackup({ site, games, suggestions }) {
+  // liste henüz buluta aktarılmadıysa boş bir yedek yazmanın anlamı yok
+  if (!site && !games.length && !suggestions.length) {
+    log(`Firestore henüz boş; ${FILES.backup} yazılmadı.`);
+    return;
+  }
   const content = { site, games, suggestions };
   const prev = readJson(FILES.backup);
   if (prev && stable({ site: prev.site, games: prev.games, suggestions: prev.suggestions }) === stable(content)) {

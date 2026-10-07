@@ -86,7 +86,7 @@ Claude `js/config.js` dosyasına ekleyip yayınlar.
    `const firebaseConfig =` kısmını ve sondaki `;` işaretini yapıştırma. `measurementId` satırı da varsa sorun değil.
 4. Sağ üstte **“Commit changes…”** → açılan pencerede **“Commit directly to the main branch”** seçili kalsın → yeşil **“Commit changes”**.
 
-1–2 dakika sonra siteyi yenile. Sağ üstteki düğme **Düzenle** yerine **Giriş** olduysa bağlantı tamam.
+Birkaç dakika (en fazla ~10) sonra siteyi yenile. Sağ üstteki düğme **Düzenle** yerine **Giriş** olduysa bağlantı tamam.
 
 ## 3. E-posta/şifre ile girişi aç
 
@@ -103,6 +103,11 @@ Claude `js/config.js` dosyasına ekleyip yayınlar.
 
 Bu e-posta sitenin sahibi olarak kurallara yazılacak. Gerçekten kullandığın bir adres olsun; şifre sıfırlama e-postası oraya gelir.
 Sitede “kayıt ol” yok; ziyaretçiler hesap açmaz.
+
+**Güvenlik için bir ayar daha:** Authentication → **“Settings”** sekmesi → **“User actions”** bölümünde
+**“Enable create (sign-up)”** kutusunun işaretini kaldır → **Save**. Böylece Firebase'in kendi adresi üzerinden de
+kimse yeni hesap açamaz; yalnızca senin konsoldan eklediğin hesap kalır. (Bu bölümün adı biraz farklı görünürse
+“sign-up” ya da “create” geçen ayarı ara.)
 
 ## 5. Firestore veritabanını oluştur
 
@@ -141,9 +146,12 @@ Sitede “kayıt ol” yok; ziyaretçiler hesap açmaz.
 
 ## 8. YouTube kanal linki (son video)
 
+Kanal linkin (`https://www.youtube.com/@kurabiyelipismaniye`) siteye zaten eklendi; listeyi buluta aktarınca o da
+gider, bu adım çoğunlukla kendiliğinden tamamlanmış olur. Değiştirmek istersen:
+
 1. Düzenleme çubuğunda **Site ayarları**.
 2. **Kanal adı**: `Kurabiyeli Pişmaniye` (hazır gelir).
-3. **YouTube kanal linki**: kanalının adresi, ör. `https://www.youtube.com/@kanaladin` → **Kaydet**.
+3. **YouTube kanal linki**: kanalının adresi → **Kaydet**.
 
 “Abone ol” düğmesi hemen çıkar. Son video en geç bir saat içinde sitenin üstünde görünür. Yeni video yükleyince de en geç bir saatte güncellenir.
 
@@ -193,7 +201,7 @@ Kart girmediğin için **asla ücret çıkmaz**. Sınır dolarsa o gün o özell
 | Giriş (Authentication) | — | Tek kullanıcı sensin; sorun olmaz. Günde 150 şifre sıfırlama e-postası gönderilebilir. |
 
 - Günlük sınırlar ABD Pasifik saatiyle gece yarısı, yani **Türkiye saatiyle sabah 10–11 civarı** sıfırlanır.
-- Okuma sınırı dolarsa ziyaretçiler listenin GitHub'daki son saatlik kopyasını görür; o gün öneri gönderilemez, sen de kaydedemezsin.
+- Okuma sınırı dolarsa ziyaretçiler listenin GitHub'daki son saatlik kopyasını görür. Okuma ve yazma ayrı sayıldığı için kaydetmek ve öneri göndermek çoğunlukla çalışmaya devam eder, ama değişiklikler o gün sitede görünmeyebilir.
 - Kullanımı görmek için: Firebase'de Firestore sayfasındaki **“Usage”** (kullanım) sekmesi.
 
 ## Yedekler
@@ -216,7 +224,7 @@ Başka yol: Firebase → Authentication → **“Users”** → kendi satırınd
 
 | Ne görüyorsun | Ne yapmalı |
 | --- | --- |
-| Sağ üstte hâlâ **Düzenle** yazıyor, **Giriş** yok | `js/config.js` ayarı yayınlanmamış ya da hatalı. 1–2 dakika bekle, sayfayı yenile. Düzelmezse ayarları Claude'a gönder. |
+| Sağ üstte hâlâ **Düzenle** yazıyor, **Giriş** yok | `js/config.js` ayarı yayınlanmamış ya da hatalı. GitHub Pages'in güncellemesi ve tarayıcı önbelleği yüzünden 10 dakikaya kadar sürebilir; bekleyip sayfayı yenile. Düzelmezse ayarları Claude'a gönder. |
 | “E-posta ya da şifre yanlış.” | Yazımı kontrol et. Firebase → Authentication → “Users” listesinde adresin var mı bak. Gerekirse **Şifremi unuttum**. |
 | “Giriş yapılamadı (auth/operation-not-allowed)” | 3. adım eksik: “Email/Password” açılmamış. |
 | “Çok fazla deneme yapıldı.” | Birkaç dakika bekle. |
@@ -234,5 +242,5 @@ Başka yol: Firebase → Authentication → **“Users”** → kendi satırınd
 
 - **Düzenlemek:** **Giriş** yap; düzenleme modu açılır. Her değişiklik kendiliğinden kaydedilir. Telefonda bir kez giriş yapınca açık kalır; çıkmak için **Çıkış**.
 - **Görsel eklemek:** oyunun kartına dokun → **Görsel ekle** → galeriden fotoğraf seç. Görsel küçültülüp kaydedilir.
-- **Öneriler:** **Öneriler** sekmesinde her önerinin altında **Listeme ekle** düğmesi var.
+- **Öneriler:** **Öneriler** sekmesinde, listende olmayan önerilerin altında **Listeme ekle** düğmesi var (oyun zaten listedeyse **Listede var, işaretle** çıkar).
 - Ayrıntılar için [KULLANIM.md](KULLANIM.md).
