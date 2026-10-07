@@ -1,0 +1,61 @@
+# Saatte bir YouTube kanalının son videolarını data/latest.json dosyasına yazar. Firebase kuruluysa
+# Firestore'daki listeyi backup/firestore-backup.json olarak yedekler ve data/games.js dosyasını günceller.
+# Ayrıntılar scripts/sync.mjs içinde. Hemen çalıştırmak için: Actions → "Son videolar ve yedek" → Run workflow.
+name: Son videolar ve yedek
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - js/config.js
+      - scripts/sync.mjs
+      - .github/workflows/sync.yml
+
+permissions:
+  contents: write
+
+# iki çalışma üst üste binmesin; yenisi eskisinin bitmesini bekler
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BRANCH: main
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.BRANCH }}
+
+      - name: Node.js kur
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Son videoları ve yedeği al
+        run: node scripts/sync.mjs
+
+      - name: Değişenleri kaydet
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for f in data/latest.json data/games.js backup; do
+            if [ -e "$f" ]; then git add -A -- "$f"; fi
+          done
+          if git diff --cached --quiet; then
+            echo 'Değişiklik yok, commit atılmadı.'
+            exit 0
+          fi
+          git commit -m 'Otomatik: son videolar ve yedek'
+          if ! git push origin "HEAD:$BRANCH"; then
+            echo 'Push reddedildi (dal bu arada değişmiş); güncel hali çekilip bir kez daha deneniyor.'
+            git pull --rebase origin "$BRANCH"
+            git push origin "HEAD:$BRANCH"
+          fi

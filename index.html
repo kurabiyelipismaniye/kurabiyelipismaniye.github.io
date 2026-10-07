@@ -30,6 +30,13 @@
   <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
   <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 9.1 4.5 4.5 0 0 0 7 18z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
   <symbol id="i-pad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10a5 5 0 0 1 4.8 6.3l-1 3.6a2.6 2.6 0 0 1-4.4 1.1L14 15.5h-4L7.6 18a2.6 2.6 0 0 1-4.4-1.1l-1-3.6A5 5 0 0 1 7 7z"/><path d="M7.5 10v3M6 11.5h3"/><circle cx="16" cy="10.5" r=".6" fill="currentColor"/><circle cx="17.6" cy="12.6" r=".6" fill="currentColor"/></symbol>
 </svg>
 
@@ -38,7 +45,7 @@
     <div class="banner-top">
       <div class="brand">
         <span class="brand-mark"><svg class="icon"><use href="#i-pad"/></svg></span>
-        <span class="brand-name" id="channelName">ibrahimeserocak</span>
+        <span class="brand-name" id="channelName">Kurabiyeli Pişmaniye</span>
       </div>
       <div class="banner-actions">
         <button type="button" class="icon-btn" id="themeBtn" aria-label="Temayı değiştir"><svg class="icon"><use href="#i-moon"/></svg></button>
@@ -73,6 +80,19 @@
     </div>
   </header>
 
+  <section class="latest" id="latestSection" aria-labelledby="latestTitle" hidden>
+    <div class="latest-head">
+      <h2 class="eyebrow" id="latestTitle">Kanaldaki son video</h2>
+      <a class="latest-channel" id="latestChannel" href="#" target="_blank" rel="noopener" hidden>Kanala git</a>
+    </div>
+    <div id="latestBody"></div>
+  </section>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Sayfa bölümleri" hidden>
+    <button type="button" role="tab" class="tab" id="tab-games" data-tab="games" aria-controls="gamesPanel" aria-selected="true">Oyunlar <b id="tabGamesCount"></b></button>
+    <button type="button" role="tab" class="tab" id="tab-suggestions" data-tab="suggestions" aria-controls="suggestionsPanel" aria-selected="false" tabindex="-1">Öneriler <b id="tabSugCount"></b></button>
+  </nav>
+
   <div class="edit-bar" id="editBar" hidden>
     <div class="edit-bar-info">
       <strong>Düzenleme modu</strong>
@@ -82,11 +102,14 @@
       <button type="button" class="btn btn-primary btn-sm" id="addBtn"><svg class="icon"><use href="#i-plus"/></svg><span>Oyun ekle</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn"><svg class="icon"><use href="#i-sliders"/></svg><span>Site ayarları</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="publishBtn"><svg class="icon"><use href="#i-upload"/></svg><span>Yayınla / Yedekle</span></button>
+      <button type="button" class="btn btn-ghost btn-sm" id="setupBtn" hidden><svg class="icon"><use href="#i-cloud"/></svg><span>Kurulum</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="clearExamples" hidden><svg class="icon"><use href="#i-trash"/></svg><span>Örnekleri sil</span></button>
+      <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn" hidden><svg class="icon"><use href="#i-logout"/></svg><span>Çıkış</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="editDone">Bitti</button>
     </div>
   </div>
 
+  <div class="tab-panel" id="gamesPanel" role="tabpanel" aria-labelledby="tab-games">
   <div class="toolbar" id="toolbar">
     <div class="toolbar-row">
       <label class="search">
@@ -119,6 +142,42 @@
     <div class="grid" id="grid"></div>
     <div class="empty" id="emptyState" hidden></div>
   </main>
+  </div>
+
+  <section class="tab-panel suggestions" id="suggestionsPanel" role="tabpanel" aria-labelledby="tab-suggestions" hidden>
+    <form class="sug-form" id="sugForm" novalidate>
+      <h2>Oyun öner</h2>
+      <p class="hint">Kanalda oynanmasını istediğin bir oyun mu var? Yaz; beğenilen öneriler listeye eklenir.</p>
+      <div class="field">
+        <label for="sg-title">Oyunun adı <em>*</em></label>
+        <input id="sg-title" type="text" maxlength="80" autocomplete="off" required placeholder="ör. Hollow Knight: Silksong">
+        <p class="hint" id="sg-dup" hidden></p>
+        <p class="field-error" id="sg-title-error" hidden>Oyunun adını yaz.</p>
+      </div>
+      <div class="field">
+        <label for="sg-category">Kategori</label>
+        <input id="sg-category" type="text" maxlength="40" list="categoryList" placeholder="ör. Korku">
+      </div>
+      <div class="field">
+        <label for="sg-note">Neden önerirsin?</label>
+        <textarea id="sg-note" rows="3" maxlength="400" placeholder="Kısaca anlat (isteğe bağlı)"></textarea>
+      </div>
+      <div class="field">
+        <label for="sg-name">Adın</label>
+        <input id="sg-name" type="text" maxlength="40" autocomplete="nickname" placeholder="İsteğe bağlı">
+      </div>
+      <p class="field-error" id="sg-error" hidden></p>
+      <div><button type="submit" class="btn btn-primary" id="sg-submit">Öneriyi gönder</button></div>
+    </form>
+    <div class="sug-list-wrap">
+      <div class="sug-list-head">
+        <h2>Gelen öneriler</h2>
+        <span class="result-line" id="sugCountLine"></span>
+      </div>
+      <ol class="sug-list" id="sugList"></ol>
+      <p class="sug-empty" id="sugEmpty" hidden></p>
+    </div>
+  </section>
 
   <footer class="footer">
     <span id="footerText"></span>
@@ -167,7 +226,9 @@
         <ol class="ep-editor" id="epEditor"></ol>
         <div>
           <button type="button" class="btn btn-ghost btn-sm" id="addEpisode"><svg class="icon"><use href="#i-plus"/></svg><span>Bölüm ekle</span></button>
+          <button type="button" class="btn btn-ghost btn-sm" id="pickFromChannel" aria-expanded="false" aria-controls="channelPicker" hidden><svg class="icon"><use href="#i-youtube"/></svg><span>Kanaldaki videolardan seç</span></button>
         </div>
+        <div class="channel-picker" id="channelPicker" hidden></div>
       </fieldset>
       <div class="field">
         <span class="label" id="coverLabel">Kapak görseli</span>
@@ -268,7 +329,7 @@
   </div>
   <div class="dialog-body">
     <p class="data-status" id="dataStatus"></p>
-    <section class="data-block">
+    <section class="data-block" id="publishBlock">
       <h3>Ziyaretçilere göster</h3>
       <p>Düzenlemelerin şimdilik yalnızca bu tarayıcıda. Herkesin görmesi için listeyi GitHub’daki <code>data/games.js</code> dosyasına koyman gerekiyor:</p>
       <ol class="steps">
@@ -283,23 +344,81 @@
       <textarea id="exportText" class="export-text" rows="6" readonly hidden aria-label="Dışa aktarılan liste"></textarea>
     </section>
     <section class="data-block">
-      <h3>Yedekten geri yükle</h3>
+      <h3 id="restoreTitle">Yedekten geri yükle</h3>
       <p>Daha önce indirdiğin <code>games.js</code> ya da <code>.json</code> dosyasını seç. Mevcut liste onunla değişir; yanlışlıkla yaparsan “Geri al” ile dönebilirsin.</p>
       <div class="data-actions">
         <label class="btn btn-ghost file-btn">
           <input type="file" id="importFile" accept=".js,.json,application/json,text/javascript" class="visually-hidden">
           <svg class="icon"><use href="#i-upload"/></svg><span>Dosya seç</span>
         </label>
+        <button type="button" class="btn btn-ghost" id="downloadBackup" hidden><svg class="icon"><use href="#i-download"/></svg><span>Yedeği indir</span></button>
         <button type="button" class="btn btn-ghost" id="resetLocal">Yayındaki listeye dön</button>
       </div>
     </section>
   </div>
 </dialog>
 
+<!-- Yönetici girişi -->
+<dialog id="loginDialog" class="dialog dialog-sm" aria-labelledby="loginTitle">
+  <form id="loginForm" novalidate>
+    <div class="dialog-head">
+      <h2 id="loginTitle">Yönetici girişi</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Kapat"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <p class="hint">Bu giriş yalnızca site sahibi içindir. Ziyaretçilerin hesap açmasına gerek yok; oyunları görmek ve öneri göndermek için giriş gerekmez.</p>
+      <div class="field">
+        <label for="l-email">E-posta</label>
+        <input id="l-email" type="email" autocomplete="username" inputmode="email" required>
+      </div>
+      <div class="field">
+        <label for="l-pass">Şifre</label>
+        <input id="l-pass" type="password" autocomplete="current-password" required>
+      </div>
+      <p class="field-error" id="l-error" role="alert" hidden></p>
+    </div>
+    <div class="dialog-foot">
+      <button type="button" class="btn btn-ghost btn-sm" id="l-forgot">Şifremi unuttum</button>
+      <span class="spacer"></span>
+      <button type="submit" class="btn btn-primary" id="l-submit">Giriş yap</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Kurulum -->
+<dialog id="setupDialog" class="dialog" aria-labelledby="setupTitle">
+  <div class="dialog-head">
+    <h2 id="setupTitle">Kurulum</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Kapat"><svg class="icon"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="dialog-body" id="setupBody"></div>
+</dialog>
+
+<!-- Görsel görüntüleyici -->
+<dialog id="lightbox" class="dialog lightbox" aria-label="Görsel">
+  <div class="lightbox-stage">
+    <img id="lightboxImg" alt="">
+    <button type="button" class="icon-btn lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Önceki görsel"><svg class="icon"><use href="#i-left"/></svg></button>
+    <button type="button" class="icon-btn lightbox-nav lightbox-next" id="lightboxNext" aria-label="Sonraki görsel"><svg class="icon"><use href="#i-right"/></svg></button>
+    <button type="button" class="icon-btn detail-close" data-close aria-label="Kapat"><svg class="icon"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="lightbox-bar">
+    <span class="lightbox-count" id="lightboxCount"></span>
+    <span class="spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm" id="lightboxCover" hidden><svg class="icon"><use href="#i-image"/></svg><span>Kapak yap</span></button>
+    <button type="button" class="btn btn-danger btn-sm" id="lightboxDelete" hidden><svg class="icon"><use href="#i-trash"/></svg><span>Sil</span></button>
+  </div>
+</dialog>
+
+<input type="file" id="quickCoverInput" accept="image/*" class="visually-hidden" tabindex="-1" aria-hidden="true">
+<input type="file" id="galleryInput" accept="image/*" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
+
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<script src="js/config.js"></script>
 <script src="data/games.js"></script>
 <script src="js/app.js"></script>
+<script type="module" src="js/cloud.js"></script>
 <!-- SITE-END -->
 </body>
 </html>

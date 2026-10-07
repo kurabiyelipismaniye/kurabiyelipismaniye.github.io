@@ -5,7 +5,7 @@
 window.SITE_DATA = {
   "version": 1,
   "site": {
-    "channelName": "ibrahimeserocak",
+    "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
     "tagline": "Kanalda oynadığım ve sırada bekleyen oyunlar. Tikli olanları bitirdim, gerisi sıradaki videolarda.",
     "youtubeUrl": "",

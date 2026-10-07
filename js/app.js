@@ -16,12 +16,18 @@
     'PC', 'PlayStation 5', 'PlayStation 4', 'Xbox Series X|S', 'Xbox One', 'Nintendo Switch', 'Mobil', 'VR'
   ];
   const SITE_DEFAULTS = {
-    channelName: 'Kanalım',
+    channelName: 'Kurabiyeli Pişmaniye',
     title: 'Oyun Arşivi',
     tagline: '',
     youtubeUrl: '',
     githubEditUrl: ''
   };
+
+  // Firebase ayarı varsa site "bulut" modunda çalışır: liste Firestore'dan okunur, sahibi giriş yapınca
+  // her değişiklik anında kaydedilir. Ayar yoksa "yerel" mod: liste data/games.js'ten okunur.
+  const CONFIG = window.SITE_CONFIG || {};
+  const CLOUD_CONFIGURED = Boolean(CONFIG.firebase && CONFIG.firebase.apiKey);
+  const mode = CLOUD_CONFIGURED ? 'cloud' : 'local';
 
   /* ---------- yardımcılar ---------- */
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -29,14 +35,20 @@
   const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ESC_MAP[c]);
   const lower = (s) => String(s || '').toLocaleLowerCase('tr');
+  // Karşılaştırma ve arama için sadeleştirme: büyük/küçük harf, Türkçe I/ı ve aksanlar fark etmez
+  // ("HADES II" = "hades ii", "sehir" = "Şehir").
+  const fold = (s) => lower(s).replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const icon = (name, cls = 'icon') => `<svg class="${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 
-  function todayISO() {
-    const d = new Date();
+  // Bir tarihin (Date, zaman damgası ya da ISO metni) yerel gün karşılığı: YYYY-AA-GG
+  function localDay(value) {
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
+  const todayISO = () => localDay(new Date());
 
   const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
   const DAY_MS = 86400000;
@@ -323,10 +335,96 @@
   const isDirty = () => snapshot(data) !== snapshot(published);
   const findGame = (id) => data.games.find((g) => g.id === id);
 
-  function commit() {
-    persist();
+  /* ---------- kaydetme ---------- */
+  // change: { games: [kimlik…], deleted: [kimlik…], site: true } ya da { all: true }
+  let cloudApi = null;          // window.cloud (bulut modunda, bağlantı kurulunca)
+  let owner = null;             // giriş yapan sahibi { uid, email }
+  let cloudGames = null;        // Firestore'daki son oyun listesi (null: henüz gelmedi)
+  let cloudSite;                // Firestore'daki site ayarları (undefined: gelmedi, null: yok)
+  let cloudError = null;        // { code, message } okuma hatası (ör. kurallar yayınlanmamış)
+  let pendingSaves = 0;
+  let saveFailed = false;
+  const pendingDeletes = new Map(); // geri alınabilsin diye birkaç saniye bekletilen silmeler
+
+  // Bulutta henüz hiç veri yoksa (site ayarı ve oyun yok) kurulum tamamlanmamış sayılır.
+  const cloudInitialized = () => Boolean(cloudSite) || Boolean(cloudGames && cloudGames.length);
+  const cloudLive = () => mode === 'cloud' && Boolean(cloudApi) && cloudGames !== null && !cloudError;
+
+  function cloudErrorText(err) {
+    const code = (err && err.code) || '';
+    if (code === 'permission-denied') return 'Kaydedilemedi: yetki yok. Giriş yaptığından ve güvenlik kurallarının yayınlandığından emin ol (Kurulum).';
+    if (code === 'unavailable') return 'Kaydedilemedi: internet bağlantısı yok. Bağlantı gelince otomatik denenir.';
+    if (code === 'resource-exhausted') return 'Kaydedilemedi: günlük ücretsiz kullanım sınırı dolmuş olabilir. Yarın tekrar dene.';
+    if (code === 'invalid-argument') return 'Kaydedilemedi: veri çok büyük. Daha küçük bir görsel dene.';
+    return `Kaydedilemedi (${code || 'bilinmeyen hata'}). Biraz sonra tekrar dene.`;
+  }
+
+  function track(promise) {
+    pendingSaves += 1;
+    saveFailed = false;
+    renderSaveState();
+    return Promise.resolve(promise)
+      .catch((err) => {
+        saveFailed = true;
+        toast(cloudErrorText(err), { error: true });
+        throw err;
+      })
+      .finally(() => {
+        pendingSaves -= 1;
+        renderSaveState();
+      });
+  }
+  const quiet = (p) => p.catch(() => {});
+
+  function saveToCloud(change) {
+    if (!cloudApi) {
+      toast('Buluta bağlanılamadı; değişiklik kaydedilmedi. Sayfayı yenileyip tekrar dene.', { error: true });
+      return;
+    }
+    // bulut boşken tek bir oyunu kaydetmek, listenin geri kalanını kaybettirirdi: önce hepsini aktar
+    if (change.all || !cloudInitialized()) {
+      quiet(track(cloudApi.replaceGames(data.games)));
+      quiet(track(cloudApi.saveSite(data.site)));
+      return;
+    }
+    for (const id of change.games || []) {
+      const g = findGame(id);
+      if (g) quiet(track(cloudApi.saveGame(g)));
+    }
+    for (const id of change.deleted || []) quiet(track(cloudApi.deleteGame(id)));
+    if (change.site) quiet(track(cloudApi.saveSite(data.site)));
+  }
+
+  function commit(change = { all: true }) {
+    if (mode === 'cloud') saveToCloud(change);
+    else persist();
     render();
   }
+
+  // Bulutta silme, "Geri al" süresi bitince yapılır; bu sürede oyun listede gizlenir.
+  function scheduleCloudDelete(ids, delay = 7500) {
+    for (const id of ids) {
+      clearTimeout(pendingDeletes.get(id));
+      pendingDeletes.set(id, setTimeout(() => {
+        pendingDeletes.delete(id);
+        if (cloudApi) quiet(track(cloudApi.deleteGame(id)));
+      }, delay));
+    }
+  }
+  function cancelCloudDelete(ids) {
+    for (const id of ids) {
+      clearTimeout(pendingDeletes.get(id));
+      pendingDeletes.delete(id);
+    }
+  }
+  // sayfa kapanırken bekleyen silmeleri hemen gönder
+  window.addEventListener('pagehide', () => {
+    for (const [id, timer] of pendingDeletes) {
+      clearTimeout(timer);
+      if (cloudApi) quiet(cloudApi.deleteGame(id));
+    }
+    pendingDeletes.clear();
+  });
 
   /* ---------- tercihler ---------- */
   const prefs = Object.assign(
@@ -335,6 +433,9 @@
   );
   if (!['all', 'played', 'ongoing', 'todo'].includes(prefs.status)) prefs.status = 'all';
   const savePrefs = () => storageSet(PREFS_KEY, prefs);
+  // Yerel modda herkes kendi tarayıcısında düzenleyebilir; bulut modunda yalnızca giriş yapan sahibi.
+  const canEdit = () => mode === 'local' || Boolean(owner && cloudApi);
+  const isEditing = () => prefs.editing && canEdit();
   let searchText = '';
   let justToggled = null;
 
@@ -358,6 +459,19 @@
     statTodo: $('#statTodo'),
     statEpisodes: $('#statEpisodes'),
     clearExamples: $('#clearExamples'),
+    setupBtn: $('#setupBtn'),
+    logoutBtn: $('#logoutBtn'),
+    publishBtn: $('#publishBtn'),
+    loginDialog: $('#loginDialog'),
+    setupDialog: $('#setupDialog'),
+    setupBody: $('#setupBody'),
+    lightbox: $('#lightbox'),
+    latestSection: $('#latestSection'),
+    latestBody: $('#latestBody'),
+    latestChannel: $('#latestChannel'),
+    tabs: $('#tabs'),
+    gamesPanel: $('#gamesPanel'),
+    sugPanel: $('#suggestionsPanel'),
     search: $('#searchInput'),
     sort: $('#sortSelect'),
     chips: $('#categoryChips'),
@@ -408,7 +522,7 @@
   }
 
   function statusHTML(g) {
-    if (prefs.editing) {
+    if (isEditing()) {
       return `<div class="card-foot-right">
         <button type="button" class="icon-btn" data-action="edit" aria-label="${esc(g.title)} oyununu düzenle">${icon('edit')}</button>
         <button type="button" class="tick" data-action="toggle" aria-pressed="${g.played}">
@@ -462,13 +576,13 @@
   }
 
   function visibleGames() {
-    const q = lower(searchText.trim());
+    const q = fold(searchText);
     const list = data.games.filter((g) => {
       if (prefs.status !== 'all' && gameState(g) !== prefs.status) return false;
       if (prefs.category !== 'all' && g.category !== prefs.category) return false;
       if (q) {
         const episodeText = g.episodes.map((e) => e.title).join(' ');
-        if (!lower(`${g.title} ${g.category} ${g.platform} ${g.description} ${episodeText}`).includes(q)) return false;
+        if (!fold(`${g.title} ${g.category} ${g.platform} ${g.description} ${episodeText}`).includes(q)) return false;
       }
       return true;
     });
@@ -549,7 +663,7 @@
     el.resultLine.textContent = total === 0 ? '' : filtered ? `${total} oyundan ${list.length} tanesi gösteriliyor` : `${total} oyun`;
 
     if (total === 0) {
-      el.empty.innerHTML = prefs.editing
+      el.empty.innerHTML = isEditing()
         ? `<h2>Arşiv boş</h2><p>İlk oyununu ekle; adını, kategorisini ve kısa bir açıklamasını yazman yeterli.</p>
            <button type="button" class="btn btn-primary" data-empty="add">${icon('plus')}<span>Oyun ekle</span></button>`
         : '<h2>Henüz oyun yok</h2><p>Yakında burada kanalda oynanan oyunlar listelenecek.</p>';
@@ -563,13 +677,51 @@
     }
   }
 
+  // Bulut modunda üstteki çubukta kayıt durumu gösterilir.
+  function renderSaveState() {
+    if (mode !== 'cloud') return;
+    let text = 'Buluta kaydedildi';
+    let cls = '';
+    if (pendingSaves > 0) { text = 'Kaydediliyor…'; cls = 'is-dirty'; }
+    else if (saveFailed) { text = 'Son değişiklik kaydedilemedi'; cls = 'is-error'; }
+    else if (!cloudLive()) { text = 'Kurulum tamamlanmadı'; cls = 'is-dirty'; }
+    else if (!cloudInitialized()) { text = 'Liste henüz bulutta değil'; cls = 'is-dirty'; }
+    el.dirtyPill.textContent = text;
+    el.dirtyPill.className = `pill ${cls}`.trim();
+  }
+
+  // Sağ üstteki düğme: yerel modda "Düzenle"; bulut modunda sahibi giriş yapmadıysa "Giriş".
+  function renderAuthButton() {
+    const label = el.editToggle.querySelector('span');
+    const use = el.editToggle.querySelector('use');
+    if (mode === 'cloud' && !owner) {
+      label.textContent = 'Giriş';
+      use.setAttribute('href', '#i-lock');
+      el.editToggle.setAttribute('aria-label', 'Yönetici girişi');
+      el.editToggle.removeAttribute('aria-pressed');
+    } else {
+      label.textContent = 'Düzenle';
+      use.setAttribute('href', '#i-edit');
+      el.editToggle.setAttribute('aria-label', 'Düzenle');
+      el.editToggle.setAttribute('aria-pressed', String(isEditing()));
+    }
+  }
+
   function renderEditing() {
-    document.body.classList.toggle('is-editing', prefs.editing);
-    el.editBar.hidden = !prefs.editing;
-    el.editToggle.setAttribute('aria-pressed', String(prefs.editing));
-    const dirty = isDirty();
-    el.dirtyPill.textContent = dirty ? 'Yayınlanmamış değişiklik var' : 'Yayındakiyle aynı';
-    el.dirtyPill.classList.toggle('is-dirty', dirty);
+    const editing = isEditing();
+    document.body.classList.toggle('is-editing', editing);
+    el.editBar.hidden = !editing;
+    renderAuthButton();
+    if (mode === 'cloud') {
+      renderSaveState();
+      el.publishBtn.querySelector('span').textContent = 'Yedekle';
+      el.setupBtn.hidden = false;
+      el.logoutBtn.hidden = false;
+    } else {
+      const dirty = isDirty();
+      el.dirtyPill.textContent = dirty ? 'Yayınlanmamış değişiklik var' : 'Yayındakiyle aynı';
+      el.dirtyPill.className = `pill${dirty ? ' is-dirty' : ''}`;
+    }
     const examples = data.games.filter((g) => g.example).length;
     el.clearExamples.hidden = !examples;
     el.clearExamples.querySelector('span').textContent = `Örnekleri sil (${examples})`;
@@ -581,6 +733,9 @@
     renderFilters();
     renderGrid();
     renderEditing();
+    renderTabs();
+    if (latest) renderLatest();
+    if (suggestions) renderSuggestions();
   }
 
   /* ---------- bildirimler ---------- */
@@ -712,7 +867,7 @@
     const undated = info.aired.length - info.dated.length;
     let note = '';
     if (undated) {
-      note = prefs.editing
+      note = isEditing()
         ? `<p class="series-note">${undated} bölümün yayın tarihi eksik. Eklemek için “Düzenle”ye bas.</p>`
         : `<p class="series-note">${undated} bölümün yayın tarihi belli değil.</p>`;
     }
@@ -748,7 +903,9 @@
       return `<li class="ep${upcoming ? ' is-upcoming' : ''}" data-ep="${esc(e.id)}">
         <span class="ep-no">${n}</span>
         <div class="ep-main">
-          <span class="ep-name">${e.title ? esc(e.title) : episodeName(n)}</span>
+          ${link
+            ? `<a class="ep-name ep-link" href="${esc(link)}" target="_blank" rel="noopener">${e.title ? esc(e.title) : episodeName(n)}</a>`
+            : `<span class="ep-name">${e.title ? esc(e.title) : episodeName(n)}</span>`}
           ${upcoming ? '<span class="ep-soon">Yayınlanacak</span>' : ''}
         </div>
         <time class="ep-date" ${e.date ? `datetime="${esc(e.date)}"` : ''}>${e.date ? esc(formatDate(e.date, 'short')) : 'Tarih yok'}</time>
@@ -777,9 +934,13 @@
     return `<a class="btn btn-yt" href="${esc(episodeLink(ep))}" target="_blank" rel="noopener">${icon('youtube')}<span>${label}</span></a>`;
   }
 
-  function openDetail(id) {
+  let playingEpId = null;
+
+  function openDetail(id, opts = {}) {
     const g = findGame(id);
     if (!g) return;
+    const keepPlayer = opts.keepPlayer && detailId === id;
+    if (!keepPlayer) playingEpId = null;
     detailId = id;
     const state = gameState(g);
     const status = {
@@ -797,13 +958,16 @@
     ];
 
     const actions = [];
-    if (!prefs.editing) actions.push(watchButtonHTML(g));
-    if (prefs.editing) {
+    if (!isEditing()) actions.push(watchButtonHTML(g));
+    if (isEditing()) {
       actions.push(`<button type="button" class="tick" data-detail="toggle" aria-pressed="${g.played}"><span class="tick-box">${icon('check')}</span>Oynadım</button>`);
       actions.push(`<button type="button" class="btn btn-ghost" data-detail="add-episode">${icon('plus')}<span>Bölüm ekle</span></button>`);
+      actions.push(`<button type="button" class="btn btn-ghost" data-detail="cover">${icon('image')}<span>Kapak görseli</span></button>`);
       actions.push(`<button type="button" class="btn btn-ghost" data-detail="edit">${icon('edit')}<span>Düzenle</span></button>`);
     }
     const actionsHTML = actions.filter(Boolean).join('');
+    const oldPlayer = keepPlayer ? $('#detailPlayer', el.detailContent) : null;
+    const scrollTop = keepPlayer ? el.detailDialog.scrollTop : 0;
 
     el.detailContent.innerHTML = `
       <div class="detail-media">
@@ -819,15 +983,28 @@
         ${seriesHTML(g)}
         <p class="detail-desc${g.description ? '' : ' is-empty'}">${g.description ? esc(g.description) : 'Bu oyun için henüz açıklama yazılmadı.'}</p>
         ${episodesHTML(g)}
+        ${galleryEnabled() ? '<section class="gallery" id="gallerySection" aria-labelledby="galleryTitle" hidden></section>' : ''}
         ${actionsHTML ? `<div class="detail-actions">${actionsHTML}</div>` : ''}
       </div>`;
+    // bulut güncellemesi gelince oynayan video kesilmesin
+    if (oldPlayer && oldPlayer.querySelector('iframe')) {
+      $('#detailPlayer', el.detailContent).replaceWith(oldPlayer);
+      for (const row of $$('.ep', el.detailContent)) row.classList.toggle('is-playing', row.dataset.ep === playingEpId);
+    }
     openDialog(el.detailDialog);
+    if (keepPlayer) el.detailDialog.scrollTop = scrollTop;
+    loadGallery(g.id, keepPlayer);
   }
+
+  const refreshDetail = () => {
+    if (detailId) openDetail(detailId, { keepPlayer: true });
+  };
 
   function playEpisode(g, epId) {
     const ep = g.episodes.find((e) => e.id === epId);
     if (!ep || !hasVideo(ep)) return;
     $('#detailPlayer', el.detailContent).innerHTML = playerHTML(g, ep);
+    playingEpId = epId;
     for (const row of $$('.ep', el.detailContent)) row.classList.toggle('is-playing', row.dataset.ep === epId);
     el.detailDialog.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -846,6 +1023,229 @@
     } else if (action === 'edit' || action === 'add-episode') {
       closeDialog(el.detailDialog);
       openForm(g.id, { addEpisode: action === 'add-episode' });
+    } else if (action === 'cover') {
+      pickFile(quickCoverInput, g.id);
+    } else if (action === 'gallery-add') {
+      pickFile(galleryInput, g.id);
+    } else if (action === 'gallery-open') {
+      openLightbox(Number(btn.dataset.index) || 0);
+    }
+  });
+
+  /* ---------- görseller ---------- */
+  const COVER_LIMITS = { maxSide: 720, maxChars: 380000 };   // kapak: oyun kaydının içinde durur
+  const GALLERY_LIMITS = { maxSide: 1600, maxChars: 900000 }; // galeri: her görsel ayrı kayıt
+  const quickCoverInput = $('#quickCoverInput');
+  const galleryInput = $('#galleryInput');
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Görsel okunamadı'));
+      img.src = src;
+    });
+  }
+
+  function drawJpeg(img, maxSide, quality) {
+    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  // Görseli küçültüp JPEG'e çevirir; sınırı aşarsa önce kaliteyi, sonra boyutu düşürür.
+  // source: dosya (telefon galerisinden) ya da data:/blob: adresi
+  async function imageToDataUrl(source, { maxSide, maxChars }) {
+    let url = source;
+    let revoke = false;
+    if (typeof source !== 'string') {
+      if (!source || !/^image\//.test(source.type)) throw new Error('Görsel dosyası değil');
+      url = URL.createObjectURL(source);
+      revoke = true;
+    }
+    try {
+      const img = await loadImage(url);
+      const tries = [[maxSide, 0.82], [maxSide, 0.7], [Math.round(maxSide * 0.75), 0.68], [Math.round(maxSide * 0.55), 0.62]];
+      for (const [side, q] of tries) {
+        const out = drawJpeg(img, side, q);
+        if (out.length <= maxChars) return out;
+      }
+      throw new Error('Görsel çok büyük');
+    } finally {
+      if (revoke) URL.revokeObjectURL(url);
+    }
+  }
+
+  function pickFile(input, gameId) {
+    input.dataset.game = gameId;
+    input.value = '';
+    input.click();
+  }
+
+  quickCoverInput.addEventListener('change', async () => {
+    const file = quickCoverInput.files && quickCoverInput.files[0];
+    const g = findGame(quickCoverInput.dataset.game);
+    if (!file || !g) return;
+    try {
+      g.cover = await imageToDataUrl(file, COVER_LIMITS);
+      commit({ games: [g.id] });
+      refreshDetail();
+      toast('Kapak görseli güncellendi.');
+    } catch (err) {
+      toast('Bu dosya görsel olarak açılamadı. Telefonun galerisinden bir fotoğraf seç.', { error: true });
+    }
+  });
+
+  /* galeri (yalnızca bulut modunda; görseller Firestore'da oyunun altında ayrı kayıtlar) */
+  let gallery = { gameId: null, images: null, loading: false, error: false };
+  const galleryEnabled = () => mode === 'cloud' && Boolean(cloudApi);
+
+  async function loadGallery(gameId, keep) {
+    if (!galleryEnabled()) return;
+    if (keep && gallery.gameId === gameId && gallery.images) {
+      renderGallery();
+      return;
+    }
+    gallery = { gameId, images: null, loading: true, error: false };
+    renderGallery();
+    try {
+      const images = await cloudApi.listImages(gameId);
+      if (gallery.gameId !== gameId) return;
+      gallery.images = Array.isArray(images) ? images : [];
+    } catch (err) {
+      if (gallery.gameId !== gameId) return;
+      gallery.images = [];
+      gallery.error = true;
+    }
+    gallery.loading = false;
+    renderGallery();
+  }
+
+  function renderGallery() {
+    const sec = $('#gallerySection', el.detailContent);
+    if (!sec) return;
+    const editing = isEditing();
+    const imgs = gallery.images || [];
+    if (!editing && !imgs.length) {
+      sec.hidden = true;
+      return;
+    }
+    let body;
+    if (gallery.loading) body = '<p class="hint">Görseller yükleniyor…</p>';
+    else if (gallery.error) body = '<p class="hint">Görseller şu an yüklenemedi.</p>';
+    else if (!imgs.length) body = '<p class="hint">Henüz görsel yok. Oyundan ekran görüntüleri ya da fotoğraflar ekleyebilirsin.</p>';
+    else {
+      body = `<div class="gallery-grid">${imgs.map((im, i) => `<button type="button" class="gallery-item" data-detail="gallery-open" data-index="${i}" aria-label="Görseli büyüt (${i + 1}/${imgs.length})"><img src="${esc(safeImage(im.data))}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>`;
+    }
+    sec.innerHTML = `<div class="gallery-head">
+        <h3 id="galleryTitle">Görseller ${imgs.length ? `<b>${imgs.length}</b>` : ''}</h3>
+        ${editing ? `<button type="button" class="btn btn-ghost btn-sm" data-detail="gallery-add">${icon('plus')}<span>Görsel ekle</span></button>` : ''}
+      </div>${body}`;
+    sec.hidden = false;
+  }
+
+  galleryInput.addEventListener('change', async () => {
+    const files = Array.from(galleryInput.files || []).slice(0, 10);
+    const gameId = galleryInput.dataset.game;
+    if (!files.length || !cloudApi || !findGame(gameId)) return;
+    toast(files.length > 1 ? `${files.length} görsel yükleniyor…` : 'Görsel yükleniyor…');
+    let added = 0;
+    for (const file of files) {
+      try {
+        const dataUrl = await imageToDataUrl(file, GALLERY_LIMITS);
+        const id = await track(cloudApi.addImage(gameId, dataUrl));
+        if (gallery.gameId === gameId) {
+          gallery.images = (gallery.images || []).concat({ id, data: dataUrl, createdAt: Date.now() });
+          renderGallery();
+        }
+        added += 1;
+      } catch (err) {
+        if (err && !err.code) toast(`“${file.name}” görsel olarak açılamadı.`, { error: true });
+      }
+    }
+    if (added) toast(added > 1 ? `${added} görsel eklendi.` : 'Görsel eklendi.');
+  });
+
+  /* görsel görüntüleyici */
+  let lightboxIndex = 0;
+  const lbDelete = $('#lightboxDelete');
+  const lbCover = $('#lightboxCover');
+
+  function openLightbox(index) {
+    lightboxIndex = index;
+    renderLightbox();
+    openDialog(el.lightbox);
+  }
+
+  function renderLightbox() {
+    const imgs = gallery.images || [];
+    if (!imgs.length) {
+      closeDialog(el.lightbox);
+      return;
+    }
+    lightboxIndex = (lightboxIndex + imgs.length) % imgs.length;
+    const im = imgs[lightboxIndex];
+    $('#lightboxImg').src = safeImage(im.data);
+    $('#lightboxCount').textContent = `${lightboxIndex + 1} / ${imgs.length}`;
+    $('#lightboxPrev').hidden = imgs.length < 2;
+    $('#lightboxNext').hidden = imgs.length < 2;
+    const editing = isEditing();
+    lbCover.hidden = !editing;
+    lbDelete.hidden = !editing;
+    delete lbDelete.dataset.confirm;
+    lbDelete.querySelector('span').textContent = 'Sil';
+  }
+
+  $('#lightboxPrev').addEventListener('click', () => { lightboxIndex -= 1; renderLightbox(); });
+  $('#lightboxNext').addEventListener('click', () => { lightboxIndex += 1; renderLightbox(); });
+  el.lightbox.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { lightboxIndex -= 1; renderLightbox(); }
+    if (e.key === 'ArrowRight') { lightboxIndex += 1; renderLightbox(); }
+  });
+
+  lbCover.addEventListener('click', async () => {
+    const g = findGame(gallery.gameId);
+    const im = (gallery.images || [])[lightboxIndex];
+    if (!g || !im) return;
+    try {
+      g.cover = await imageToDataUrl(im.data, COVER_LIMITS);
+      commit({ games: [g.id] });
+      refreshDetail();
+      toast('Bu görsel kapak yapıldı.');
+    } catch (err) {
+      toast('Kapak yapılamadı.', { error: true });
+    }
+  });
+
+  // silme iki dokunuşla: önce "Emin misin?" sorulur
+  lbDelete.addEventListener('click', async () => {
+    const im = (gallery.images || [])[lightboxIndex];
+    const gameId = gallery.gameId;
+    if (!im || !cloudApi) return;
+    if (lbDelete.dataset.confirm !== '1') {
+      lbDelete.dataset.confirm = '1';
+      lbDelete.querySelector('span').textContent = 'Emin misin? Tekrar bas';
+      setTimeout(() => {
+        if (lbDelete.dataset.confirm === '1') renderLightbox();
+      }, 4000);
+      return;
+    }
+    try {
+      await track(cloudApi.deleteImage(gameId, im.id));
+      gallery.images = (gallery.images || []).filter((x) => x.id !== im.id);
+      renderGallery();
+      renderLightbox();
+      toast('Görsel silindi.');
+    } catch (err) {
+      renderLightbox();
     }
   });
 
@@ -856,7 +1256,7 @@
     g.played = !g.played;
     g.playedAt = g.played ? todayISO() : null;
     justToggled = g.played ? g.id : null;
-    commit();
+    commit({ games: [g.id] });
     if (g.played) toast(`“${g.title}” oynandı olarak işaretlendi.`);
   }
 
@@ -864,14 +1264,24 @@
     const index = data.games.findIndex((g) => g.id === id);
     if (index < 0) return;
     const [removed] = data.games.splice(index, 1);
-    commit();
+    if (mode === 'cloud' && cloudInitialized()) {
+      scheduleCloudDelete([removed.id]);
+      render();
+    } else {
+      commit({ deleted: [removed.id] });
+    }
     toast(`“${removed.title}” silindi.`, {
       action: {
         label: 'Geri al',
         run: () => {
+          if (mode === 'cloud' && pendingDeletes.has(removed.id)) {
+            cancelCloudDelete([removed.id]);
+            applyCloud();
+            return;
+          }
           if (findGame(removed.id)) return; // başka bir yoldan zaten geri gelmiş
           data.games.splice(Math.min(index, data.games.length), 0, removed);
-          commit();
+          commit({ games: [removed.id] });
         }
       }
     });
@@ -881,26 +1291,49 @@
     const removed = data.games.map((g, index) => ({ g, index })).filter((x) => x.g.example);
     if (!removed.length) return;
     data.games = data.games.filter((g) => !g.example);
-    commit();
+    const ids = removed.map((x) => x.g.id);
+    if (mode === 'cloud' && cloudInitialized()) {
+      scheduleCloudDelete(ids);
+      render();
+    } else {
+      commit({ deleted: ids });
+    }
     toast(`${removed.length} örnek oyun silindi.`, {
       action: {
         label: 'Geri al',
         // yalnızca silinen örnekler geri eklenir; arada eklenen ya da silinen oyunlara dokunulmaz
         run: () => {
-          for (const { g, index } of removed) {
-            if (!findGame(g.id)) data.games.splice(Math.min(index, data.games.length), 0, g);
+          if (mode === 'cloud') {
+            const waiting = ids.filter((id) => pendingDeletes.has(id));
+            cancelCloudDelete(waiting);
+            if (waiting.length === ids.length) {
+              applyCloud();
+              return;
+            }
           }
-          commit();
+          const restored = [];
+          for (const { g, index } of removed) {
+            if (!findGame(g.id)) {
+              data.games.splice(Math.min(index, data.games.length), 0, g);
+              restored.push(g.id);
+            }
+          }
+          commit({ games: restored });
         }
       }
     });
   }
 
   function setEditing(on) {
+    if (on && !canEdit()) {
+      openLogin();
+      return;
+    }
     prefs.editing = on;
     savePrefs();
     render();
-    if (on) toast('Düzenleme modu açık. Değişiklikler bu tarayıcıda saklanır; herkese göstermek için “Yayınla”yı kullan.');
+    if (on && mode === 'cloud') toast('Düzenleme modu açık. Her değişiklik otomatik kaydedilir ve herkes hemen görür.');
+    else if (on) toast('Düzenleme modu açık. Değişiklikler bu tarayıcıda saklanır; herkese göstermek için “Yayınla”yı kullan.');
   }
 
   /* ---------- oyun formu ---------- */
@@ -1123,6 +1556,8 @@
     setRating(g ? g.rating : 0);
     syncPlayedAt();
     updateCoverPreview();
+    picker.hidden = true;
+    syncPickerButton();
     openDialog(el.formDialog);
     setTimeout(() => {
       focusTarget.focus();
@@ -1145,6 +1580,51 @@
     syncPlayedAt();
   });
   f.title.addEventListener('input', updateCoverPreview);
+
+  /* kanaldaki son videolardan bölüm seçme */
+  const pickBtn = $('#pickFromChannel');
+  const picker = $('#channelPicker');
+
+  function syncPickerButton() {
+    pickBtn.hidden = !(latest && latest.videos.length);
+    if (pickBtn.hidden) picker.hidden = true;
+    pickBtn.setAttribute('aria-expanded', String(!picker.hidden));
+  }
+
+  function renderPicker() {
+    const used = new Set(readEpisodeRows().map((r) => youtubeId(r.url)).filter(Boolean));
+    const items = (latest ? latest.videos : []).filter((v) => !used.has(v.id));
+    if (!items.length) {
+      picker.innerHTML = '<p class="hint">Kanaldaki son videoların hepsi bu oyunda zaten ekli.</p>';
+      return;
+    }
+    picker.innerHTML = `<p class="hint">Dokunduğun video bu oyuna bölüm olarak eklenir; link, başlık ve yayın tarihi kendiliğinden dolar.</p>
+      <ul class="pick-list">${items.map((v) => {
+        const other = findEpisodeByVideo(v.id);
+        const note = other && other.g.id !== formId ? ` · “${esc(other.g.title)}” oyununda ekli` : '';
+        return `<li><button type="button" class="pick-video" data-pick="${esc(v.id)}">
+          <span class="pick-thumb"><img src="${esc(v.thumbnail)}" alt="" loading="lazy"></span>
+          <span class="pick-text"><span class="pick-title">${esc(v.title)}</span><span class="pick-meta">${esc(formatDate(localDay(v.published), 'short'))}${note}</span></span>
+        </button></li>`;
+      }).join('')}</ul>`;
+  }
+
+  pickBtn.addEventListener('click', () => {
+    picker.hidden = !picker.hidden;
+    if (!picker.hidden) renderPicker();
+    syncPickerButton();
+  });
+
+  picker.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pick]');
+    const v = btn && latest && latest.videos.find((x) => x.id === btn.dataset.pick);
+    if (!v) return;
+    const row = addEpisodeRow({ url: v.url, title: v.title, date: localDay(v.published) });
+    row.dataset.touched = '1';
+    updateCoverPreview();
+    renderPicker();
+    row.scrollIntoView({ block: 'nearest' });
+  });
 
   f.addEpisode.addEventListener('click', () => {
     const row = addEpisodeRow({ date: todayISO() });
@@ -1190,42 +1670,11 @@
     updateCoverPreview();
   });
 
-  // Yüklenen görseli küçültüp JPEG'e çevirir; tarayıcı depolaması çabuk dolmasın diye.
-  function resizeImage(file, maxSide = 720) {
-    return new Promise((resolve, reject) => {
-      if (!file || !/^image\//.test(file.type)) {
-        reject(new Error('Görsel dosyası değil'));
-        return;
-      }
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.max(1, Math.round(img.naturalWidth * scale));
-        const h = Math.max(1, Math.round(img.naturalHeight * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('Görsel okunamadı'));
-      };
-      img.src = url;
-    });
-  }
-
   f.coverFile.addEventListener('change', async () => {
     const file = f.coverFile.files && f.coverFile.files[0];
     if (!file) return;
     try {
-      formCover = await resizeImage(file);
+      formCover = await imageToDataUrl(file, COVER_LIMITS);
       f.cover.value = '';
       updateCoverPreview();
     } catch (e) {
@@ -1321,9 +1770,10 @@
         savePrefs();
       }
       toast(`“${title}” arşive eklendi.`);
+      formId = game.id;
     }
     closeDialog(el.formDialog);
-    commit();
+    commit({ games: [formId] });
   });
 
   f.deleteBtn.addEventListener('click', () => {
@@ -1385,7 +1835,7 @@
       githubEditUrl: github
     };
     closeDialog(el.settingsDialog);
-    commit();
+    commit({ site: true });
     toast('Site ayarları kaydedildi.');
   });
 
@@ -1404,6 +1854,16 @@
   }
 
   function renderDataDialog() {
+    if (mode === 'cloud') {
+      const status = $('#dataStatus');
+      status.classList.remove('is-dirty');
+      status.textContent = `Değişikliklerin otomatik olarak buluta kaydediliyor (${data.games.length} oyun). Ayrıca GitHub'daki backup klasörüne her saat yedek alınıyor ve eski hâlleri saklanıyor.`;
+      $('#publishBlock').hidden = true;
+      $('#resetLocal').hidden = true;
+      $('#downloadBackup').hidden = false;
+      $('#restoreTitle').textContent = 'Yedek al ya da geri yükle';
+      return;
+    }
     const dirty = isDirty();
     const status = $('#dataStatus');
     status.classList.toggle('is-dirty', dirty);
@@ -1456,6 +1916,22 @@
     toast("games.js indirildi. GitHub'da data/ klasörüne yükleyip eskisinin yerine koy.");
   });
 
+  // Bulut modunda elle yedek: site ayarları ve oyunlar tek bir JSON dosyasında (galeri görselleri hariç;
+  // onlar GitHub'daki saatlik yedekte).
+  $('#downloadBackup').addEventListener('click', () => {
+    const payload = { version: Date.now(), site: data.site, games: data.games };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oyun-arsivi-yedek-${todayISO()}.json`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    toast('Yedek indirildi.');
+  });
+
   function parseImport(text) {
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
@@ -1468,14 +1944,14 @@
   function replaceData(next, message) {
     const previous = data;
     data = next;
-    commit();
+    commit({ all: true });
     renderDataDialog();
     toast(message, {
       action: {
         label: 'Geri al',
         run: () => {
           data = previous;
-          commit();
+          commit({ all: true });
           renderDataDialog();
         }
       }
@@ -1503,6 +1979,616 @@
     replaceData(next, 'Yayındaki listeye dönüldü.');
   });
 
+  /* ---------- kanaldaki son video ---------- */
+  // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
+  let latest = null;
+  const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
+
+  function findEpisodeByVideo(vid) {
+    for (const g of data.games) {
+      const i = g.episodes.findIndex((e) => youtubeId(e.url) === vid);
+      if (i >= 0) return { g, n: i + 1 };
+    }
+    return null;
+  }
+
+  async function loadLatest() {
+    const gh = CONFIG.github || {};
+    const bucket = Math.floor(Date.now() / 600000); // en fazla 10 dakikalık önbellek
+    const sources = [];
+    if (gh.repo && /^https?:$/.test(location.protocol)) {
+      sources.push(`https://raw.githubusercontent.com/${gh.repo}/${gh.branch || 'main'}/data/latest.json?v=${bucket}`);
+    }
+    sources.push(`data/latest.json?v=${bucket}`);
+    for (const url of sources) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) continue;
+        const json = await res.json();
+        const videos = (json && Array.isArray(json.videos) ? json.videos : [])
+          .filter((v) => v && VIDEO_ID.test(String(v.id)) && v.title)
+          .slice(0, 15)
+          .map((v) => ({
+            id: v.id,
+            title: String(v.title),
+            published: String(v.published || ''),
+            url: `https://www.youtube.com/watch?v=${v.id}`,
+            thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+          }));
+        if (!videos.length) continue;
+        latest = { channelUrl: safeLink(json.channelUrl), videos };
+        renderLatest();
+        syncPickerButton();
+        return;
+      } catch (err) {
+        /* bir sonraki kaynağı dene */
+      }
+    }
+  }
+
+  function renderLatest() {
+    if (!latest) {
+      el.latestSection.hidden = true;
+      return;
+    }
+    const [v, ...rest] = latest.videos;
+    const day = localDay(v.published);
+    const when = [relativeDay(day), formatDate(day)].filter(Boolean).join(' · ');
+    const match = findEpisodeByVideo(v.id);
+    const thumb = `<img src="${esc(v.thumbnail)}" alt="" decoding="async">`;
+    const media = canEmbed
+      ? `<button type="button" class="cover" data-latest-play="${esc(v.id)}" aria-label="Videoyu oynat: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></button>`
+      : `<a class="cover" href="${esc(v.url)}" target="_blank" rel="noopener" aria-label="Videoyu YouTube'da aç: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></a>`;
+    const playing = $('#latestPlayer iframe', el.latestBody);
+    el.latestBody.innerHTML = `<article class="latest-main">
+        <div class="latest-media" id="latestPlayer">${media}</div>
+        <div class="latest-info">
+          <p class="latest-when">${esc(when)}</p>
+          <h3 class="latest-title"><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.title)}</a></h3>
+          ${match ? `<button type="button" class="latest-game" data-latest-game="${esc(match.g.id)}">${icon('pad')}<span>${esc(match.g.title)} · ${episodeName(match.n)}</span></button>` : ''}
+          <div class="latest-actions"><a class="btn btn-yt btn-sm" href="${esc(v.url)}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a></div>
+        </div>
+      </article>
+      ${rest.length ? `<ol class="latest-more">${rest.slice(0, 4).map((r) => `<li><a class="latest-mini" href="${esc(r.url)}" target="_blank" rel="noopener">
+          <span class="latest-mini-thumb"><img src="${esc(r.thumbnail)}" alt="" loading="lazy"></span>
+          <span class="latest-mini-title">${esc(r.title)}</span>
+          <span class="latest-mini-when">${esc(relativeDay(localDay(r.published)))}</span>
+        </a></li>`).join('')}</ol>` : ''}`;
+    if (playing) $('#latestPlayer', el.latestBody).replaceChildren(playing.parentElement);
+    const channel = safeLink(data.site.youtubeUrl) || latest.channelUrl;
+    el.latestChannel.hidden = !channel;
+    if (channel) el.latestChannel.href = channel;
+    el.latestSection.hidden = false;
+  }
+
+  el.latestBody.addEventListener('click', (e) => {
+    const play = e.target.closest('[data-latest-play]');
+    if (play) {
+      const id = play.dataset.latestPlay;
+      if (!VIDEO_ID.test(id)) return;
+      $('#latestPlayer', el.latestBody).innerHTML = `<div class="cover"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="Kanaldaki son video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+      return;
+    }
+    const game = e.target.closest('[data-latest-game]');
+    if (game) openDetail(game.dataset.latestGame);
+  });
+
+  /* ---------- sekmeler ve öneriler ---------- */
+  // Öneriler ziyaretçilerin yazabildiği bir veritabanı gerektirdiği için yalnızca bulut modunda var.
+  let suggestions = null;
+  let sugError = false;
+  let unsubSug = null;
+  let activeTab = 'games';
+  const VOTES_KEY = 'oyunArsivi.oylar.v1';
+  const LAST_SUG_KEY = 'oyunArsivi.sonOneri.v1';
+  const myVotes = new Set(Array.isArray(storageGet(VOTES_KEY)) ? storageGet(VOTES_KEY) : []);
+  const suggestionsAvailable = () => mode === 'cloud';
+  const sg = {
+    form: $('#sugForm'),
+    title: $('#sg-title'),
+    category: $('#sg-category'),
+    note: $('#sg-note'),
+    name: $('#sg-name'),
+    dup: $('#sg-dup'),
+    titleError: $('#sg-title-error'),
+    error: $('#sg-error'),
+    submit: $('#sg-submit')
+  };
+
+  function subscribeSuggestions() {
+    if (!cloudApi) return;
+    if (unsubSug) unsubSug();
+    unsubSug = cloudApi.watchSuggestions((list) => {
+      suggestions = Array.isArray(list) ? list : [];
+      sugError = false;
+      renderSuggestions();
+      renderTabs();
+    }, () => {
+      sugError = true;
+      if (suggestions === null) suggestions = [];
+      renderSuggestions();
+    });
+  }
+
+  function renderTabs() {
+    const show = suggestionsAvailable();
+    el.tabs.hidden = !show;
+    if (!show) {
+      el.gamesPanel.hidden = false;
+      el.sugPanel.hidden = true;
+      return;
+    }
+    $('#tabGamesCount').textContent = data.games.length;
+    const open = (suggestions || []).filter((x) => x.status !== 'added' && x.status !== 'rejected').length;
+    $('#tabSugCount').textContent = open || '';
+    for (const t of $$('.tab', el.tabs)) {
+      const on = t.dataset.tab === activeTab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    }
+    el.gamesPanel.hidden = activeTab !== 'games';
+    el.sugPanel.hidden = activeTab !== 'suggestions';
+  }
+
+  function setTab(tab) {
+    activeTab = tab === 'suggestions' && suggestionsAvailable() ? 'suggestions' : 'games';
+    renderTabs();
+    if (activeTab === 'suggestions') renderSuggestions();
+    try {
+      history.replaceState(null, '', activeTab === 'suggestions' ? '#oneriler' : location.pathname + location.search);
+    } catch (err) { /* önizleme çerçevesinde adres değiştirilemeyebilir */ }
+  }
+
+  el.tabs.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-tab]');
+    if (t) setTab(t.dataset.tab);
+  });
+  el.tabs.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    setTab(activeTab === 'games' ? 'suggestions' : 'games');
+    $(`[data-tab="${activeTab}"]`, el.tabs).focus();
+  });
+
+  function sortedSuggestions() {
+    const rank = (x) => (x.status === 'added' ? 1 : x.status === 'rejected' ? 2 : 0);
+    return (suggestions || [])
+      .filter((x) => x.status !== 'rejected' || isEditing())
+      .slice()
+      .sort((a, b) => rank(a) - rank(b) || (b.votes || 0) - (a.votes || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+  }
+
+  const gameByTitle = (title) => data.games.find((g) => fold(g.title) === fold(title));
+
+  function suggestionHTML(x) {
+    const voted = myVotes.has(x.id);
+    const added = x.status === 'added';
+    const inList = (x.gameId && findGame(x.gameId)) || gameByTitle(x.title);
+    const when = x.createdAt ? relativeDay(localDay(x.createdAt)) : 'az önce';
+    let actions = '';
+    if (isEditing()) {
+      if (!added && inList) actions += `<button type="button" class="btn btn-ghost btn-sm" data-sug="mark">${icon('check')}<span>Listede var, işaretle</span></button>`;
+      else if (!added) actions += `<button type="button" class="btn btn-primary btn-sm" data-sug="add">${icon('plus')}<span>Listeme ekle</span></button>`;
+      actions += `<button type="button" class="btn btn-danger btn-sm" data-sug="delete">${icon('trash')}<span>Sil</span></button>`;
+    }
+    return `<li class="sug${added ? ' is-added' : ''}" data-id="${esc(x.id)}">
+      <button type="button" class="vote-btn" data-sug="vote" aria-pressed="${voted}" ${voted || added ? 'disabled' : ''} aria-label="${voted ? 'Oy verdin' : 'Ben de istiyorum'}: ${esc(x.title)}, ${x.votes || 0} oy">${icon('up')}<b>${x.votes || 0}</b></button>
+      <div class="sug-main">
+        <div class="sug-title-row">
+          <h3>${esc(x.title)}</h3>
+          ${x.category ? `<span class="chip chip-static">${esc(x.category)}</span>` : ''}
+          ${added ? `<span class="status is-played">${icon('check')}Listeye eklendi</span>` : ''}
+        </div>
+        ${x.note ? `<p class="sug-note">${esc(x.note)}</p>` : ''}
+        <p class="sug-meta">${esc(x.name || 'Anonim')} · ${esc(when)}</p>
+        ${actions ? `<div class="sug-actions">${actions}</div>` : ''}
+      </div>
+    </li>`;
+  }
+
+  function renderSuggestions() {
+    if (!suggestionsAvailable()) return;
+    const list = sortedSuggestions();
+    $('#sugList').innerHTML = list.map(suggestionHTML).join('');
+    const empty = $('#sugEmpty');
+    let msg = '';
+    if (suggestions === null) msg = cloudApi || !cloudError ? 'Öneriler yükleniyor…' : 'Öneriler şu an yüklenemiyor.';
+    else if (sugError && !list.length) msg = 'Öneriler şu an gösterilemiyor.';
+    else if (!list.length) msg = 'Henüz öneri yok. İlk öneriyi sen yap!';
+    empty.textContent = msg;
+    empty.hidden = !msg;
+    $('#sugCountLine').textContent = list.length ? `${list.length} öneri` : '';
+    sg.submit.disabled = !cloudApi;
+  }
+
+  function updateDupHint() {
+    const t = sg.title.value.trim();
+    let msg = '';
+    if (t && gameByTitle(t)) msg = 'Bu oyun zaten listede; Oyunlar sekmesinde bulabilirsin.';
+    else if (t && (suggestions || []).some((x) => fold(x.title) === fold(t))) msg = 'Bu oyun daha önce önerilmiş; aşağıda “Ben de istiyorum” diyerek destekleyebilirsin.';
+    sg.dup.textContent = msg;
+    sg.dup.hidden = !msg;
+  }
+  sg.title.addEventListener('input', () => {
+    sg.titleError.hidden = true;
+    setValid(sg.title);
+    updateDupHint();
+  });
+
+  sg.form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    sg.error.hidden = true;
+    const title = sg.title.value.trim();
+    if (!title) {
+      showError(sg.title, 'sg-title-error');
+      sg.title.focus();
+      return;
+    }
+    const showSugError = (text) => {
+      sg.error.textContent = text;
+      sg.error.hidden = false;
+    };
+    if (!cloudApi) return showSugError('Şu an bağlantı kurulamıyor. Biraz sonra tekrar dene.');
+    if (gameByTitle(title)) return showSugError('Bu oyun zaten listede.');
+    const prev = (suggestions || []).find((x) => fold(x.title) === fold(title));
+    if (prev) return showSugError('Bu oyun zaten önerilmiş. Listede “Ben de istiyorum”a basarak destekleyebilirsin.');
+    const last = Number(storageGet(LAST_SUG_KEY)) || 0;
+    if (Date.now() - last < 30000) return showSugError('Az önce bir öneri gönderdin. Biraz bekleyip tekrar dene.');
+    sg.submit.disabled = true;
+    try {
+      await cloudApi.addSuggestion({
+        title,
+        category: sg.category.value.trim(),
+        note: sg.note.value.trim(),
+        name: sg.name.value.trim()
+      });
+      storageSet(LAST_SUG_KEY, Date.now());
+      sg.form.reset();
+      updateDupHint();
+      toast('Önerin gönderildi. Teşekkürler!');
+    } catch (err) {
+      showSugError('Öneri gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.');
+    } finally {
+      sg.submit.disabled = !cloudApi;
+    }
+  });
+
+  async function voteSuggestion(id) {
+    const x = (suggestions || []).find((y) => y.id === id);
+    if (!x || myVotes.has(id) || !cloudApi) return;
+    myVotes.add(id);
+    storageSet(VOTES_KEY, Array.from(myVotes));
+    x.votes = (x.votes || 0) + 1;
+    renderSuggestions();
+    try {
+      await cloudApi.voteSuggestion(id);
+    } catch (err) {
+      myVotes.delete(id);
+      storageSet(VOTES_KEY, Array.from(myVotes));
+      x.votes = Math.max(0, (x.votes || 1) - 1);
+      renderSuggestions();
+      toast('Oy verilemedi. Tekrar dene.', { error: true });
+    }
+  }
+
+  function addSuggestionToList(id) {
+    const x = (suggestions || []).find((y) => y.id === id);
+    if (!x || !cloudApi) return;
+    const existing = (x.gameId && findGame(x.gameId)) || gameByTitle(x.title);
+    if (existing) {
+      quiet(track(cloudApi.markSuggestion(id, { status: 'added', gameId: existing.id })));
+      toast(`“${existing.title}” zaten listende; öneri “eklendi” olarak işaretlendi.`);
+      return;
+    }
+    const game = normalizeGame({ id: uid(), title: x.title, category: x.category || 'Diğer', addedAt: new Date().toISOString() });
+    data.games.push(game);
+    commit({ games: [game.id] });
+    quiet(track(cloudApi.markSuggestion(id, { status: 'added', gameId: game.id })));
+    toast(`“${game.title}” listene eklendi.`, { action: { label: 'Düzenle', run: () => openForm(game.id) } });
+  }
+
+  $('#sugList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-sug]');
+    if (!btn) return;
+    const id = btn.closest('.sug').dataset.id;
+    const action = btn.dataset.sug;
+    if (action === 'vote') voteSuggestion(id);
+    else if (action === 'add') addSuggestionToList(id);
+    else if (action === 'mark') addSuggestionToList(id);
+    else if (action === 'delete') {
+      if (btn.dataset.confirm !== '1') {
+        btn.dataset.confirm = '1';
+        btn.querySelector('span').textContent = 'Emin misin?';
+        setTimeout(() => {
+          if (btn.isConnected && btn.dataset.confirm === '1') {
+            delete btn.dataset.confirm;
+            btn.querySelector('span').textContent = 'Sil';
+          }
+        }, 4000);
+        return;
+      }
+      quiet(track(cloudApi.deleteSuggestion(id)));
+    }
+  });
+
+  // açılışta yapılan ek işler (son video, #oneriler adresi)
+  function initExtras(startHash) {
+    if (startHash === '#oneriler') setTab('suggestions');
+    loadLatest();
+  }
+
+  /* ---------- bulut bağlantısı ---------- */
+  let unsubGames = null;
+  let unsubSite = null;
+  let setupShownOnce = false;
+
+  // Firestore'dan gelen veriyi sayfaya uygular. Bulut henüz boşsa (kurulum bitmemiş) ziyaretçiler
+  // data/games.js'teki listeyi görmeye devam eder.
+  function applyCloud() {
+    if (mode !== 'cloud') return;
+    if (cloudLive() && cloudInitialized()) {
+      const games = cloudGames.filter((g) => !pendingDeletes.has(g.id)).map((g, i) => normalizeGame(g, i));
+      const site = normalizeData({ site: cloudSite || published.site }).site;
+      data = { version: 0, baseVersion: 0, site, games };
+    } else {
+      // bulut boşken sahibinin bu tarayıcıdaki düzenlemeleri de (varsa) aktarılmak üzere korunur
+      data = loadData();
+    }
+    render();
+    if (el.detailDialog.open && detailId) {
+      if (findGame(detailId)) refreshDetail();
+      else closeDialog(el.detailDialog);
+    }
+    if (el.setupDialog.open) renderSetup();
+  }
+
+  function subscribeCloud() {
+    if (!cloudApi) return;
+    if (unsubGames) unsubGames();
+    if (unsubSite) unsubSite();
+    cloudError = null;
+    unsubGames = cloudApi.watchGames((games) => {
+      cloudGames = Array.isArray(games) ? games : [];
+      cloudError = null;
+      applyCloud();
+      maybeShowSetup();
+    }, (err) => {
+      cloudError = { code: (err && err.code) || 'unknown', message: String((err && err.message) || err) };
+      cloudGames = null;
+      applyCloud();
+      maybeShowSetup();
+    });
+    unsubSite = cloudApi.watchSite((site) => {
+      cloudSite = site || null;
+      applyCloud();
+    }, () => {});
+    if (typeof subscribeSuggestions === 'function') subscribeSuggestions();
+  }
+
+  // Sahibi giriş yaptığında kurulumda eksik adım varsa yardımcı bir kez kendiliğinden açılır.
+  function maybeShowSetup() {
+    if (!owner || setupShownOnce) return;
+    if (cloudGames === null && !cloudError) return; // ilk yanıt bekleniyor
+    if (cloudLive() && cloudInitialized()) return;
+    setupShownOnce = true;
+    openSetup();
+  }
+
+  function onCloudReady() {
+    const api = window.cloud;
+    if (mode !== 'cloud') return;
+    if (!api || !api.enabled) {
+      cloudError = { code: 'sdk', message: (api && api.error) || 'Firebase yüklenemedi' };
+      renderEditing();
+      return;
+    }
+    if (cloudApi) return;
+    cloudApi = api;
+    cloudApi.onAuthChange((user) => {
+      owner = user;
+      if (!owner && prefs.editing) prefs.editing = false;
+      render();
+      if (owner && location.hash === '#kurulum') openSetup();
+      maybeShowSetup();
+      if (el.setupDialog.open) renderSetup();
+    });
+    subscribeCloud();
+    renderEditing();
+  }
+  window.addEventListener('cloud-ready', onCloudReady);
+
+  /* ---------- giriş ---------- */
+  const loginForm = $('#loginForm');
+  const loginError = $('#l-error');
+
+  function authErrorText(err) {
+    const code = (err && err.code) || '';
+    if (/invalid-credential|wrong-password|user-not-found|invalid-email|invalid-login/.test(code)) return 'E-posta ya da şifre yanlış.';
+    if (/too-many-requests/.test(code)) return 'Çok fazla deneme yapıldı. Birkaç dakika bekleyip tekrar dene.';
+    if (/network/.test(code)) return 'İnternet bağlantısı yok gibi görünüyor.';
+    if (/user-disabled/.test(code)) return 'Bu hesap devre dışı bırakılmış.';
+    return `Giriş yapılamadı (${code || 'bilinmeyen hata'}).`;
+  }
+
+  function openLogin() {
+    if (mode !== 'cloud') {
+      openSetup();
+      return;
+    }
+    loginError.hidden = true;
+    openDialog(el.loginDialog);
+    if (!cloudApi) {
+      loginError.textContent = cloudError && cloudError.code === 'sdk'
+        ? 'Firebase\'e bağlanılamadı. İnternet bağlantını kontrol edip sayfayı yenile.'
+        : 'Bağlantı kuruluyor, birkaç saniye sonra tekrar dene.';
+      loginError.hidden = false;
+    }
+    setTimeout(() => $('#l-email').focus(), 30);
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.hidden = true;
+    const email = $('#l-email').value.trim();
+    const password = $('#l-pass').value;
+    if (!email || !password) {
+      loginError.textContent = 'E-posta ve şifreyi yaz.';
+      loginError.hidden = false;
+      return;
+    }
+    if (!cloudApi) {
+      openLogin();
+      return;
+    }
+    const btn = $('#l-submit');
+    btn.disabled = true;
+    try {
+      await cloudApi.signIn(email, password);
+      $('#l-pass').value = '';
+      closeDialog(el.loginDialog);
+      prefs.editing = true;
+      savePrefs();
+      render();
+      toast('Giriş yapıldı. Düzenleme modu açık; her değişiklik otomatik kaydedilir.');
+    } catch (err) {
+      loginError.textContent = authErrorText(err);
+      loginError.hidden = false;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $('#l-forgot').addEventListener('click', async () => {
+    const email = $('#l-email').value.trim();
+    if (!email) {
+      loginError.textContent = 'Önce e-posta adresini yaz, sonra “Şifremi unuttum”a bas.';
+      loginError.hidden = false;
+      $('#l-email').focus();
+      return;
+    }
+    if (!cloudApi) return;
+    try {
+      await cloudApi.resetPassword(email);
+      loginError.hidden = true;
+      toast('Şifre sıfırlama e-postası gönderildi. Gelen kutunu (ve spam klasörünü) kontrol et.');
+    } catch (err) {
+      loginError.textContent = authErrorText(err);
+      loginError.hidden = false;
+    }
+  });
+
+  async function logout() {
+    if (!cloudApi) return;
+    try {
+      await cloudApi.signOut();
+      prefs.editing = false;
+      savePrefs();
+      render();
+      toast('Çıkış yapıldı.');
+    } catch (err) {
+      toast('Çıkış yapılamadı. Tekrar dene.', { error: true });
+    }
+  }
+
+  /* ---------- kurulum yardımcısı ---------- */
+  const KURULUM_URL = CONFIG.github && CONFIG.github.repo
+    ? `https://github.com/${CONFIG.github.repo}/blob/${CONFIG.github.branch || 'main'}/KURULUM.md`
+    : 'KURULUM.md';
+
+  function setupStep(done, title, body) {
+    return `<li class="setup-step${done ? ' is-done' : ''}">
+      <span class="setup-mark" aria-hidden="true">${done ? icon('check') : ''}</span>
+      <div class="setup-main"><h3>${title}${done ? '<span class="visually-hidden"> (tamam)</span>' : ''}</h3>${done ? '' : body}</div>
+    </li>`;
+  }
+
+  function renderSetup() {
+    const parts = [];
+    const projectId = cloudApi && cloudApi.projectId;
+    const consoleUrl = projectId ? `https://console.firebase.google.com/project/${encodeURIComponent(projectId)}` : 'https://console.firebase.google.com/';
+    const connected = mode === 'cloud' && Boolean(cloudApi);
+    parts.push(setupStep(connected, 'Firebase bağlantısı', mode === 'cloud'
+      ? '<p>Firebase yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.</p>'
+      : `<p>Site henüz buluta bağlı değil. <a href="${esc(KURULUM_URL)}" target="_blank" rel="noopener">KURULUM.md</a> rehberindeki adımları izle; Firebase ayarlarını Claude'a gönder ya da <code>js/config.js</code> dosyasına yapıştır.</p>`));
+    parts.push(setupStep(Boolean(owner), 'Yönetici girişi', connected
+      ? '<p>Firebase\'de oluşturduğun e-posta ve şifreyle giriş yap.</p><button type="button" class="btn btn-primary btn-sm" data-setup="login">Giriş yap</button>'
+      : '<p>Önce bağlantı kurulmalı.</p>'));
+    const missingDb = cloudError && /not-found|failed-precondition/.test(cloudError.code);
+    const denied = cloudError && cloudError.code === 'permission-denied';
+    const rulesOk = cloudLive();
+    let rulesBody = '<p>Giriş yapınca burada sana özel güvenlik kuralları görünecek.</p>';
+    if (owner && cloudApi) {
+      if (missingDb) {
+        rulesBody = `<p>Firestore veritabanı henüz oluşturulmamış. Firebase'de <b>Firestore Database → Create database</b> adımını tamamla.</p>
+          <div class="setup-actions"><a class="btn btn-ghost btn-sm" href="${esc(consoleUrl)}/firestore" target="_blank" rel="noopener">Firestore'u aç</a>
+          <button type="button" class="btn btn-ghost btn-sm" data-setup="retry">Tekrar kontrol et</button></div>`;
+      } else {
+        const rules = cloudApi.rulesFor(owner.email);
+        rulesBody = `<p>${denied ? 'Veritabanı şu an kimsenin okumasına izin vermiyor. ' : ''}Aşağıdaki kuralları kopyala; Firebase'de <b>Firestore Database → Rules</b> sekmesindeki her şeyi silip yapıştır ve <b>Publish</b>'e bas. Kurallar oyunları herkese gösterir ama yalnızca senin (${esc(owner.email)}) değiştirmene izin verir.</p>
+          <textarea class="export-text" id="setupRules" rows="8" readonly aria-label="Güvenlik kuralları">${esc(rules)}</textarea>
+          <div class="setup-actions"><button type="button" class="btn btn-primary btn-sm" data-setup="copy-rules">${icon('copy')}<span>Kuralları kopyala</span></button>
+          <a class="btn btn-ghost btn-sm" href="${esc(consoleUrl)}/firestore/rules" target="_blank" rel="noopener">Kurallar sayfasını aç</a>
+          <button type="button" class="btn btn-ghost btn-sm" data-setup="retry">Yayınladım, kontrol et</button></div>`;
+      }
+    }
+    parts.push(setupStep(rulesOk, 'Güvenlik kuralları', rulesBody));
+    const count = loadData().games.length;
+    parts.push(setupStep(rulesOk && cloudInitialized(), 'Listeyi buluta aktar', rulesOk && owner
+      ? `<p>Şu anki liste (${count} oyun) ve site ayarları buluta yüklenir. Sonra her değişiklik otomatik kaydedilir.</p><button type="button" class="btn btn-primary btn-sm" data-setup="migrate">Listeyi buluta aktar</button>`
+      : '<p>Önceki adımlar bitince açılır.</p>'));
+    const ytDone = Boolean(safeLink(data.site.youtubeUrl));
+    parts.push(setupStep(ytDone, 'YouTube kanal linki', owner && rulesOk
+      ? '<p>Kanal linkini girince “Abone ol” düğmesi ve kanaldaki son video (en geç bir saat içinde) görünür.</p><button type="button" class="btn btn-ghost btn-sm" data-setup="settings">Site ayarlarını aç</button>'
+      : '<p>Giriş yapınca “Site ayarları”ndan eklenir.</p>'));
+    const allDone = connected && owner && rulesOk && cloudInitialized() && ytDone;
+    el.setupBody.innerHTML = `
+      ${allDone ? '<p class="data-status">Kurulum tamam. Değişikliklerin otomatik kaydediliyor ve herkes hemen görüyor.</p>' : ''}
+      <ol class="setup-steps">${parts.join('')}</ol>
+      <p class="hint">Ayrıntılı rehber: <a href="${esc(KURULUM_URL)}" target="_blank" rel="noopener">KURULUM.md</a></p>`;
+  }
+
+  function openSetup() {
+    renderSetup();
+    openDialog(el.setupDialog);
+  }
+
+  el.setupBody.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-setup]');
+    if (!btn) return;
+    const action = btn.dataset.setup;
+    if (action === 'login') {
+      closeDialog(el.setupDialog);
+      openLogin();
+    } else if (action === 'retry') {
+      subscribeCloud();
+      toast('Kontrol ediliyor…');
+    } else if (action === 'settings') {
+      closeDialog(el.setupDialog);
+      openSettings();
+    } else if (action === 'copy-rules') {
+      const ta = $('#setupRules');
+      try {
+        await navigator.clipboard.writeText(ta.value);
+        toast('Kurallar kopyalandı. Firebase\'de Rules sekmesine yapıştır ve Publish\'e bas.');
+      } catch (err) {
+        ta.focus();
+        ta.select();
+        toast('Otomatik kopyalanamadı. Metin seçili; uzun basıp “Kopyala”yı seç.');
+      }
+    } else if (action === 'migrate') {
+      btn.disabled = true;
+      const local = loadData();
+      data = local;
+      try {
+        await track(cloudApi.replaceGames(local.games));
+        await track(cloudApi.saveSite(local.site));
+        toast(`${local.games.length} oyun buluta aktarıldı. Artık her değişiklik otomatik kaydedilir.`);
+      } catch (err) {
+        btn.disabled = false;
+      }
+      renderSetup();
+    }
+  });
+
   /* ---------- olaylar ---------- */
   el.grid.addEventListener('click', (e) => {
     const card = e.target.closest('.card');
@@ -1522,7 +2608,7 @@
   // kırık görsel linklerinde çizilen kapak görünsün
   document.addEventListener('error', (e) => {
     const t = e.target;
-    if (t && t.tagName === 'IMG' && t.closest('.cover')) t.remove();
+    if (t && t.tagName === 'IMG' && t.closest('.cover, .latest-mini-thumb, .pick-thumb')) t.remove();
   }, true);
 
   el.chips.addEventListener('click', (e) => {
@@ -1571,17 +2657,29 @@
   });
   if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', applyTheme);
 
-  el.editToggle.addEventListener('click', () => setEditing(!prefs.editing));
+  el.editToggle.addEventListener('click', () => {
+    if (mode === 'cloud' && !owner) openLogin();
+    else setEditing(!isEditing());
+  });
+  el.setupBtn.addEventListener('click', openSetup);
+  el.logoutBtn.addEventListener('click', logout);
   $('#editDone').addEventListener('click', () => setEditing(false));
   $('#addBtn').addEventListener('click', () => openForm(null));
   $('#settingsBtn').addEventListener('click', openSettings);
   $('#publishBtn').addEventListener('click', openDataDialog);
   el.clearExamples.addEventListener('click', clearExampleGames);
 
-  // Adres #duzenle ile açılırsa düzenleme modu açılır (ör. siteadresi/#duzenle)
-  if (location.hash === '#duzenle') prefs.editing = true;
+  // Adres sonu: #duzenle düzenleme modunu (bulut modunda girişi), #kurulum kurulum yardımcısını,
+  // #oneriler öneriler sekmesini açar.
+  const startHash = location.hash;
+  if (startHash === '#duzenle' && mode === 'local') prefs.editing = true;
 
   document.documentElement.lang = 'tr';
   applyTheme();
   render();
+  if (startHash === '#kurulum') openSetup();
+  else if ((startHash === '#duzenle' || startHash === '#giris') && mode === 'cloud') openLogin();
+  if (typeof initExtras === 'function') initExtras(startHash);
+  // cloud.js bir modül olduğu için bu dosyadan sonra çalışır; yine de olay kaçtıysa yakala
+  if (window.cloud) onCloudReady();
 })();
