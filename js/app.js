@@ -466,7 +466,13 @@
     setupDialog: $('#setupDialog'),
     setupBody: $('#setupBody'),
     lightbox: $('#lightbox'),
+    nowSection: $('#nowSection'),
+    nowBody: $('#nowBody'),
+    nowPlayer: $('#nowPlayer'),
+    nowInfo: $('#nowInfo'),
+    nowMore: $('#nowMore'),
     latestSection: $('#latestSection'),
+    latestTitle: $('#latestTitle'),
     latestBody: $('#latestBody'),
     latestChannel: $('#latestChannel'),
     tabs: $('#tabs'),
@@ -734,6 +740,7 @@
     renderGrid();
     renderEditing();
     renderTabs();
+    renderNowPlaying();
     if (latest) renderLatest();
     if (suggestions) renderSuggestions();
   }
@@ -1978,6 +1985,136 @@
     replaceData(next, 'Yayındaki listeye dönüldü.');
   });
 
+  /* ---------- şimdi oynuyorum ---------- */
+  // Devam eden oyunlardan son bölümü en yeni olan vitrine çıkar; öteki devam edenler altta kısa
+  // düğmeler olarak listelenir. Bölümlerinin hiçbirinde tarih olmayan oyunlar sona kalır.
+  function nowPlayingGames() {
+    return data.games
+      .filter((g) => gameState(g) === 'ongoing')
+      .sort((a, b) => seriesInfo(b).last.localeCompare(seriesInfo(a).last)
+        || String(b.addedAt).localeCompare(String(a.addedAt))
+        || a.title.localeCompare(b.title, 'tr'));
+  }
+
+  // Yayınlanmış en yeni bölüm: tarihi olanların en yenisi, hiçbirinde tarih yoksa listedeki sonuncusu
+  function newestAired(g) {
+    const info = seriesInfo(g);
+    return info.dated[info.dated.length - 1] || info.aired[info.aired.length - 1] || null;
+  }
+
+  // Vitrin üç parçadan oluşur: kapak (ya da oynayan video), bilgiler ve öteki devam edenler. Her parça
+  // yalnızca içeriği değişince yeniden yazılır; oynayan video, aynı bölüm gösterildikçe yerinden hiç oynamaz
+  // (iframe sayfadan çıkarılıp geri konursa baştan yüklenir).
+  const nowParts = { media: '', info: '', more: '' };
+  let nowPlaying = ''; // vitrinde oynayan video: "oyun|bölüm|video" (boş: oynamıyor)
+
+  function setNowPart(node, part, html) {
+    if (nowParts[part] === html) return;
+    node.innerHTML = html;
+    nowParts[part] = html;
+  }
+
+  // Vitrindeki videoyu durdurup yerine kapağı koyar (sayfada başka bir video başlarken).
+  function stopNowPlaying() {
+    if (!nowPlaying) return;
+    nowPlaying = '';
+    nowParts.media = '';
+    renderNowPlaying();
+  }
+
+  function renderNowPlaying() {
+    const [g, ...others] = nowPlayingGames();
+    const ep = g && newestAired(g);
+    if (!ep) {
+      el.nowSection.hidden = true;
+      setNowPart(el.nowPlayer, 'media', '');
+      setNowPart(el.nowInfo, 'info', '');
+      setNowPart(el.nowMore, 'more', '');
+      nowPlaying = '';
+      return;
+    }
+    const info = seriesInfo(g);
+    const n = episodeNo(g, ep);
+    const link = episodeLink(ep);
+    const vid = youtubeId(ep.url);
+    const first = info.aired.length === 1;
+    const badge = `<span class="cover-video${link ? '' : ' is-soon'}">${link ? icon('play') : ''}${episodeName(n)}</span>`;
+
+    let media;
+    if (vid && canEmbed) {
+      media = `<button type="button" class="cover" data-now="play" data-game="${esc(g.id)}" data-ep="${esc(ep.id)}" aria-label="${esc(g.title)}: ${episodeAcc(n)} oynat">${coverHTML(g)}<span class="play-big">${icon('play')}</span>${badge}</button>`;
+    } else if (link) {
+      media = `<a class="cover" href="${esc(link)}" target="_blank" rel="noopener" aria-label="${esc(g.title)}: ${openLabel(ep, n)}">${coverHTML(g)}<span class="play-big">${icon('play')}</span>${badge}</a>`;
+    } else {
+      media = `<button type="button" class="cover" data-now-game="${esc(g.id)}" aria-label="${esc(g.title)}: ayrıntılar">${coverHTML(g)}${badge}</button>`;
+    }
+
+    const when = [relativeDay(ep.date), formatDate(ep.date)].filter(Boolean).join(' · ');
+    const tags = [g.category, g.platform].filter(Boolean).map(esc).join(' · ');
+    const span = daysBetween(info.first, info.last);
+    const meta = [`${info.aired.length} bölüm`];
+    if (span > 0) meta.push(`${span} günde`);
+    const next = info.upcoming[0];
+
+    let watch;
+    if (link) {
+      const where = isYoutubeUrl(ep.url) ? "YouTube'da izle" : 'izle';
+      watch = `<a class="btn btn-yt" href="${esc(link)}" target="_blank" rel="noopener">${icon('youtube')}<span>${first ? episodeAcc(n) : 'Son bölümü'} ${where}</span></a>`;
+    } else {
+      watch = watchButtonHTML(g); // en yeni bölümün linki yoksa linki olan bir bölüme gider
+    }
+
+    const infoHTML = `<div class="now-tags">
+        ${tags ? `<span>${tags}</span>` : ''}
+        ${g.example ? '<span class="example-chip" title="Örnek olarak eklendi">Örnek</span>' : ''}
+      </div>
+      <h3 class="now-title"><button type="button" class="now-title-btn" data-now-game="${esc(g.id)}">${esc(g.title)}</button></h3>
+      <div class="now-ep">
+        <span class="now-label">${first ? 'İlk bölüm' : 'Son bölüm'} · ${episodeName(n)}</span>
+        ${ep.title ? `<span class="now-ep-title">${esc(ep.title)}</span>` : ''}
+        ${when ? `<time class="now-ep-when" datetime="${esc(ep.date)}">${esc(when)}</time>` : ''}
+      </div>
+      <p class="now-meta">${meta.join(' · ')}${next ? ` · <span class="now-next">Sıradaki bölüm ${esc(formatDate(next.date))}</span>` : ''}</p>
+      <div class="now-actions">
+        ${watch}
+        <button type="button" class="btn btn-ghost" data-now-game="${esc(g.id)}">${icon('pad')}<span>Tüm bölümler</span></button>
+      </div>`;
+    const moreHTML = others.length
+      ? `<span>${others.length === 1 ? 'Bu da devam ediyor:' : 'Bunlar da devam ediyor:'}</span>${others.map((o) =>
+        `<button type="button" class="latest-game" data-now-game="${esc(o.id)}">${icon('pad')}<span>${esc(o.title)}</span></button>`).join('')}`
+      : '';
+
+    // oynayan bölüm vitrinden düştüyse ya da videosu değiştiyse yerine kapak gelir
+    if (nowPlaying && nowPlaying !== `${g.id}|${ep.id}|${vid}`) {
+      nowPlaying = '';
+      nowParts.media = '';
+    }
+    if (!nowPlaying) setNowPart(el.nowPlayer, 'media', media);
+    setNowPart(el.nowInfo, 'info', infoHTML);
+    setNowPart(el.nowMore, 'more', moreHTML);
+    el.nowMore.hidden = !others.length;
+    el.nowSection.hidden = false;
+  }
+
+  el.nowBody.addEventListener('click', (e) => {
+    const play = e.target.closest('[data-now="play"]');
+    if (play) {
+      // ekranda görünen bölüm oynatılır (o arada gün dönüp vitrin değişmiş olsa bile)
+      const g = findGame(play.dataset.game);
+      const ep = g && g.episodes.find((x) => x.id === play.dataset.ep);
+      if (!ep || !hasVideo(ep)) {
+        renderNowPlaying();
+        return;
+      }
+      stopLatestPlayer();
+      el.nowPlayer.innerHTML = playerHTML(g, ep);
+      nowPlaying = `${g.id}|${ep.id}|${youtubeId(ep.url)}`;
+      return;
+    }
+    const game = e.target.closest('[data-now-game]');
+    if (game) openDetail(game.dataset.nowGame);
+  });
+
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
   let latest = null;
@@ -2025,39 +2162,59 @@
     }
   }
 
+  const latestMoreHTML = (list) => (list.length ? `<ol class="latest-more">${list.slice(0, 4).map((r) => `<li><a class="latest-mini" href="${esc(r.url)}" target="_blank" rel="noopener">
+          <span class="latest-mini-thumb"><img src="${esc(r.thumbnail)}" alt="" loading="lazy"></span>
+          <span class="latest-mini-title">${esc(r.title)}</span>
+          <span class="latest-mini-when">${esc(relativeDay(localDay(r.published)))}</span>
+        </a></li>`).join('')}</ol>` : '');
+
   function renderLatest() {
     if (!latest) {
       el.latestSection.hidden = true;
       return;
     }
     const [v, ...rest] = latest.videos;
-    const day = localDay(v.published);
-    const when = [relativeDay(day), formatDate(day)].filter(Boolean).join(' · ');
-    const match = findEpisodeByVideo(v.id);
-    const thumb = `<img src="${esc(v.thumbnail)}" alt="" decoding="async">`;
-    const media = canEmbed
-      ? `<button type="button" class="cover" data-latest-play="${esc(v.id)}" aria-label="Videoyu oynat: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></button>`
-      : `<a class="cover" href="${esc(v.url)}" target="_blank" rel="noopener" aria-label="Videoyu YouTube'da aç: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></a>`;
-    const playing = $('#latestPlayer iframe', el.latestBody);
-    el.latestBody.innerHTML = `<article class="latest-main">
-        <div class="latest-media" id="latestPlayer">${media}</div>
-        <div class="latest-info">
-          <p class="latest-when">${esc(when)}</p>
-          <h3 class="latest-title"><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.title)}</a></h3>
-          ${match ? `<button type="button" class="latest-game" data-latest-game="${esc(match.g.id)}">${icon('pad')}<span>${esc(match.g.title)} · ${episodeName(match.n)}</span></button>` : ''}
-          <div class="latest-actions"><a class="btn btn-yt btn-sm" href="${esc(v.url)}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a></div>
-        </div>
-      </article>
-      ${rest.length ? `<ol class="latest-more">${rest.slice(0, 4).map((r) => `<li><a class="latest-mini" href="${esc(r.url)}" target="_blank" rel="noopener">
-          <span class="latest-mini-thumb"><img src="${esc(r.thumbnail)}" alt="" loading="lazy"></span>
-          <span class="latest-mini-title">${esc(r.title)}</span>
-          <span class="latest-mini-when">${esc(relativeDay(localDay(r.published)))}</span>
-        </a></li>`).join('')}</ol>` : ''}`;
-    if (playing) $('#latestPlayer', el.latestBody).replaceChildren(playing.parentElement);
+    // Kanaldaki son video "Şimdi oynuyorum" vitrinindeki bölümse ikinci kez büyük gösterilmez;
+    // bu bölümde yalnızca öteki videolar listelenir.
+    const featured = nowPlayingGames()[0];
+    const featuredEp = featured && newestAired(featured);
+    if (featuredEp && youtubeId(featuredEp.url) === v.id) {
+      el.latestTitle.textContent = 'Kanaldaki diğer videolar';
+      el.latestBody.innerHTML = latestMoreHTML(rest);
+    } else {
+      el.latestTitle.textContent = 'Kanaldaki son video';
+      const day = localDay(v.published);
+      const when = [relativeDay(day), formatDate(day)].filter(Boolean).join(' · ');
+      const match = findEpisodeByVideo(v.id);
+      const thumb = `<img src="${esc(v.thumbnail)}" alt="" decoding="async">`;
+      const media = canEmbed
+        ? `<button type="button" class="cover" data-latest-play="${esc(v.id)}" aria-label="Videoyu oynat: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></button>`
+        : `<a class="cover" href="${esc(v.url)}" target="_blank" rel="noopener" aria-label="Videoyu YouTube'da aç: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></a>`;
+      const playing = $('#latestPlayer iframe', el.latestBody);
+      el.latestBody.innerHTML = `<article class="latest-main">
+          <div class="latest-media" id="latestPlayer">${media}</div>
+          <div class="latest-info">
+            <p class="latest-when">${esc(when)}</p>
+            <h3 class="latest-title"><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.title)}</a></h3>
+            ${match ? `<button type="button" class="latest-game" data-latest-game="${esc(match.g.id)}">${icon('pad')}<span>${esc(match.g.title)} · ${episodeName(match.n)}</span></button>` : ''}
+            <div class="latest-actions"><a class="btn btn-yt btn-sm" href="${esc(v.url)}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a></div>
+          </div>
+        </article>
+        ${latestMoreHTML(rest)}`;
+      if (playing) $('#latestPlayer', el.latestBody).replaceChildren(playing.parentElement);
+    }
     const channel = safeLink(data.site.youtubeUrl) || latest.channelUrl;
     el.latestChannel.hidden = !channel;
     if (channel) el.latestChannel.href = channel;
-    el.latestSection.hidden = false;
+    el.latestSection.hidden = !el.latestBody.innerHTML.trim();
+  }
+
+  // Bu bölümde oynayan videoyu durdurup yerine kapağı koyar (vitrinde video başlarken).
+  function stopLatestPlayer() {
+    const frame = $('#latestPlayer iframe', el.latestBody);
+    if (!frame) return;
+    frame.parentElement.remove();
+    renderLatest();
   }
 
   el.latestBody.addEventListener('click', (e) => {
@@ -2065,6 +2222,7 @@
     if (play) {
       const id = play.dataset.latestPlay;
       if (!VIDEO_ID.test(id)) return;
+      stopNowPlaying();
       $('#latestPlayer', el.latestBody).innerHTML = `<div class="cover"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="Kanaldaki son video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
       return;
     }

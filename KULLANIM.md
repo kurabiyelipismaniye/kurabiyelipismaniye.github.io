@@ -6,6 +6,9 @@ her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayın
 
 ## Sitede neler var
 
+- **Şimdi oynuyorum:** sayfanın en üstünde, devam eden oyunlardan son bölümü en yeni olanı büyük kapağıyla,
+  son bölümüyle ve “Son bölümü izle” düğmesiyle gösterir; kapağa basınca son bölüm site içinde oynar. Başka devam eden
+  oyun varsa altında küçük düğmeler olarak listelenir. Devam eden oyun yoksa bu bölüm görünmez.
 - **Kayıt dosyası:** kaç oyunu bitirdiğin, kaçının devam ettiği, kaçının sırada olduğu, toplam bölüm sayısı ve yüzde olarak ilerleme çubuğu
 - **Arama:** oyun adı, kategori, platform, açıklama ya da bölüm başlıklarında arar
 - **Filtreler:** Tümü / Oynadıklarım / Devam edenler / Sıradakiler, kategori düğmeleri, sıralama (son eklenen, son yayınlanan bölüm, A–Z, puan, son bitirilen)
