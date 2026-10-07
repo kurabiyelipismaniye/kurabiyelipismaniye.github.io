@@ -68,7 +68,7 @@ Claude `js/config.js` dosyasına ekleyip yayınlar.
 **B) GitHub'da kendin düzenle.**
 
 1. Chrome'da GitHub'a giriş yap ve **Masaüstü sitesi**ni aç.
-2. Şu adresi aç: `https://github.com/ibrahimeserocak/Youtube/edit/main/js/config.js`
+2. Şu adresi aç: `https://github.com/kurabiyelipismaniye/kurabiyelipismaniye.github.io/edit/main/js/config.js`
    (dosya düzenleyicisi doğrudan açılır; açılmazsa dosyayı açıp kalem simgesine bas).
 3. `firebase: null,` satırını bul. `null` yerine kopyaladığın `{ ... }` kısmını yapıştır. Sonunda virgül kalsın:
 
@@ -125,7 +125,7 @@ kimse yeni hesap açamaz; yalnızca senin konsoldan eklediğin hesap kalır. (Bu
 
 ## 6. Sitede giriş yap ve güvenlik kurallarını yayınla
 
-1. Siteyi aç: [ibrahimeserocak.github.io/Youtube](https://ibrahimeserocak.github.io/Youtube/) → sağ üstte **Giriş**.
+1. Siteyi aç: [kurabiyelipismaniye.github.io](https://kurabiyelipismaniye.github.io/) → sağ üstte **Giriş**.
 2. Dördüncü adımda eklediğin e-postayı ve şifreyi yaz → **Giriş yap**.
 3. **Kurulum** penceresi kendiliğinden açılır. Açılmazsa düzenleme çubuğundaki **Kurulum** düğmesine bas
    (ya da adresin sonuna `#kurulum` yaz).
@@ -157,7 +157,7 @@ gider, bu adım çoğunlukla kendiliğinden tamamlanmış olur. Değiştirmek is
 
 **Hemen görmek istersen (isteğe bağlı):**
 
-1. Chrome'da GitHub'a giriş yap, **Masaüstü sitesi**ni aç: `https://github.com/ibrahimeserocak/Youtube/actions`
+1. Chrome'da GitHub'a giriş yap, **Masaüstü sitesi**ni aç: `https://github.com/kurabiyelipismaniye/kurabiyelipismaniye.github.io/actions`
 2. Solda **Son videolar ve yedek**.
 3. **“Run workflow”** → dal `main` kalsın → yeşil **“Run workflow”**.
 4. 1–2 dakika sonra yeşil tik çıkınca siteyi yenile.

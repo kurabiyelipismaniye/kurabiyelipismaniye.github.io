@@ -65,9 +65,9 @@ yedeği **Dosya seç** ile geri yükleyebilirsin.
 
 ## Siteyi GitHub Pages'te yayına almak
 
-1. GitHub'da bu deponun (`ibrahimeserocak/Youtube`) **Settings → Pages** sayfasına git.
+1. GitHub'da bu deponun (`kurabiyelipismaniye/kurabiyelipismaniye.github.io`) **Settings → Pages** sayfasına git.
 2. **Source:** “Deploy from a branch”. **Branch:** `main`, klasör `/ (root)` → **Save**.
-3. Birkaç dakika sonra site `https://ibrahimeserocak.github.io/Youtube/` adresinde açılır.
+3. Birkaç dakika sonra site `https://kurabiyelipismaniye.github.io/` adresinde açılır.
 
 Siteyi başka bir depoya ya da dala taşırsan “Site ayarları”ndaki **GitHub'daki veri dosyasının düzenleme linki**
 alanını da ona göre güncelle (ör. `https://github.com/KULLANICI/DEPO/edit/DAL/data/games.js`).
