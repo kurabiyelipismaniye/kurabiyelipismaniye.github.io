@@ -3,8 +3,9 @@
    1) Firebase kuruluysa Firestore'daki herkese açık veriyi okur; backup/firestore-backup.json yedeğini ve
       site Firebase'e ulaşamadığında gösterilen data/games.js dosyasını günceller.
    2) YouTube kanalının RSS akışındaki son videoları data/latest.json dosyasına yazar.
+   3) Oyunların Steam mağaza sayfasını adıyla arar ve data/steam.json dosyasına yazar.
    Dosyalar yalnızca içerik değiştiğinde yeniden yazılır. Bağımlılık yok: Node 18+ ve yerleşik fetch yeterli.
-   Testler için: FIRESTORE_BASE (ör. http://127.0.0.1:8080) ve YOUTUBE_BASE (ör. http://127.0.0.1:9000). */
+   Testler için: FIRESTORE_BASE (ör. http://127.0.0.1:8080), YOUTUBE_BASE (ör. http://127.0.0.1:9000) ve STEAM_BASE. */
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -15,6 +16,7 @@ const FILES = {
   config: 'js/config.js',
   games: 'data/games.js',
   latest: 'data/latest.json',
+  steam: 'data/steam.json',
   backup: 'backup/firestore-backup.json'
 };
 
@@ -22,6 +24,7 @@ const FILES = {
 const trimBase = (s) => String(s).trim().replace(/\/+$/, '');
 const FIRESTORE_BASE = trimBase(process.env.FIRESTORE_BASE || 'https://firestore.googleapis.com').replace(/\/v1$/, '');
 const YOUTUBE_BASE = trimBase(process.env.YOUTUBE_BASE || 'https://www.youtube.com');
+const STEAM_BASE = trimBase(process.env.STEAM_BASE || 'https://store.steampowered.com');
 
 const TIMEOUT_MS = 30000;
 const RETRY_MS = 2000;
@@ -36,7 +39,7 @@ const BROWSER_HEADERS = {
 
 // data/games.js okunaklı kalsın diye bilinen alanlar sitenin kullandığı sırayla yazılır, gerisi alfabetik
 const SITE_KEYS = ['channelName', 'title', 'tagline', 'youtubeUrl', 'githubEditUrl'];
-const GAME_KEYS = ['id', 'title', 'category', 'platform', 'description', 'cover', 'rating', 'played', 'playedAt', 'addedAt', 'episodes', 'example'];
+const GAME_KEYS = ['id', 'title', 'category', 'platform', 'description', 'cover', 'steamUrl', 'rating', 'played', 'playedAt', 'addedAt', 'episodes', 'example'];
 const EPISODE_KEYS = ['id', 'title', 'url', 'date'];
 const IMAGE_KEYS = ['id', 'createdAt', 'data'];
 const SUGGESTION_KEYS = ['id', 'title', 'note', 'name', 'category', 'votes', 'status', 'gameId', 'createdAt'];
@@ -469,6 +472,83 @@ async function syncLatest(site, cfg) {
   log(`${FILES.latest} güncellendi: ${videos.length} video${videos[0] ? `, en yenisi "${videos[0].title}"` : ''}.`);
 }
 
+/* ---------- Steam ---------- */
+// Her oyun adıyla Steam mağazasında aranır. Yalnızca adı birebir tutan (büyük/küçük harf, ™ ® işaretleri ve
+// noktalama farkı sayılmaz) ilk uygulama kabul edilir; emin olunamazsa link verilmez (ör. "Minecraft" araması
+// "Minecraft Dungeons" döndürür, o kabul edilmez). Sonuç oyun kimliğiyle ve arandığı adla saklanır; ad değişirse
+// yeniden aranır. Bulunamayanlar haftada bir yeniden denenir. Elle Steam linki (ya da "yok") girilmiş oyunlar aranmaz.
+const STEAM_MAX_LOOKUPS = 25; // bir çalışmada en fazla bu kadar arama; kalanlar sonraki saate kalır
+const STEAM_RETRY_MS = 7 * 86400000;
+const STEAM_DELAY_MS = 1500; // aramalar arası bekleme, Steam'i yormamak için
+
+// "DARK SOULS™ III" = "Dark Souls III", "Baldur's Gate 3" = "Baldurs Gate 3", "S.T.A.L.K.E.R." = "STALKER":
+// işaretler ve kelime içindeki kesme/nokta/virgül atılır, öteki noktalama boşluk sayılır.
+function steamKey(s) {
+  return String(s || '').replace(/[\u2122\u00ae\u00a9]/g, '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\u0131/g, 'i').replace(/['\u2019.,]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+async function findOnSteam(title) {
+  const url = `${STEAM_BASE}/api/storesearch/?term=${encodeURIComponent(title)}&l=english&cc=US`;
+  const body = await request(url, { headers: { 'User-Agent': BROWSER_HEADERS['User-Agent'], 'Accept': 'application/json' } });
+  let json;
+  try { json = JSON.parse(body); } catch { throw new Error(`Steam yanıtı JSON değil — ${url}`); }
+  const items = isObj(json) && Array.isArray(json.items) ? json.items : [];
+  const want = steamKey(title);
+  if (!want) return null; // Latin harfi ya da rakamı olmayan ad (ör. yalnızca Çince) güvenle eşleştirilemez
+  const hit = items.find((it) => isObj(it) && it.type === 'app' && Number.isInteger(it.id) && it.id > 0 && steamKey(it.name) === want);
+  return hit ? { appid: hit.id, name: String(hit.name).trim() } : null;
+}
+
+async function syncSteam(games) {
+  const prev = readJson(FILES.steam);
+  const old = prev && isObj(prev.games) ? prev.games : {};
+  const now = Date.now();
+  const out = {};
+  const todo = [];
+  for (const g of games) {
+    if (!isObj(g) || typeof g.id !== 'string' || !g.id) continue;
+    const title = typeof g.title === 'string' ? g.title.trim() : '';
+    if (!title || (typeof g.steamUrl === 'string' && g.steamUrl.trim())) continue; // elle girilmiş
+    const e = isObj(old[g.id]) ? old[g.id] : null;
+    const fresh = e && e.title === title && (Number.isInteger(e.appid) && e.appid > 0
+      || (e.appid === null && now - Date.parse(e.checkedAt || 0) < STEAM_RETRY_MS));
+    if (fresh) out[g.id] = e;
+    else todo.push({ id: g.id, title, prev: e });
+  }
+  let looked = 0;
+  for (const t of todo) {
+    if (looked >= STEAM_MAX_LOOKUPS) {
+      // aranamayanların eski kaydı (varsa ve adı tutuyorsa) korunur
+      if (t.prev && t.prev.title === t.title) out[t.id] = t.prev;
+      continue;
+    }
+    if (looked) await sleep(STEAM_DELAY_MS);
+    looked++;
+    try {
+      const hit = await findOnSteam(t.title);
+      out[t.id] = hit
+        ? { title: t.title, appid: hit.appid, name: hit.name }
+        : { title: t.title, appid: null, checkedAt: new Date(now).toISOString().slice(0, 10) };
+      log(hit ? `Steam: "${t.title}" → ${hit.name} (${hit.appid})` : `Steam: "${t.title}" için birebir eşleşen oyun bulunamadı.`);
+    } catch (err) {
+      warn(`Steam araması yapılamadı ("${t.title}"): ${err.message}. Kalan oyunlar sonraki çalışmada aranacak.`);
+      if (t.prev && t.prev.title === t.title) out[t.id] = t.prev;
+      looked = STEAM_MAX_LOOKUPS; // Steam'e ulaşılamıyorsa bu çalışmada başka arama yapılmaz
+    }
+  }
+  if (todo.length > STEAM_MAX_LOOKUPS) log(`Steam: ${todo.length - STEAM_MAX_LOOKUPS} oyun sonraki çalışmada aranacak.`);
+  const sorted = {};
+  for (const id of Object.keys(out).sort(byStr)) sorted[id] = out[id];
+  if (prev && stable(prev.games || {}) === stable(sorted)) {
+    log(`${FILES.steam}: değişiklik yok.`);
+    return;
+  }
+  writeText(FILES.steam, `${JSON.stringify({ updatedAt: new Date(now).toISOString(), games: sorted }, null, 2)}\n`);
+  const found = Object.values(sorted).filter((e) => e.appid).length;
+  log(`${FILES.steam} güncellendi: ${found} oyunun Steam sayfası bulundu.`);
+}
+
 /* ---------- ana akış ---------- */
 async function main() {
   let cfg;
@@ -481,6 +561,7 @@ async function main() {
   }
 
   let site = null;
+  let games = null;
   const fb = isObj(cfg.firebase) ? cfg.firebase : null;
   if (fb && fb.apiKey && fb.projectId) {
     let data = null;
@@ -491,6 +572,8 @@ async function main() {
     }
     if (data) {
       site = data.site;
+      // liste henüz buluta aktarılmadıysa data/games.js'teki liste kullanılır
+      if (data.site || data.games.length) games = data.games;
       try {
         writeBackup(data);
         writeGamesJs(data);
@@ -504,15 +587,22 @@ async function main() {
     log('Firebase kurulmamış; yedek adımı atlandı.');
   }
   // Firestore okunamadıysa ya da site ayarı yoksa son bilinen ayarlar data/games.js'ten alınır
-  if (!site) {
+  if (!site || !games) {
     const prev = readSiteData();
-    site = prev && isObj(prev.site) ? prev.site : null;
+    if (!site) site = prev && isObj(prev.site) ? prev.site : null;
+    if (!games) games = prev && Array.isArray(prev.games) ? prev.games : [];
   }
 
   try {
     await syncLatest(site, cfg);
   } catch (err) {
     warn(`Son videolar alınamadı, ${FILES.latest} olduğu gibi bırakıldı: ${err.message}`);
+  }
+
+  try {
+    await syncSteam(games);
+  } catch (err) {
+    warn(`Steam adımı tamamlanamadı, ${FILES.steam} olduğu gibi bırakıldı: ${err.message}`);
   }
 }
 

@@ -1,5 +1,6 @@
 # Saatte bir YouTube kanalının son videolarını data/latest.json dosyasına yazar. Firebase kuruluysa
 # Firestore'daki listeyi backup/firestore-backup.json olarak yedekler ve data/games.js dosyasını günceller.
+# Oyunların Steam mağaza sayfasını adıyla arayıp data/steam.json dosyasına yazar.
 # Ayrıntılar scripts/sync.mjs içinde. Hemen çalıştırmak için: Actions → "Son videolar ve yedek" → Run workflow.
 name: Son videolar ve yedek
 
@@ -49,7 +50,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          for f in data/latest.json data/games.js backup; do
+          for f in data/latest.json data/games.js data/steam.json backup; do
             if [ -e "$f" ]; then git add -A -- "$f"; fi
           done
           if git diff --cached --quiet; then

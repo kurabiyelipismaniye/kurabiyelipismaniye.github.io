@@ -201,6 +201,9 @@
     return id;
   }
 
+  // Oyun adından linkte kullanılacak kısa kimlik: "Red Dead Redemption 2" → red-dead-redemption-2
+  const slugify = (s) => fold(s).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '');
+
   function normalizeEpisode(e, fallbackId) {
     e = e && typeof e === 'object' ? e : {};
     const date = String(e.date || '').trim().slice(0, 10);
@@ -241,6 +244,7 @@
       platform: String(g.platform || '').trim(),
       description: String(g.description || '').trim(),
       cover: String(g.cover || '').trim(),
+      steamUrl: String(g.steamUrl || '').trim(), // elle girilen mağaza linki; "yok": link gösterilmez
       rating: Math.max(0, Math.min(5, Math.round(Number(g.rating) || 0))),
       played,
       playedAt: played && g.playedAt ? String(g.playedAt) : null,
@@ -342,9 +346,19 @@
   let cloudGames = null;        // Firestore'daki son oyun listesi (null: henüz gelmedi)
   let cloudSite;                // Firestore'daki site ayarları (undefined: gelmedi, null: yok)
   let cloudError = null;        // { code, message } okuma hatası (ör. kurallar yayınlanmamış)
+  let gamesFromCache = false;   // son oyun listesi tarayıcının önbelleğinden mi geldi (sunucudan henüz gelmedi)
   let pendingSaves = 0;
   let saveFailed = false;
   const pendingDeletes = new Map(); // geri alınabilsin diye birkaç saniye bekletilen silmeler
+
+  // Yeni oyunun kimliği adından türetilir (oyunun linkinde görünür: #oyun/elden-ring) ve ad sonradan
+  // değişse de aynı kalır. Kullanımdaki ya da silinmeyi bekleyen bir kimlikse sonuna -2, -3… eklenir.
+  function newGameId(title) {
+    const base = slugify(title) || 'oyun';
+    let id = base;
+    for (let n = 2; findGame(id) || pendingDeletes.has(id); n++) id = `${base}-${n}`;
+    return id;
+  }
 
   // Bulutta henüz hiç veri yoksa (site ayarı ve oyun yok) kurulum tamamlanmamış sayılır.
   const cloudInitialized = () => Boolean(cloudSite) || Boolean(cloudGames && cloudGames.length);
@@ -806,7 +820,63 @@
   }
   el.detailDialog.addEventListener('close', () => {
     el.detailContent.innerHTML = ''; // video oynuyorsa durdur
+    pendingGameHash = ''; // kullanıcı kendi kapattıysa, bekleyen link sonradan araya girmesin
+    if (GAME_HASH.test(location.hash)) setHash(activeTab === 'suggestions' ? '#oneriler' : '');
   });
+
+  /* ---------- oyunun linki ---------- */
+  // Her oyunun kendi adresi var: …/#oyun/<kimlik> (ör. #oyun/elden-ring). Bu adresle açılan sayfa o oyunun
+  // penceresini açar; pencere açıkken adres çubuğu da bu adresi gösterir, oradan da kopyalanabilir.
+  const GAME_HASH = /^#oyun\/(.+)$/;
+  const gameHash = (g) => `#oyun/${encodeURIComponent(g.id)}`;
+  const gameUrl = (g) => `${location.href.split('#')[0]}${gameHash(g)}`;
+
+  function setHash(hash) {
+    try {
+      history.replaceState(null, '', hash || location.pathname + location.search);
+    } catch (err) { /* önizleme çerçevesinde adres değiştirilemeyebilir */ }
+  }
+
+  function gameFromHash(hash) {
+    const m = GAME_HASH.exec(hash || '');
+    if (!m) return null;
+    let key = m[1];
+    try { key = decodeURIComponent(key); } catch (err) { /* bozuk kodlama: olduğu gibi denenir */ }
+    // elle yazılmış linkler için oyunun adıyla da aranır (#oyun/elden-ring, #oyun/Elden%20Ring)
+    return findGame(key) || data.games.find((g) => slugify(g.title) === slugify(key)) || null;
+  }
+
+  // Bulut modunda liste sonradan gelir; oyun ilk listede yoksa liste gelince bir kez daha aranır (final).
+  let pendingGameHash = '';
+  function openFromHash(hash, final) {
+    const g = gameFromHash(hash);
+    if (g) {
+      pendingGameHash = '';
+      openDetail(g.id);
+      return;
+    }
+    if (!final) {
+      pendingGameHash = hash;
+      return;
+    }
+    pendingGameHash = '';
+    setHash(activeTab === 'suggestions' ? '#oneriler' : '');
+    toast('Bu linkteki oyun listede bulunamadı.', { error: true });
+  }
+
+  window.addEventListener('hashchange', () => {
+    if (GAME_HASH.test(location.hash)) openFromHash(location.hash, mode === 'local' || cloudFinal());
+  });
+
+  async function copyGameLink(g) {
+    const url = gameUrl(g);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast('Oyunun linki kopyalandı. Video açıklamasına yapıştırabilirsin.');
+    } catch (err) {
+      window.prompt('Linki kopyala:', url);
+    }
+  }
 
   /* ---------- oyun ayrıntısı ---------- */
   let detailId = null;
@@ -948,10 +1018,16 @@
 
   let playingEpId = null;
 
+  // Pencere yenilenirken (bulut güncellemesi, Steam bilgisi) odaklı düğme kaybolmasın diye sırası hatırlanır.
+  const detailFocusables = () => $$('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])', el.detailContent);
+
   function openDetail(id, opts = {}) {
     const g = findGame(id);
     if (!g) return;
+    pendingGameHash = ''; // başka bir oyun açıldıysa bekleyen link sonradan araya girmesin
     const keepPlayer = opts.keepPlayer && detailId === id;
+    const focusIndex = keepPlayer && el.detailContent.contains(document.activeElement)
+      ? detailFocusables().indexOf(document.activeElement) : -1;
     if (!keepPlayer) playingEpId = null;
     detailId = id;
     const state = gameState(g);
@@ -977,6 +1053,11 @@
       actions.push(`<button type="button" class="btn btn-ghost" data-detail="cover">${icon('image')}<span>Kapak görseli</span></button>`);
       actions.push(`<button type="button" class="btn btn-ghost" data-detail="edit">${icon('edit')}<span>Düzenle</span></button>`);
     }
+    const store = steamLink(g);
+    if (store) {
+      actions.push(`<a class="btn btn-ghost" href="${esc(store)}" target="_blank" rel="noopener">${icon('external')}<span>${isSteamUrl(store) ? "Steam'de gör" : 'Mağaza sayfası'}</span></a>`);
+    }
+    actions.push(`<button type="button" class="btn btn-ghost" data-detail="copy-link">${icon('copy')}<span>Linki kopyala</span></button>`);
     const actionsHTML = actions.filter(Boolean).join('');
     const oldPlayer = keepPlayer ? $('#detailPlayer', el.detailContent) : null;
     const scrollTop = keepPlayer ? el.detailDialog.scrollTop : 0;
@@ -1004,7 +1085,12 @@
       for (const row of $$('.ep', el.detailContent)) row.classList.toggle('is-playing', row.dataset.ep === playingEpId);
     }
     openDialog(el.detailDialog);
+    if (location.hash !== gameHash(g)) setHash(gameHash(g));
     if (keepPlayer) el.detailDialog.scrollTop = scrollTop;
+    if (focusIndex >= 0) {
+      const target = detailFocusables()[focusIndex];
+      if (target) target.focus({ preventScroll: true });
+    }
     loadGallery(g.id, keepPlayer);
   }
 
@@ -1041,6 +1127,8 @@
       pickFile(galleryInput, g.id);
     } else if (action === 'gallery-open') {
       openLightbox(Number(btn.dataset.index) || 0);
+    } else if (action === 'copy-link') {
+      copyGameLink(g);
     }
   });
 
@@ -1353,6 +1441,8 @@
     title: $('#f-title'),
     category: $('#f-category'),
     platform: $('#f-platform'),
+    steam: $('#f-steam'),
+    steamHint: $('#steamHint'),
     desc: $('#f-desc'),
     episodes: $('#epEditor'),
     addEpisode: $('#addEpisode'),
@@ -1530,9 +1620,11 @@
   }
 
   function clearErrors() {
-    for (const id of ['f-title-error', 'f-category-error', 'f-played-at-error']) $(`#${id}`).hidden = true;
+    for (const id of ['f-title-error', 'f-category-error', 'f-steam-error', 'f-played-at-error']) $(`#${id}`).hidden = true;
     setValid(f.title);
     setValid(f.category);
+    setValid(f.steam);
+    f.steam.setAttribute('aria-describedby', 'steamHint');
     setValid(f.playedAt);
     clearEpisodeErrors();
   }
@@ -1555,6 +1647,8 @@
     f.title.value = g ? g.title : '';
     f.category.value = g ? g.category : (prefs.category !== 'all' ? prefs.category : '');
     f.platform.value = g ? g.platform : '';
+    f.steam.value = g ? g.steamUrl : '';
+    updateSteamHint();
     f.desc.value = g ? g.description : '';
     f.episodes.innerHTML = '';
     for (const ep of g ? g.episodes : []) addEpisodeRow(ep, { existing: true });
@@ -1577,11 +1671,28 @@
   }
 
   // yazmaya başlayınca o alanın hata mesajı kalksın
-  for (const [input, errorId] of [[f.title, 'f-title-error'], [f.category, 'f-category-error'], [f.playedAt, 'f-played-at-error']]) {
+  for (const [input, errorId] of [[f.title, 'f-title-error'], [f.category, 'f-category-error'], [f.steam, 'f-steam-error'], [f.playedAt, 'f-played-at-error']]) {
     input.addEventListener('input', () => {
       setValid(input);
       $(`#${errorId}`).hidden = true;
+      if (input === f.steam) input.setAttribute('aria-describedby', 'steamHint');
     });
+  }
+  f.steam.addEventListener('input', updateSteamHint);
+  f.title.addEventListener('input', updateSteamHint);
+
+  // Steam alanının altındaki açıklama: boşsa otomatik bulunan sayfa (ya da aranacağı), doluysa ne olacağı
+  function updateSteamHint() {
+    const typed = f.steam.value.trim();
+    const e = formId ? steamMap[formId] : null;
+    const sameTitle = e && e.title === f.title.value.trim();
+    let text;
+    if (STEAM_NONE.test(typed)) text = 'Bu oyunun penceresinde mağaza linki gösterilmez.';
+    else if (typed) text = 'Oyunun penceresinde bu link gösterilir.';
+    else if (sameTitle && e.appid) text = `Boş bırakırsan Steam'de bulunan sayfa kullanılır: ${e.name}. Yanlışsa doğru linki yapıştır; Steam'de yoksa “yok” yaz.`;
+    else if (sameTitle) text = "Steam'de bu adla birebir eşleşen oyun bulunamadı. Linki kendin yapıştırabilirsin; Steam'de yoksa “yok” yaz.";
+    else text = "Boş bırakırsan oyun adıyla Steam'de aranır; bulunursa bir saat içinde oyunun penceresine “Steam'de gör” eklenir. Steam'de yoksa “yok” yaz.";
+    f.steamHint.textContent = text;
   }
   f.played.addEventListener('change', () => {
     if (!f.played.checked) {
@@ -1708,6 +1819,19 @@
       showError(f.category, 'f-category-error');
       firstInvalid = firstInvalid || f.category;
     }
+    // Steam alanı: boş, "yok" ya da tek parça bir link (şeması yazılmamışsa https:// eklenir)
+    let steamUrl = f.steam.value.trim();
+    if (STEAM_NONE.test(steamUrl)) {
+      steamUrl = 'yok';
+    } else if (steamUrl) {
+      steamUrl = withScheme(steamUrl);
+      if (safeLink(steamUrl)) {
+        f.steam.value = steamUrl;
+      } else {
+        showError(f.steam, 'f-steam-error');
+        firstInvalid = firstInvalid || f.steam;
+      }
+    }
     // yarım yazılmış bitirme tarihi sessizce başka bir tarihle değiştirilmesin
     if (f.played.checked && ((f.playedAt.validity && f.playedAt.validity.badInput) ||
         (f.playedAt.value && !isValidDay(f.playedAt.value)))) {
@@ -1754,6 +1878,7 @@
       title,
       category,
       platform: f.platform.value.trim(),
+      steamUrl,
       description: f.desc.value.trim(),
       episodes: sortEpisodes(rows.map((r) => normalizeEpisode(r))),
       cover: formCover,
@@ -1769,7 +1894,7 @@
       delete existing.example; // elle düzenlenen oyun artık örnek sayılmaz
       toast(`“${title}” güncellendi.`);
     } else {
-      const game = normalizeGame({ ...values, id: uid(), addedAt: new Date().toISOString() });
+      const game = normalizeGame({ ...values, id: newGameId(title), addedAt: new Date().toISOString() });
       data.games.push(game);
       if (game.played) justToggled = game.id;
       // yeni oyun filtrelerde gizli kalmasın
@@ -2208,6 +2333,51 @@
     if (el.detailDialog.open && findGame(detailId) && !$('#detailPlayer iframe', el.detailContent)) refreshDetail();
   }, 60000);
 
+  /* ---------- Steam sayfası ---------- */
+  // data/steam.json'u saatlik görev yazar (scripts/sync.mjs): oyunlar adıyla Steam'de aranır, yalnızca adı
+  // birebir tutan kabul edilir. Formdaki "Steam sayfası" doluysa o kullanılır; "yok" yazılırsa link gösterilmez.
+  let steamMap = {};
+  const STEAM_NONE = /^yok$/i;
+
+  function isSteamUrl(url) {
+    try { return /(^|\.)steampowered\.com$/i.test(new URL(url).hostname); } catch (err) { return false; }
+  }
+
+  function steamLink(g) {
+    const manual = String(g.steamUrl || '').trim();
+    if (manual) return STEAM_NONE.test(manual) ? '' : safeLink(manual);
+    const e = steamMap[g.id];
+    // ad değiştiyse eski eşleşme kullanılmaz; görev yeni adla yeniden arar
+    return e && e.title === g.title && Number.isInteger(e.appid) && e.appid > 0 ? `https://store.steampowered.com/app/${e.appid}/` : '';
+  }
+
+  async function loadSteam() {
+    const gh = CONFIG.github || {};
+    const bucket = Math.floor(Date.now() / 600000); // en fazla 10 dakikalık önbellek
+    const sources = [];
+    if (gh.repo && /^https?:$/.test(location.protocol)) {
+      sources.push(`https://raw.githubusercontent.com/${gh.repo}/${gh.branch || 'main'}/data/steam.json?v=${bucket}`);
+    }
+    sources.push(`data/steam.json?v=${bucket}`);
+    for (const url of sources) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) continue;
+        const json = await res.json();
+        if (!json || typeof json.games !== 'object' || Array.isArray(json.games)) continue;
+        const open = el.detailDialog.open ? findGame(detailId) : null;
+        const before = open ? steamLink(open) : '';
+        steamMap = json.games;
+        // açık pencere yalnızca düğmesi değiştiyse yenilenir (oynayan video varsa baştan başlamasın diye dokunulmaz)
+        if (open && steamLink(open) !== before && !$('#detailPlayer iframe', el.detailContent)) refreshDetail();
+        if (el.formDialog.open) updateSteamHint();
+        return;
+      } catch (err) {
+        /* bir sonraki kaynağı dene */
+      }
+    }
+  }
+
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
   let latest = null;
@@ -2545,7 +2715,7 @@
       toast(`“${existing.title}” zaten listende; öneri “eklendi” olarak işaretlendi.`);
       return;
     }
-    const game = normalizeGame({ id: uid(), title: x.title, category: x.category || 'Diğer', addedAt: new Date().toISOString() });
+    const game = normalizeGame({ id: newGameId(x.title), title: x.title, category: x.category || 'Diğer', addedAt: new Date().toISOString() });
     data.games.push(game);
     commit({ games: [game.id] });
     quiet(track(cloudApi.markSuggestion(id, { status: 'added', gameId: game.id })));
@@ -2580,6 +2750,7 @@
   function initExtras(startHash) {
     if (startHash === '#oneriler') setTab('suggestions');
     loadLatest();
+    loadSteam();
   }
 
   /* ---------- bulut bağlantısı ---------- */
@@ -2602,18 +2773,25 @@
     render();
     if (el.detailDialog.open && detailId) {
       if (findGame(detailId)) refreshDetail();
-      else closeDialog(el.detailDialog);
+      // tarayıcıdaki eski kopyada olmayan oyun, sunucudan güncel liste gelene kadar kapatılmaz
+      else if (!gamesFromCache) closeDialog(el.detailDialog);
     }
     if (el.setupDialog.open) renderSetup();
+    // #oyun/… linkiyle açıldıysa ve oyun ilk listede yoksa her yeni listede yeniden aranır; "bulunamadı"
+    // kararı yalnızca sunucudan gelen listeyle (ya da hata olunca) verilir
+    if (pendingGameHash && (cloudGames !== null || cloudError)) openFromHash(pendingGameHash, cloudFinal());
   }
+
+  const cloudFinal = () => (cloudGames !== null && !gamesFromCache) || Boolean(cloudError);
 
   function subscribeCloud() {
     if (!cloudApi) return;
     if (unsubGames) unsubGames();
     if (unsubSite) unsubSite();
     cloudError = null;
-    unsubGames = cloudApi.watchGames((games) => {
+    unsubGames = cloudApi.watchGames((games, meta) => {
       cloudGames = Array.isArray(games) ? games : [];
+      gamesFromCache = Boolean(meta && meta.fromCache);
       cloudError = null;
       applyCloud();
       maybeShowSetup();
@@ -2647,6 +2825,7 @@
     if (!api || !api.enabled) {
       cloudError = { code: 'sdk', message: (api && api.error) || 'Firebase yüklenemedi' };
       renderEditing();
+      if (pendingGameHash) openFromHash(pendingGameHash, true);
       return;
     }
     if (cloudApi) return;
@@ -2947,6 +3126,7 @@
   render();
   if (startHash === '#kurulum') openSetup();
   else if ((startHash === '#duzenle' || startHash === '#giris') && mode === 'cloud') openLogin();
+  else if (GAME_HASH.test(startHash)) openFromHash(startHash, mode === 'local');
   if (typeof initExtras === 'function') initExtras(startHash);
   // cloud.js bir modül olduğu için bu dosyadan sonra çalışır; yine de olay kaçtıysa yakala
   if (window.cloud) onCloudReady();

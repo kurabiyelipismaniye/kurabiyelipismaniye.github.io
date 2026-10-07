@@ -316,8 +316,25 @@ async function start(cfg) {
     saveSite: safe((site) => setDoc(doc(db, 'site', 'settings'), clean(site))),
 
     /* ---------- oyunlar ---------- */
+    // Oyun listesi ikinci bilgiyle gelir: { fromCache } — Firestore önce tarayıcıdaki (eski olabilecek) kopyayı,
+    // sonra sunucudakini gönderir. Yalnızca "kaydediliyor" bilgisi değişen anlık görüntüler atlanır.
     watchGames(onData, onError) {
-      return listen(collection(db, 'games'), (qs) => qs.docs.map((d) => ({ ...plain(dataOf(d)), id: d.id })), onData, onError);
+      let lastFromCache = null;
+      return onSnapshot(
+        collection(db, 'games'),
+        { includeMetadataChanges: true },
+        (qs) => {
+          const fromCache = qs.metadata.fromCache;
+          if (fromCache === lastFromCache && !qs.docChanges().length) return;
+          lastFromCache = fromCache;
+          onData(qs.docs.map((d) => ({ ...plain(dataOf(d)), id: d.id })), { fromCache });
+        },
+        (err) => {
+          const e = toError(err);
+          if (typeof onError === 'function') onError(e);
+          else console.warn('Bulut dinleyicisi durdu:', e);
+        }
+      );
     },
     saveGame: safe(async (game) => {
       const data = checkGame(game);

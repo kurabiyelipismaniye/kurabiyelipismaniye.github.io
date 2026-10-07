@@ -19,6 +19,11 @@ her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayın
 - **Ayrıntı penceresi:** karta tıklayınca açılır. İçinde tam açıklama, bilgiler, **Kanaldaki seri** özeti
   (ilk ve son bölümün yayın tarihi, ne kadar önce yayınlandığı, kaç bölüm olduğu, serinin kaç günde
   tamamlandığı ve bölümleri tarihine göre gösteren çizgi) ve bölüm listesi var. Bölümler site içinde oynatılır.
+- **Oyunun kendi linki:** her oyunun ayrı bir adresi var (ör. `https://kurabiyelipismaniye.github.io/#oyun/elden-ring`).
+  Bu linke tıklayan, siteyi o oyunun penceresi açık hâlde görür. Linki oyunun penceresindeki **Linki kopyala** ile
+  alıp video açıklamasına yapıştırabilirsin; pencere açıkken adres çubuğunda da yazar. Link oyunun kimliğinden
+  oluşur; oyunun adını sonradan değiştirsen de çalışmaya devam eder.
+- **Steam'de gör:** oyunun Steam mağaza sayfası varsa penceresinde bu düğme çıkar (aşağıda “Steam sayfası”na bak).
 - Açık ve koyu tema, telefonda da düzgün görünür
 
 ## Oyunun durumu nasıl belirlenir
@@ -55,6 +60,22 @@ Durumu elle seçmen gerekmez:
 **Sıradaki bölüm** olarak, sayfanın üstündeki **Yakında** listesinde de tarihiyle görünür. O gün gelince kendiliğinden yayınlanmış sayılır.
 
 Seriyi bitirdiysen “Bu oyunu oynadım” kutusunu işaretle; bitirme tarihi olarak son bölümün tarihi önerilir.
+
+## Steam sayfası
+
+Oyunun Steam mağaza sayfasını elle bulman gerekmez: saatlik otomatik görev her oyunu adıyla Steam'de arar.
+Yalnızca adı birebir tutan oyunu kabul eder (büyük/küçük harf, ™ ® işaretleri ve noktalama fark etmez); emin olamazsa
+link koymaz. Örneğin “Minecraft” araması Steam'de “Minecraft Dungeons” bulur ama ad tutmadığı için bağlanmaz.
+Yeni eklediğin oyunun düğmesi en geç bir saat içinde gelir (hemen görmek için Actions → **Son videolar ve yedek** → **Run workflow**).
+
+Oyun formundaki **Steam sayfası** alanı:
+
+- **Boş:** otomatik bulunan sayfa kullanılır. Alanın altında ne bulunduğu yazar.
+- **Link:** otomatik bulunan yanlışsa ya da ad farklıysa (ör. “Dark Souls 3” ↔ “DARK SOULS III”) doğru linki yapıştır.
+  Steam dışı bir mağaza linki de olur; düğme o zaman **Mağaza sayfası** diye görünür.
+- **yok:** oyun Steam'de değilse (ör. konsol oyunu) yaz; düğme gösterilmez.
+
+Oyunun adını değiştirirsen eski eşleşme bırakılır ve yeni adla yeniden aranır.
 
 ## Değişiklikleri herkese göstermek (yayınlamak)
 
@@ -93,5 +114,6 @@ alanını da ona göre güncelle (ör. `https://github.com/KULLANICI/DEPO/edit/D
 | `css/style.css` | Görünüm, renkler, yazı tipleri |
 | `js/app.js` | Ekleme, tik atma, bölümler, filtreleme, yayınlama |
 | `data/games.js` | Oyun listesi, bölümler ve site ayarları (yayınladığın dosya) |
+| `data/steam.json` | Oyunların otomatik bulunan Steam sayfaları (saatlik görev yazar, elle düzenleme) |
 
 Bilgisayarında denemek için `index.html` dosyasına çift tıklaman yeterli.
