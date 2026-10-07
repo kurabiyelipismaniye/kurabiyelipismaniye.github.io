@@ -1559,10 +1559,9 @@
     picker.hidden = true;
     syncPickerButton();
     openDialog(el.formDialog);
-    setTimeout(() => {
-      focusTarget.focus();
-      if (opts.addEpisode) focusTarget.scrollIntoView({ block: 'center' });
-    }, 30);
+    // odak hemen verilir; gecikmeli verilse kullanıcının o arada dokunduğu alandan odağı çalabilirdi
+    focusTarget.focus();
+    if (opts.addEpisode) focusTarget.scrollIntoView({ block: 'center' });
   }
 
   // yazmaya başlayınca o alanın hata mesajı kalksın
@@ -2082,7 +2081,10 @@
   const VOTES_KEY = 'oyunArsivi.oylar.v1';
   const LAST_SUG_KEY = 'oyunArsivi.sonOneri.v1';
   const myVotes = new Set(Array.isArray(storageGet(VOTES_KEY)) ? storageGet(VOTES_KEY) : []);
-  const suggestionsAvailable = () => mode === 'cloud';
+  // Sekmeler yalnızca veritabanına gerçekten ulaşılabildiğinde görünür; kurulum bitmeden ziyaretçiler
+  // çalışmayan bir öneri formu görmesin.
+  const suggestionsAvailable = () => mode === 'cloud' && cloudLive();
+  let wantSuggestionsTab = false; // adres #oneriler ile açıldıysa bağlantı kurulunca o sekmeye geç
   const sg = {
     form: $('#sugForm'),
     title: $('#sg-title'),
@@ -2118,6 +2120,10 @@
       el.sugPanel.hidden = true;
       return;
     }
+    if (wantSuggestionsTab) {
+      wantSuggestionsTab = false;
+      activeTab = 'suggestions';
+    }
     $('#tabGamesCount').textContent = data.games.length;
     const open = (suggestions || []).filter((x) => x.status !== 'added' && x.status !== 'rejected').length;
     $('#tabSugCount').textContent = open || '';
@@ -2131,7 +2137,11 @@
   }
 
   function setTab(tab) {
-    activeTab = tab === 'suggestions' && suggestionsAvailable() ? 'suggestions' : 'games';
+    if (tab === 'suggestions' && !suggestionsAvailable()) {
+      wantSuggestionsTab = mode === 'cloud';
+      return;
+    }
+    activeTab = tab === 'suggestions' ? 'suggestions' : 'games';
     renderTabs();
     if (activeTab === 'suggestions') renderSuggestions();
     try {
@@ -2233,19 +2243,24 @@
     if (prev) return showSugError('Bu oyun zaten önerilmiş. Listede “Ben de istiyorum”a basarak destekleyebilirsin.');
     const last = Number(storageGet(LAST_SUG_KEY)) || 0;
     if (Date.now() - last < 30000) return showSugError('Az önce bir öneri gönderdin. Biraz bekleyip tekrar dene.');
+    const sent = { title, category: sg.category.value.trim(), note: sg.note.value.trim(), name: sg.name.value.trim() };
+    // form hemen temizlenir: onay beklerken yeni bir öneri yazmaya başlayan kişinin yazdıkları silinmesin
+    sg.form.reset();
+    updateDupHint();
+    storageSet(LAST_SUG_KEY, Date.now());
     sg.submit.disabled = true;
     try {
-      await cloudApi.addSuggestion({
-        title,
-        category: sg.category.value.trim(),
-        note: sg.note.value.trim(),
-        name: sg.name.value.trim()
-      });
-      storageSet(LAST_SUG_KEY, Date.now());
-      sg.form.reset();
-      updateDupHint();
+      await cloudApi.addSuggestion(sent);
       toast('Önerin gönderildi. Teşekkürler!');
     } catch (err) {
+      storageRemove(LAST_SUG_KEY);
+      // gönderilemediyse, kişi bu arada başka bir şey yazmadıysa yazdıkları geri gelir
+      if (!sg.title.value && !sg.note.value) {
+        sg.title.value = sent.title;
+        sg.category.value = sent.category;
+        sg.note.value = sent.note;
+        sg.name.value = sent.name;
+      }
       showSugError('Öneri gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.');
     } finally {
       sg.submit.disabled = !cloudApi;
@@ -2422,7 +2437,7 @@
         : 'Bağlantı kuruluyor, birkaç saniye sonra tekrar dene.';
       loginError.hidden = false;
     }
-    setTimeout(() => $('#l-email').focus(), 30);
+    $('#l-email').focus();
   }
 
   loginForm.addEventListener('submit', async (e) => {
