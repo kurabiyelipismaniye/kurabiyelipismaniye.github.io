@@ -52,20 +52,19 @@
     return d ? d.toLocaleDateString('tr-TR', { day: 'numeric', month, year: 'numeric' }) : '';
   }
 
-  // "bugün", "3 gün önce", "2 ay önce", "yarın" gibi göreli zaman
-  const relFormat = typeof Intl !== 'undefined' && Intl.RelativeTimeFormat
-    ? new Intl.RelativeTimeFormat('tr', { numeric: 'auto' })
-    : null;
+  // "bugün", "3 gün önce", "2 ay önce", "yarın" gibi göreli zaman. Yalnızca dün/bugün/yarın sözcükle
+  // yazılır; "geçen ay" gibi takvim sözcükleri süreyle karışmasın diye diğerleri hep sayıyla verilir.
+  const hasRel = typeof Intl !== 'undefined' && Intl.RelativeTimeFormat;
+  const relAuto = hasRel ? new Intl.RelativeTimeFormat('tr', { numeric: 'auto' }) : null;
+  const relNum = hasRel ? new Intl.RelativeTimeFormat('tr', { numeric: 'always' }) : null;
   function relativeDay(iso) {
     const d = parseDay(iso);
-    if (!d || !relFormat) return '';
+    if (!d || !hasRel) return '';
     const days = Math.round((d - parseDay(todayISO())) / DAY_MS);
     const abs = Math.abs(days);
-    if (abs <= 1) return relFormat.format(days, 'day'); // bugün / dün / yarın
-    if (abs < 7) return `${abs} gün ${days < 0 ? 'önce' : 'sonra'}`;
-    if (abs < 30) return relFormat.format(Math.trunc(days / 7), 'week');
-    if (abs < 365) return relFormat.format(Math.trunc(days / 30.44), 'month');
-    return relFormat.format(Math.trunc(days / 365), 'year');
+    if (abs <= 1) return relAuto.format(days, 'day');
+    const [unit, size] = abs < 7 ? ['day', 1] : abs < 30 ? ['week', 7] : abs < 335 ? ['month', 30.44] : ['year', 365];
+    return relNum.format(Math.sign(days) * Math.max(1, Math.round(abs / size)), unit);
   }
 
   function daysBetween(a, b) {
@@ -207,7 +206,7 @@
   // YouTube linkleri şeması eksik yazılmış olsa da (youtube.com/...) düzgün bir adrese çevrilir.
   function episodeLink(e) {
     const vid = youtubeId(e.url);
-    return vid ? `https://www.youtube.com/watch?v=${vid}` : safeLink(e.url);
+    return safeLink(e.url) || (vid ? `https://www.youtube.com/watch?v=${vid}` : '');
   }
 
   function normalizeData(d) {
@@ -236,7 +235,10 @@
         for (const lg of local.games) {
           if (!lg || typeof lg !== 'object' || 'episodes' in lg || lg.video) continue;
           const pg = published.games.find((p) => p.id === lg.id && p.example);
-          if (pg) {
+          // kullanıcı örneği kendi oyununa çevirdiyse (ad, açıklama, puan… değiştiyse) dokunma
+          const untouched = pg && ['title', 'category', 'platform', 'description', 'cover', 'rating']
+            .every((k) => String(lg[k] ?? '').trim() === String(pg[k] ?? '').trim());
+          if (untouched) {
             lg.episodes = clone(pg.episodes);
             lg.example = true;
           }
@@ -706,7 +708,9 @@
     const withLink = airedEpisodes(g).filter((e) => episodeLink(e));
     if (!withLink.length) return '';
     const ongoing = gameState(g) === 'ongoing' && withLink.length > 1;
-    const ep = ongoing ? withLink[withLink.length - 1] : withLink[0];
+    // tarihsiz bölümler sona sıralanır; "son bölüm" için tarihi olan en yenisi seçilir
+    const dated = withLink.filter((e) => e.date);
+    const ep = ongoing ? (dated[dated.length - 1] || withLink[withLink.length - 1]) : withLink[0];
     const n = episodeNo(g, ep);
     const where = hasVideo(ep) ? "YouTube'da izle" : 'izle';
     const label = ongoing ? `Son bölümü ${where}` : `${episodeAcc(n)} ${where}`;
@@ -892,7 +896,9 @@
         title: $('.ep-title-input', row).value.trim(),
         date: $('.ep-date-input', row).value
       };
-      r.counts = Boolean(r.url || r.title || row.dataset.existing === '1' || row.dataset.touched === '1');
+      const kept = row.dataset.existing === '1' || row.dataset.touched === '1';
+      // linki, başlığı ve tarihi tamamen silinen satır da kaldırılmış sayılır
+      r.counts = Boolean(r.url || r.title || (kept && r.date));
       return r;
     });
   }
@@ -920,13 +926,14 @@
     if (opts.existing) li.dataset.existing = '1';
     // eski sürümden gelen tarihsiz bölüm, tarih seçilmeden de kaydedilebilsin
     if (opts.existing && !ep.date) li.dataset.undatedOk = '1';
+    const key = `r${uid()}`; // sayfa içi kimlik; bölüm kimliğinde boşluk ya da nokta olabilir
     li.innerHTML = `
       <span class="ep-row-no"></span>
       <div class="ep-row-fields">
-        <input class="ep-url" id="ep-url-${esc(id)}" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" value="${esc(ep.url || '')}">
-        <input class="ep-title-input" id="ep-title-${esc(id)}" type="text" maxlength="120" value="${esc(ep.title || '')}">
-        <input class="ep-date-input" id="ep-date-${esc(id)}" type="date" min="${FIRST_YOUTUBE_DAY}" max="9999-12-31" value="${esc(ep.date || '')}">
-        <p class="field-error ep-row-error" id="ep-err-${esc(id)}" hidden></p>
+        <input class="ep-url" id="ep-url-${key}" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" value="${esc(ep.url || '')}">
+        <input class="ep-title-input" id="ep-title-${key}" type="text" maxlength="120" value="${esc(ep.title || '')}">
+        <input class="ep-date-input" id="ep-date-${key}" type="date" min="${FIRST_YOUTUBE_DAY}" max="9999-12-31" value="${esc(ep.date || '')}">
+        <p class="field-error ep-row-error" id="ep-err-${key}" hidden></p>
       </div>
       <button type="button" class="icon-btn ep-remove">${icon('x')}</button>`;
     f.episodes.append(li);
@@ -934,22 +941,31 @@
     return li;
   }
 
-  function setInvalid(input, errorId) {
+  function setInvalid(input, errorId, message = '') {
     input.classList.add('is-invalid');
     input.setAttribute('aria-invalid', 'true');
     input.setAttribute('aria-describedby', errorId);
+    input.dataset.error = message;
   }
   function setValid(input) {
     input.classList.remove('is-invalid');
     input.removeAttribute('aria-invalid');
     input.removeAttribute('aria-describedby');
+    delete input.dataset.error;
+  }
+
+  // Satırın mesajı, o satırda hâlâ hatalı olan alanların mesajlarından yeniden kurulur.
+  function updateRowError(row) {
+    const err = $('.ep-row-error', row);
+    const messages = $$('input.is-invalid', row).map((i) => i.dataset.error).filter(Boolean);
+    const n = $$('.ep-row', f.episodes).indexOf(row) + 1;
+    err.textContent = messages.length ? `${episodeName(n)}: ${messages.join(' ')}` : '';
+    err.hidden = !messages.length;
   }
 
   function clearRowErrors(row) {
-    const err = $('.ep-row-error', row);
-    err.hidden = true;
-    err.textContent = '';
     for (const input of $$('input', row)) setValid(input);
+    updateRowError(row);
   }
 
   function clearEpisodeErrors() {
@@ -1078,8 +1094,11 @@
   f.episodes.addEventListener('input', (e) => {
     const row = e.target.closest('.ep-row');
     if (!row) return;
-    // satırda yazmaya başlayınca o satırın hatası kalksın
-    if ($('.is-invalid', row)) clearRowErrors(row);
+    // düzeltilen alanın hatası kalksın; aynı satırdaki diğer hatalar görünmeye devam etsin
+    if (e.target.classList.contains('is-invalid')) {
+      setValid(e.target);
+      updateRowError(row);
+    }
     if (e.target.classList.contains('ep-date-input')) row.dataset.touched = '1';
     if (e.target.classList.contains('ep-url')) updateCoverPreview();
   });
@@ -1163,32 +1182,24 @@
     for (const r of rows) {
       const urlInput = $('.ep-url', r.row);
       const dateInput = $('.ep-date-input', r.row);
-      const errorId = `ep-err-${r.id}`;
-      const problems = [];
+      const errorId = $('.ep-row-error', r.row).id;
       // "youtube.com/watch?v=…" gibi şemasız YouTube linkleri sessizce tamamlanır
       if (r.url && !/^[a-z][a-z0-9+.-]*:/i.test(r.url) && youtubeId(r.url)) {
         r.url = `https://${r.url.replace(/^\/+/, '')}`;
         urlInput.value = r.url;
       }
       if (r.url && !safeLink(r.url)) {
-        setInvalid(urlInput, errorId);
-        problems.push('Link https:// ile başlamalı.');
+        setInvalid(urlInput, errorId, 'Link https:// ile başlamalı.');
         firstInvalid = firstInvalid || urlInput;
       }
       if (!r.date && r.row.dataset.undatedOk !== '1') {
-        setInvalid(dateInput, errorId);
-        problems.push('Yayın tarihini seç.');
+        setInvalid(dateInput, errorId, 'Yayın tarihini seç.');
         firstInvalid = firstInvalid || dateInput;
       } else if (r.date && !isValidDay(r.date)) {
-        setInvalid(dateInput, errorId);
-        problems.push('Geçerli bir tarih seç (gün.ay.yıl).');
+        setInvalid(dateInput, errorId, 'Geçerli bir tarih seç (gün.ay.yıl).');
         firstInvalid = firstInvalid || dateInput;
       }
-      if (problems.length) {
-        const err = $(`#${errorId}`);
-        err.textContent = `${episodeName(r.n)}: ${problems.join(' ')}`;
-        err.hidden = false;
-      }
+      updateRowError(r.row);
     }
     if (firstInvalid) {
       firstInvalid.focus();
