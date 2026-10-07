@@ -2375,6 +2375,7 @@
     unsubSite = cloudApi.watchSite((site) => {
       cloudSite = site || null;
       applyCloud();
+      maybeShowSetup();
     }, () => {});
     if (typeof subscribeSuggestions === 'function') subscribeSuggestions();
   }
@@ -2383,6 +2384,7 @@
   function maybeShowSetup() {
     if (!owner || setupShownOnce) return;
     if (cloudGames === null && !cloudError) return; // ilk yanıt bekleniyor
+    if (cloudSite === undefined && !cloudError) return; // liste boşsa karar site ayarlarına kalır; onları da bekle
     if (cloudLive() && cloudInitialized()) return;
     setupShownOnce = true;
     openSetup();
