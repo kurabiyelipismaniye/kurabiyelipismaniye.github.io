@@ -539,6 +539,7 @@ main { display: flex; flex-direction: column; gap: 14px; }
   text-transform: uppercase;
 }
 .cover-video .icon { width: 14px; height: 14px; }
+.cover-video.is-soon { padding-left: 9px; }
 
 .stamp {
   position: absolute;
@@ -784,7 +785,6 @@ main { display: flex; flex-direction: column; gap: 14px; }
 .field textarea { resize: vertical; min-height: 96px; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent-text); box-shadow: 0 0 0 3px var(--accent-soft); }
 .field input:disabled { opacity: .5; }
-.field .is-invalid { border-color: var(--danger); }
 
 .hint { font-size: .8rem; color: var(--muted); }
 .field-error { font-size: .8rem; color: var(--danger); font-weight: 500; }
@@ -843,8 +843,8 @@ main { display: flex; flex-direction: column; gap: 14px; }
   gap: 8px;
   min-width: 0;
 }
-.ep-row-fields .ep-url { grid-column: 1 / -1; }
-.ep-row-fields input {
+.ep-row-fields .ep-url, .ep-row-error { grid-column: 1 / -1; }
+.field .ep-row-fields input {
   width: 100%;
   min-height: 40px;
   padding: 8px 10px;
@@ -854,9 +854,15 @@ main { display: flex; flex-direction: column; gap: 14px; }
   color: var(--fg);
   font: 400 .9rem/1.3 var(--font-body);
 }
-.ep-row-fields input:focus { outline: none; border-color: var(--accent-text); box-shadow: 0 0 0 3px var(--accent-soft); }
-.ep-row-fields .is-invalid { border-color: var(--danger); }
+.field .ep-row-fields input:focus { outline: none; border-color: var(--accent-text); box-shadow: 0 0 0 3px var(--accent-soft); }
 .ep-remove { margin-top: 2px; }
+
+/* hatalı alan: odaktayken de kırmızı kalsın */
+.field input.is-invalid,
+.field input.is-invalid:focus,
+.field textarea.is-invalid,
+.field .ep-row-fields input.is-invalid,
+.field .ep-row-fields input.is-invalid:focus { border-color: var(--danger); box-shadow: 0 0 0 3px rgb(192 53 43 / .15); }
 
 .played-row { align-items: end; }
 .check {
@@ -960,6 +966,8 @@ main { display: flex; flex-direction: column; gap: 14px; }
 .series-end b { font: 600 clamp(.92rem, 2.6vw, 1.05rem)/1.25 var(--font-display); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .series-rel { font-size: .82rem; color: var(--muted); }
 .series-note { font-size: .82rem; color: var(--muted); }
+.series-next { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px dashed var(--line); }
+.series-next b { font: 600 .95rem/1.25 var(--font-display); }
 
 /* bölüm listesi */
 .episodes { display: flex; flex-direction: column; gap: 10px; }
@@ -983,6 +991,17 @@ main { display: flex; flex-direction: column; gap: 14px; }
 }
 .ep + .ep { border-top: 1px solid var(--line); }
 .ep.is-playing { background: var(--accent-soft); }
+.ep.is-upcoming .ep-name, .ep.is-upcoming .ep-no { color: var(--muted); }
+.ep-soon {
+  align-self: flex-start;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px dashed var(--accent-text);
+  color: var(--accent-text);
+  font: 700 .62rem/1.2 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
 .ep-no {
   font: 700 .95rem/1 var(--font-mono);
   color: var(--muted);

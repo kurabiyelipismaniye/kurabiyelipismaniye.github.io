@@ -1,30 +1,54 @@
 # Oyun Arşivi — kullanım kılavuzu
 
 YouTube kanalın için oyun listesi sitesi. Oyun ekleyebilir, oynadıklarına tik atabilir,
-her oyuna açıklama, kategori, platform, puan, kapak görseli ve YouTube videosu bağlayabilirsin.
-Sunucu ya da veritabanı gerekmez; GitHub Pages'te ücretsiz yayınlanır.
+her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayınladığın bölümleri
+(YouTube linki ve yayın tarihiyle) ekleyebilirsin. Sunucu ya da veritabanı gerekmez; GitHub Pages'te ücretsiz yayınlanır.
 
 ## Sitede neler var
 
-- **Kayıt dosyası:** kaç oyunu bitirdiğin, yüzde olarak ilerleme çubuğu
-- **Arama:** oyun adı, kategori, platform ya da açıklamada arar
-- **Filtreler:** Tümü / Oynadıklarım / Sıradakiler, kategori düğmeleri, sıralama (son eklenen, A–Z, puan, son bitirilen)
-- **Oyun kartları:** kapak, kategori, platform, kısa açıklama, puan ve “Oynandı” damgası
-- **Ayrıntı penceresi:** karta tıklayınca açılır; tam açıklama, bilgiler ve video (site içinde oynatılır)
+- **Kayıt dosyası:** kaç oyunu bitirdiğin, kaçının devam ettiği, kaçının sırada olduğu, toplam bölüm sayısı ve yüzde olarak ilerleme çubuğu
+- **Arama:** oyun adı, kategori, platform, açıklama ya da bölüm başlıklarında arar
+- **Filtreler:** Tümü / Oynadıklarım / Devam edenler / Sıradakiler, kategori düğmeleri, sıralama (son eklenen, son yayınlanan bölüm, A–Z, puan, son bitirilen)
+- **Oyun kartları:** kapak, bölüm sayısı, kategori, platform, kısa açıklama, puan ve durum (Oynandı / Devam ediyor / Sırada)
+- **Ayrıntı penceresi:** karta tıklayınca açılır. İçinde tam açıklama, bilgiler, **Kanaldaki seri** özeti
+  (ilk ve son bölümün yayın tarihi, ne kadar önce yayınlandığı, kaç bölüm olduğu, serinin kaç günde
+  tamamlandığı ve bölümleri tarihine göre gösteren çizgi) ve bölüm listesi var. Bölümler site içinde oynatılır.
 - Açık ve koyu tema, telefonda da düzgün görünür
+
+## Oyunun durumu nasıl belirlenir
+
+Durumu elle seçmen gerekmez:
+
+- **Oynandı:** “Oynadım” kutusu işaretli
+- **Devam ediyor:** en az bir bölümü yayınlanmış ama “Oynadım” işaretli değil
+- **Sırada:** henüz yayınlanmış bölümü yok
 
 ## Düzenleme
 
 1. Sağ üstteki **Düzenle** (kalem) düğmesine bas. Adresin sonuna `#duzenle` yazarak da açabilirsin.
 2. Sarı çizgili çubuk çıkar:
-   - **Oyun ekle:** ad ve kategori zorunlu; platform, açıklama, YouTube video linki, kapak görseli, puan ve “Bu oyunu oynadım” isteğe bağlı.
+   - **Oyun ekle:** ad ve kategori zorunlu. Platform, açıklama, bölümler, kapak görseli, puan ve “Bu oyunu oynadım” isteğe bağlı.
    - **Site ayarları:** kanal adı, başlık, kısa açıklama, YouTube kanal linki (doldurunca kırmızı “Abone ol” düğmesi çıkar).
    - **Yayınla / Yedekle:** aşağıya bak.
+   - **Örnekleri sil:** siteyle birlikte gelen “Örnek” etiketli oyunları tek seferde siler (“Geri al” ile geri getirebilirsin).
 3. Kartlardaki **Oynadım** kutusuna tıklayınca oyun bitti olarak işaretlenir ve bugünün tarihi kaydedilir.
    Kalem simgesi oyunu düzenler; silme düğmesi düzenleme penceresinin içindedir (silince “Geri al” çıkar).
 4. İşin bitince **Bitti**'ye bas; site ziyaretçilerin gördüğü hâline döner.
 
-> `data/games.js` içindeki 10 oyun örnek olarak eklendi. Düzenleme modunda silebilir ya da değiştirebilirsin.
+> `data/games.js` içindeki 10 oyun ve bölümleri örnek olarak eklendi. **Örnekleri sil** ile hepsini kaldırabilir
+> ya da birini düzenleyip kendi bilgilerinle kaydedebilirsin (kaydedince “Örnek” etiketi kalkar).
+
+## Yeni bölüm yükleyince
+
+1. Düzenleme modunda oyunun kartına tıkla ve **Bölüm ekle**'ye bas.
+2. Videonun YouTube linkini yapıştır. Tarih bugünle gelir; video başka gün yayınlandıysa değiştir.
+   Başlığı boş bırakırsan bölüm “5. bölüm” gibi numarasıyla görünür (internet bağlantısı izin verirse başlık videodan kendiliğinden gelir).
+3. **Değişiklikleri kaydet**, sonra herkesin görmesi için **Yayınla**.
+
+İleri bir tarih girersen (planlanmış video ya da prömiyer) bölüm listede **Yayınlanacak** olarak, seri özetinde
+**Sıradaki bölüm** olarak görünür. O gün gelince kendiliğinden yayınlanmış sayılır.
+
+Seriyi bitirdiysen “Bu oyunu oynadım” kutusunu işaretle; bitirme tarihi olarak son bölümün tarihi önerilir.
 
 ## Değişiklikleri herkese göstermek (yayınlamak)
 
@@ -50,8 +74,7 @@ o dala göre güncelle (ör. `.../edit/DAL-ADI/data/games.js`).
 
 ## Kapak görselleri
 
-- **Hiçbir şey koymazsan:** oyunun adıyla renkli bir kapak çizilir.
-- **YouTube video linki eklersen:** videonun küçük resmi kapak olur.
+- **Hiçbir şey koymazsan:** ilk bölümün YouTube küçük resmi kapak olur; bölüm yoksa oyunun adıyla renkli bir kapak çizilir.
 - **Görsel linki:** internetteki bir görselin `https://` adresini yapıştır.
 - **Bilgisayardan yükle:** görsel küçültülüp listeye gömülür. Çok sayıda yüklenen görsel listeyi büyütür;
   istersen görselleri depoda `images/` klasörüne koyup kapak alanına `images/dosya-adi.jpg` yazabilirsin.
@@ -62,7 +85,7 @@ o dala göre güncelle (ör. `.../edit/DAL-ADI/data/games.js`).
 | --- | --- |
 | `index.html` | Sayfanın iskeleti |
 | `css/style.css` | Görünüm, renkler, yazı tipleri |
-| `js/app.js` | Ekleme, tik atma, filtreleme, yayınlama |
-| `data/games.js` | Oyun listesi ve site ayarları (yayınladığın dosya) |
+| `js/app.js` | Ekleme, tik atma, bölümler, filtreleme, yayınlama |
+| `data/games.js` | Oyun listesi, bölümler ve site ayarları (yayınladığın dosya) |
 
 Bilgisayarında denemek için `index.html` dosyasına çift tıklaman yeterli.
