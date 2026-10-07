@@ -2,7 +2,7 @@
 // (bkz. KURULUM.md). Boş kaldığı sürece site, listeyi data/games.js dosyasından okur.
 window.SITE_CONFIG = {
   github: { repo: 'ibrahimeserocak/Youtube', branch: 'main' },
-  youtube: { channelUrl: '' },
+  youtube: { channelUrl: 'https://www.youtube.com/@kurabiyelipismaniye' },
   firebase: null,
   firebaseEmulators: null
 };

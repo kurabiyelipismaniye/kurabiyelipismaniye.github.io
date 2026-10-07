@@ -8,7 +8,7 @@ window.SITE_DATA = {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
     "tagline": "Kanalda oynadığım ve sırada bekleyen oyunlar. Tikli olanları bitirdim, gerisi sıradaki videolarda.",
-    "youtubeUrl": "",
+    "youtubeUrl": "https://www.youtube.com/@kurabiyelipismaniye",
     "githubEditUrl": "https://github.com/ibrahimeserocak/Youtube/edit/main/data/games.js"
   },
   "games": [
