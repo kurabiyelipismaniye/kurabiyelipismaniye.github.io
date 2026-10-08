@@ -5,7 +5,16 @@
 const CACHE = 'oyun-arsivi-v1';
 const FONTS = 'oyun-arsivi-yazi-tipleri-v1';
 
-self.addEventListener('install', () => self.skipWaiting());
+// Uygulamanın iskeleti kurulurken hemen saklanır: ilk ziyarette yüklenip sonra internetsiz açılsa da sayfa gelir.
+const SHELL = ['./', 'css/style.css', 'js/app.js', 'js/config.js', 'js/cloud.js', 'data/games.js', 'manifest.webmanifest', 'icons/icon.svg', 'favicon.ico'];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.all(SHELL.map((path) => cache.add(path).catch(() => {}))); // biri alınamazsa ötekiler yine saklanır
+    await self.skipWaiting();
+  })());
+});
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
@@ -46,6 +55,6 @@ async function cacheFirst(req) {
   const hit = await cache.match(req);
   if (hit) return hit;
   const res = await fetch(req);
-  if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
+  if (res.ok) cache.put(req, res.clone()); // hata yanıtı saklanmaz; bir sonraki açılışta yeniden istenir
   return res;
 }

@@ -41,7 +41,7 @@ const BROWSER_HEADERS = {
 
 // data/games.js okunaklı kalsın diye bilinen alanlar sitenin kullandığı sırayla yazılır, gerisi alfabetik
 const SITE_KEYS = ['channelName', 'title', 'tagline', 'youtubeUrl', 'githubEditUrl'];
-const GAME_KEYS = ['id', 'title', 'category', 'platform', 'description', 'cover', 'steamUrl', 'rating', 'queueOrder', 'played', 'playedAt', 'addedAt', 'episodes', 'example'];
+const GAME_KEYS = ['id', 'title', 'category', 'platform', 'description', 'cover', 'steamUrl', 'rating', 'queueOrder', 'suggestion', 'played', 'playedAt', 'addedAt', 'episodes', 'example'];
 const EPISODE_KEYS = ['id', 'title', 'url', 'date'];
 const IMAGE_KEYS = ['id', 'createdAt', 'data'];
 const SUGGESTION_KEYS = ['id', 'title', 'note', 'name', 'category', 'votes', 'status', 'gameId', 'createdAt'];
@@ -553,23 +553,38 @@ async function syncSteam(games) {
 
 /* ---------- bölüm süreleri ---------- */
 // YouTube'un RSS akışında süre yok; her bölüm videosunun sayfasındaki "lengthSeconds" bir kez okunur ve saklanır.
-// Süresi okunamayan (henüz yayınlanmamış, gizli ya da silinmiş) videolar günde bir yeniden denenir.
+// Süresi okunamayan (gizli, silinmiş ya da henüz yayınlanmamış) videolar günde bir yeniden denenir. Son iki günde
+// yayınlanan bölümler (prömiyer, planlanmış video, canlı yayın dahil) her çalışmada önce denenir; süre yayından sonraki
+// ilk çalışmada gelir. İleri tarihli bölümler en sona kalır, böylece çok sayıda planlanmış bölüm diğerlerini bekletmez.
 const DURATION_MAX_LOOKUPS = 20;
 const DURATION_RETRY_MS = 86400000;
 const DURATION_DELAY_MS = 1000;
 // sitedeki youtubeId ile aynı: watch?v=, youtu.be/, embed/, shorts/, live/, v/
 const YT_ID = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))(?!videoseries|live_stream)([A-Za-z0-9_-]{11})/;
 
-function episodeVideoIds(games) {
+const DURATION_RECENT_DAYS = 2;
+
+// Bölümlerdeki YouTube videoları; "recent": son iki günde yayınlananlar, "future": ileri tarihliler.
+// Tarihler sitenin yerel tarihidir; "bugün" en ileri saat dilimine (UTC+14) göre alınır ki bugünkü bölüm ileri sayılmasın.
+function episodeVideoIds(games, now = Date.now()) {
   const ids = new Set();
+  const recent = new Set();
+  const future = new Set();
+  const since = new Date(now - DURATION_RECENT_DAYS * 86400000).toISOString().slice(0, 10);
+  const today = new Date(now + 14 * 3600000).toISOString().slice(0, 10);
   for (const g of games) {
     if (!isObj(g) || !Array.isArray(g.episodes)) continue;
     for (const e of g.episodes) {
       const m = isObj(e) && typeof e.url === 'string' ? e.url.replace(/&amp;/gi, '&').match(YT_ID) : null;
-      if (m) ids.add(m[1]);
+      if (!m) continue;
+      ids.add(m[1]);
+      if (typeof e.date !== 'string' || e.date < since) continue;
+      if (e.date <= today) recent.add(m[1]);
+      else future.add(m[1]);
     }
   }
-  return [...ids].sort(byStr);
+  for (const id of recent) future.delete(id); // aynı video hem yayınlanmış hem ileri tarihli bölümde
+  return { ids: [...ids].sort(byStr), recent, future };
 }
 
 function parseDuration(html) {
@@ -587,11 +602,14 @@ async function syncDurations(games) {
   const videos = {};
   const failed = {};
   const todo = [];
-  for (const id of episodeVideoIds(games)) {
+  const { ids, recent, future } = episodeVideoIds(games, now);
+  for (const id of ids) {
     if (Number.isInteger(oldVideos[id]) && oldVideos[id] > 0) videos[id] = oldVideos[id];
-    else if (oldFailed[id] && now - Date.parse(oldFailed[id]) < DURATION_RETRY_MS) failed[id] = oldFailed[id];
+    else if (oldFailed[id] && !recent.has(id) && now - Date.parse(oldFailed[id]) < DURATION_RETRY_MS) failed[id] = oldFailed[id];
     else todo.push(id);
   }
+  const rank = (id) => (recent.has(id) ? 0 : future.has(id) ? 2 : 1);
+  todo.sort((a, b) => rank(a) - rank(b)); // yeni bölümler önce, planlanmışlar en son
   let looked = 0;
   for (const id of todo) {
     if (looked >= DURATION_MAX_LOOKUPS) break;

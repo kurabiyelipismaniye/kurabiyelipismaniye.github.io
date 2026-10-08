@@ -31,6 +31,16 @@ her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayın
   oyunlardan birini dönen bir çarkla rastgele seçer; istersen devam edenleri de çarka katabilir, tek tek oyun çıkarabilirsin.
   Sesli (sağ üstten kapatılabilir), yayında doğrudan kullanılabilir. Sonuçtan **Oyunu aç** ya da **Çarktan çıkar, tekrar çevir**.
 - **Steam'de gör:** oyunun Steam mağaza sayfası varsa penceresinde bu düğme çıkar (aşağıda “Steam sayfası”na bak).
+- **Öneriler** sekmesi (bulut kuruluysa): ziyaretçiler oyun önerir, beğendikleri öneriye **Ben de istiyorum** diyerek
+  destek verir; fikrini değiştiren aynı düğmeyle (**Desteğini geri çek**) desteğini geri alır. Öneriler **En çok desteklenen**
+  (en çok destek alan ilk üçü #1, #2, #3 ile işaretlenir), **En yeni** ya da **A–Z** sıralanır; **Tümü / Bekleyen / Listede**
+  düğmeleri ve kategori düğmeleriyle süzülür (kategori yazılmayanlar “Kategorisiz”de). Her önerinin durumu görünür:
+  **Düşünüyorum**, **Sıraya aldım**, **Oynuyorum**, **Oynandı** ya da **Olmayacak**. Listeye eklediğin önerinin durumu
+  oyunun durumundan kendiliğinden gelir. Öneren kişi kendi önerilerini “Senin önerilerin” kutusunda görür, durumu değişince
+  siteyi açtığında haber alır.
+- **Önerilerden gelenler:** bir öneriyi **Listeme ekle** ile listeye aldığında oyunun kartında “Öneri · önerenin adı”
+  rozeti çıkar, penceresinde **Öneren** satırı yazar. Oyunlar sekmesindeki **Önerilerden gelenler** düğmesi yalnızca bu
+  oyunları gösterir. Daha önce listeye eklediğin öneriler de sayılır.
 - Açık ve koyu tema, telefonda da düzgün görünür
 
 ## Oyunun durumu nasıl belirlenir

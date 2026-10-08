@@ -1231,7 +1231,7 @@ code {
 }
 .stats-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stats-link .icon { width: 14px; height: 14px; }
-.dialog-stats { width: min(920px, calc(100% - 24px)); }
+.dialog-stats { width: min(920px, calc(100% - 24px)); scroll-padding-top: 84px; } /* odaklanılan çubuk yapışkan başlığın altında kalmasın */
 .stats-body { gap: 22px; }
 .kpis { display: grid; grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
 .kpi { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); min-width: 0; }
@@ -1470,6 +1470,12 @@ button.hbar { cursor: pointer; }
 .my-sug { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .my-sug b { font: 600 .95rem/1.3 var(--font-body); overflow-wrap: anywhere; min-width: 0; }
 .my-sug .status { flex: none; height: 26px; font-size: .75rem; }
+.sug-tools { display: flex; flex-direction: column; gap: 10px; }
+.sug-rank { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font: 700 .7rem/1 var(--font-mono); }
+.vote-btn[aria-pressed="true"]:not(:disabled) { cursor: pointer; }
+.from-sug { display: inline-flex; align-items: center; gap: 3px; height: 22px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--accent-text); color: var(--accent-text); font: 700 .66rem/1 var(--font-mono); letter-spacing: .04em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.from-sug .icon { width: 12px; height: 12px; flex: none; }
+.chip-filter.is-sugfilter { border-color: var(--accent-text); }
 .sug-empty { padding: 24px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); }
 
 /* ---------- kanaldan bölüm seçme ---------- */
@@ -1670,6 +1676,7 @@ button.hbar { cursor: pointer; }
   .search { flex-basis: 100%; }
   .segmented { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; border-radius: 16px; }
   .segmented label { justify-content: center; padding: 0 8px; border-radius: 13px; }
+  #sugStatus { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sort { flex: 1 1 auto; }
   .sort select { width: 100%; }
   .field-row { grid-template-columns: minmax(0, 1fr); }

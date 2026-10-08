@@ -173,7 +173,7 @@ Kurulum bitti. Kurulum penceresinde bütün adımlar tikliyse her şey çalış�
 | Listeyi, bölümleri, görselleri, son videoyu görmek | ✓ | ✓ |
 | Aramak, filtrelemek, bölümleri izlemek | ✓ | ✓ |
 | **Öneriler** sekmesinde oyun önermek | ✓ | ✓ |
-| Bir öneriye oy vermek (öneri başına bir oy) | ✓ | ✓ |
+| Bir öneriye destek vermek ya da desteğini geri çekmek (öneri başına bir) | ✓ | ✓ |
 | Oyun eklemek, düzenlemek, silmek, tik atmak | — | ✓ |
 | Görsel eklemek ve silmek | — | ✓ |
 | Öneriyi **Listeme ekle**, öneri silmek | — | ✓ |
@@ -231,6 +231,7 @@ Başka yol: Firebase → Authentication → **“Users”** → kendi satırınd
 | “Firestore veritabanı henüz oluşturulmamış” | 5. adımı yap, sonra **Tekrar kontrol et**. |
 | “Kurulum tamamlanmadı”, “yetki yok” ya da permission-denied | Kurallar yayınlanmamış, eksik yapıştırılmış ya da başka bir e-postayla giriş yapılmış. **Kurulum** → **Kuralları kopyala** → Rules'ta her şeyi silip yapıştır → **“Publish”** → 1 dakika bekle → **Yayınladım, kontrol et**. |
 | Giriş e-postanı değiştirdin | Yeni e-postayla giriş yap; **Kurulum** yeni kuralları gösterir. Onları yayınla. |
+| “Güvenlik kurallarında bir güncelleme var” uyarısı / önerilerde **Desteğini geri çek** çıkmıyor | Site güncellendi ve kurallara yeni bir izin eklendi. **Kurulum** → **Kuralları kopyala** → Rules'ta her şeyi silip yapıştır → **“Publish”** → 1 dakika bekle → **Yayınladım, kontrol et**. O zamana kadar her şey eskisi gibi çalışır, yalnızca destek geri çekilemez. |
 | “günlük ücretsiz kullanım sınırı dolmuş olabilir” | Türkiye saatiyle sabah 10–11'de sıfırlanır. Bekle. |
 | “veri çok büyük” (görsel eklerken) | Daha küçük bir fotoğraf seç ya da ekran görüntüsü kullan. |
 | Son video görünmüyor | **Site ayarları**'nda kanal linki dolu mu ve `https://www.youtube.com/@…` biçiminde mi bak. Bir saat bekle ya da “Run workflow” ile hemen çalıştır. GitHub → **Actions**'ta kırmızı ✗ varsa Claude'a haber ver. |

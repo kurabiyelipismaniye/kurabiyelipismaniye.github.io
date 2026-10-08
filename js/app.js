@@ -245,6 +245,10 @@
       description: String(g.description || '').trim(),
       cover: String(g.cover || '').trim(),
       steamUrl: String(g.steamUrl || '').trim(), // elle girilen mağaza linki; "yok": link gösterilmez
+      // öneriden eklendiyse: { id, name, votes } (önerinin kimliği, önerenin adı, eklendiğindeki destek sayısı)
+      ...(g.suggestion && typeof g.suggestion === 'object' && g.suggestion.id
+        ? { suggestion: { id: String(g.suggestion.id), name: String(g.suggestion.name || '').trim().slice(0, 40), votes: Math.max(0, Math.round(Number(g.suggestion.votes) || 0)) } }
+        : {}),
       rating: Math.max(0, Math.min(5, Math.round(Number(g.rating) || 0))),
       ...(Number.isFinite(Number(g.queueOrder)) && g.queueOrder !== null && g.queueOrder !== '' ? { queueOrder: Number(g.queueOrder) } : {}),
       played,
@@ -348,6 +352,11 @@
   let cloudSite;                // Firestore'daki site ayarları (undefined: gelmedi, null: yok)
   let cloudError = null;        // { code, message } okuma hatası (ör. kurallar yayınlanmamış)
   let gamesFromCache = false;   // son oyun listesi tarayıcının önbelleğinden mi geldi (sunucudan henüz gelmedi)
+  let rulesV2 = false;          // yayındaki güvenlik kuralları güncel mi (destek geri çekilebilir)
+  let rulesChecking = false;
+  let rulesTriedAt = 0;
+  let rulesChecked = false;
+  let rulesNoticeShown = false;
   let pendingSaves = 0;
   let saveFailed = false;
   const pendingDeletes = new Map(); // geri alınabilsin diye birkaç saniye bekletilen silmeler
@@ -443,7 +452,7 @@
 
   /* ---------- tercihler ---------- */
   const prefs = Object.assign(
-    { editing: false, theme: '', status: 'all', category: 'all', sort: 'recent', wheelPools: ['todo'], wheelSound: true },
+    { editing: false, theme: '', status: 'all', category: 'all', sort: 'recent', wheelPools: ['todo'], wheelSound: true, fromSug: false, sugSort: 'votes', sugStatus: 'all', sugCat: 'all' },
     storageGet(PREFS_KEY) || {}
   );
   if (!['all', 'played', 'ongoing', 'todo'].includes(prefs.status)) prefs.status = 'all';
@@ -533,6 +542,11 @@
     const dark = isDarkNow();
     el.themeBtn.innerHTML = icon(dark ? 'sun' : 'moon');
     el.themeBtn.setAttribute('aria-label', dark ? 'Açık temaya geç' : 'Koyu temaya geç');
+    // tarayıcı çubuğunun rengi (telefona eklenen uygulamada üst çubuk) sitede seçilen temaya uyar
+    const metas = $$('meta[name="theme-color"]');
+    for (const m of metas) if (!m.dataset.auto) m.dataset.auto = m.content;
+    const chosen = metas.find((m) => /dark/.test(m.media) === dark);
+    for (const m of metas) m.content = prefs.theme && chosen ? chosen.dataset.auto : m.dataset.auto;
   }
 
   /* ---------- çizim ---------- */
@@ -600,6 +614,7 @@
           <button type="button" class="chip" data-action="category" data-category="${esc(g.category)}" aria-label="${esc(g.category)} kategorisini göster">${esc(g.category)}</button>
           ${g.platform ? `<span class="platform">${esc(g.platform)}</span>` : ''}
           ${g.example ? '<span class="example-chip" title="Örnek olarak eklendi">Örnek</span>' : ''}
+          ${fromSugHTML(g)}
         </div>
         <h3 class="card-title">${esc(g.title)}</h3>
         ${g.description ? `<p class="card-desc">${esc(g.description)}</p>` : ''}
@@ -611,6 +626,22 @@
     </article>`;
   }
 
+  // Oyun bir öneriden mi eklendi: oyunda saklanan bilgi, yoksa (eskiden eklenenler için) onu "eklendi" yapan öneri
+  let lastFromSugKey = '';
+  const fromSugKey = () => data.games.map((g) => {
+    const o = suggestionOf(g);
+    return o ? `${g.id}\u0000${o.name}\u0000${o.votes}` : '';
+  }).join('\u0001');
+  function suggestionOf(g) {
+    if (g.suggestion) return g.suggestion;
+    const x = suggestions ? suggestions.find((y) => y.status === 'added' && y.gameId === g.id) : null;
+    return x ? { id: x.id, name: x.name || '', votes: x.votes || 0 } : null;
+  }
+  const fromSugHTML = (g) => {
+    const o = suggestionOf(g);
+    return o ? `<span class="from-sug" title="${esc(o.name ? `${o.name} önerdi` : 'Ziyaretçi önerisi')} · ${o.votes} destek">${icon('up')}Öneri${o.name ? ` · ${esc(o.name)}` : ''}</span>` : '';
+  };
+
   function categoryCounts() {
     const map = new Map();
     for (const g of data.games) map.set(g.category, (map.get(g.category) || 0) + 1);
@@ -619,9 +650,11 @@
 
   function visibleGames() {
     const q = fold(searchText);
+    const fromSugOn = prefs.fromSug && data.games.some((g) => suggestionOf(g));
     const list = data.games.filter((g) => {
       if (prefs.status !== 'all' && gameState(g) !== prefs.status) return false;
       if (prefs.category !== 'all' && g.category !== prefs.category) return false;
+      if (fromSugOn && !suggestionOf(g)) return false;
       if (q) {
         const episodeText = g.episodes.map((e) => e.title).join(' ');
         if (!fold(`${g.title} ${g.category} ${g.platform} ${g.description} ${episodeText}`).includes(q)) return false;
@@ -701,8 +734,14 @@
     if (prefs.category !== 'all' && !cats.some(([c]) => c === prefs.category)) prefs.category = 'all';
     const chip = (value, label, count) =>
       `<button type="button" class="chip-filter" data-category="${esc(value)}" aria-pressed="${prefs.category === value}">${esc(label)} <b>${count}</b></button>`;
-    el.chips.innerHTML = chip('all', 'Tüm kategoriler', total) + cats.map(([c, n]) => chip(c, c, n)).join('');
-    el.chips.hidden = cats.length === 0;
+    const fromSug = data.games.filter((g) => suggestionOf(g)).length;
+    // eski oyunların kaynağı öneri listesinden çıkarılır; liste gelmeden kayıtlı seçim silinmez
+    if (!fromSug && (mode !== 'cloud' || (suggestions !== null && !sugError && cloudFinal()))) prefs.fromSug = false;
+    const sugChip = fromSug
+      ? `<button type="button" class="chip-filter is-sugfilter" data-fromsug aria-pressed="${prefs.fromSug}">${icon('up')}Önerilerden gelenler <b>${fromSug}</b></button>`
+      : '';
+    el.chips.innerHTML = sugChip + chip('all', 'Tüm kategoriler', total) + cats.map(([c, n]) => chip(c, c, n)).join('');
+    el.chips.hidden = cats.length === 0 && !fromSug;
   }
 
   function renderGrid() {
@@ -1078,6 +1117,8 @@
       ['Durum', status],
       ['Listeye eklendi', esc(formatDate(g.addedAt) || '—')]
     ];
+    const origin = suggestionOf(g);
+    if (origin) facts.push(['Öneren', `${esc(origin.name || 'Ziyaretçi')} · ${origin.votes} destek`]);
     const total = gameDuration(g);
     if (total.seconds) facts.splice(4, 0, ['Toplam süre', esc(formatDuration(total.seconds) + (total.missing ? ' +' : ''))]);
 
@@ -1935,10 +1976,11 @@
       if (game.played) justToggled = game.id;
       // yeni oyun filtrelerde gizli kalmasın
       const hidden = (prefs.status !== 'all' && prefs.status !== gameState(game)) ||
-        (prefs.category !== 'all' && prefs.category !== game.category);
+        (prefs.category !== 'all' && prefs.category !== game.category) || (prefs.fromSug && !suggestionOf(game));
       if (hidden) {
         prefs.status = 'all';
         prefs.category = 'all';
+        prefs.fromSug = false;
         savePrefs();
       }
       toast(`“${title}” arşive eklendi.`);
@@ -2998,7 +3040,7 @@
     return `<ul class="hbars">${rows.map((r) => {
       const tag = r.id && open ? 'button type="button"' : 'div tabindex="0"';
       const end = r.id && open ? 'button' : 'div';
-      return `<li><${tag} class="hbar${r.other ? ' is-other' : ''}"${r.id && open ? ` data-stats-game="${esc(r.id)}"` : ''} data-tip="${esc(r.tip)}" aria-label="${esc(r.name)}: ${esc(r.label)}">
+      return `<li><${tag} class="hbar${r.other ? ' is-other' : ''}"${r.id && open ? ` data-stats-game="${esc(r.id)}"` : ''} data-key="${esc(r.other ? 'other' : r.id || r.name)}" data-tip="${esc(r.tip)}" aria-label="${esc(r.name)}: ${esc(r.label)}">
         <span class="hbar-name">${esc(r.name)}</span>
         <span class="hbar-track"><span class="hbar-fill" style="--r:${(r.value / max).toFixed(4)}"></span><span class="hbar-val">${esc(r.label)}</span></span>
       </${end}></li>`;
@@ -3007,6 +3049,9 @@
   const tableHTML = (head, rows) => `<details><summary>Tablo olarak göster</summary><table><thead><tr>${head.map((h, i) => `<th${i ? ' class="num"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`;
 
   const STATS_TOP = 10;
+  let lastStatsHTML = '';
+  let tipTarget = null;         // kısa bilgi kutusunun gösterdiği öğe
+  let restoringFocus = false;
   function renderStatsPage() {
     const games = data.games;
     const aired = games.flatMap((g) => airedEpisodes(g).map((e) => ({ g, e })));
@@ -3017,31 +3062,33 @@
 
     const kpis = [
       ['Toplam video süresi', totalSec ? formatDuration(totalSec) : '—', totalSec
-        ? (missing ? `${missing} bölümün süresi henüz bilinmiyor` : `${known.length} bölümün toplamı`)
+        ? (missing ? `${missing} bölümün süresi bilinmiyor` : `${known.length} bölümün toplamı`)
         : 'Süreler saatlik görevle gelir', true],
       ['Yayınlanan bölüm', String(aired.length), `${games.filter((g) => airedEpisodes(g).length).length} oyunda`],
       ['Bitirilen oyun', String(played), `${games.length} oyundan`],
       ['Ortalama bölüm', known.length ? formatDuration(totalSec / known.length) : '—', known.length ? 'süresi bilinen bölümlerde' : '']
     ];
 
-    // 1) oyunlara göre süre (süre yoksa bölüm sayısı); ilk 10, kalanı "Diğer"
+    // 1) oyunlara göre süre (süre yoksa bölüm sayısı); ilk 10, kalanı "Diğer". Bölümü olan her oyun listede kalır;
+    // süresi bilinmeyen bölümü olan oyunun toplamına oyun penceresindeki gibi "+" eklenir.
     const bySec = totalSec > 0;
     let rows = games.map((g) => {
       const d = gameDuration(g);
       const eps = airedEpisodes(g).length;
-      return { id: g.id, name: g.title, value: bySec ? d.seconds : eps, eps, sec: d.seconds };
-    }).filter((r) => r.value > 0).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'tr'));
-    const fmt = (v) => (bySec ? formatDuration(v) : `${v} bölüm`);
-    const tableRows = rows.map((r) => [r.name, bySec ? formatDuration(r.sec) : '—', String(r.eps)]);
+      return { id: g.id, name: g.title, value: bySec ? d.seconds : eps, eps, sec: d.seconds, missing: d.missing };
+    }).filter((r) => r.eps > 0).sort((a, b) => b.value - a.value || b.eps - a.eps || a.name.localeCompare(b.name, 'tr'));
+    const secText = (r) => (r.sec ? `${formatDuration(r.sec)}${r.missing ? ' +' : ''}` : '—');
+    const tableRows = rows.map((r) => [r.name, bySec ? secText(r) : '—', String(r.eps)]);
     if (rows.length > STATS_TOP + 1) {
       const rest = rows.slice(STATS_TOP);
       rows = rows.slice(0, STATS_TOP);
-      const v = rest.reduce((n, r) => n + r.value, 0);
-      rows.push({ name: `Diğer ${rest.length} oyun`, value: v, other: true, eps: rest.reduce((n, r) => n + r.eps, 0), sec: rest.reduce((n, r) => n + r.sec, 0) });
+      const sum = (k) => rest.reduce((n, r) => n + r[k], 0);
+      rows.push({ name: `Diğer ${rest.length} oyun`, value: sum('value'), other: true, eps: sum('eps'), sec: sum('sec'), missing: sum('missing') });
     }
     for (const r of rows) {
-      r.label = fmt(r.value);
-      r.tip = `<b>${esc(r.label)}</b>${esc(r.name)} · ${r.eps} bölüm${r.id ? ' — aç' : ''}`;
+      r.label = bySec ? secText(r) : `${r.value} bölüm`;
+      const unknown = bySec && r.missing ? ` (${r.missing} bölümün süresi bilinmiyor)` : '';
+      r.tip = `<b>${esc(r.label)}</b>${esc(r.name)} · ${r.eps} bölüm${unknown}${r.id ? ' — aç' : ''}`;
     }
 
     // 2) son 12 ay: yayınlanan bölüm sayısı
@@ -3063,7 +3110,7 @@
     const cats = categoryCounts().map(([c, n]) => ({ name: c, value: n, label: `${n} oyun`, tip: `<b>${n} oyun</b>${esc(c)}` }))
       .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'tr'));
 
-    el.statsBody.innerHTML = `
+    const html = `
       <dl class="kpis">${kpis.map(([k, v, note, hero]) => `<div class="kpi${hero ? ' kpi-hero' : ''}"><dt>${k}</dt><dd>${esc(v)}</dd>${note ? `<small>${esc(note)}</small>` : ''}</div>`).join('')}</dl>
       <section class="viz" aria-labelledby="vizGames">
         <h3 id="vizGames">${bySec ? 'Oyunlara göre toplam video süresi' : 'Oyunlara göre bölüm sayısı'}</h3>
@@ -3073,7 +3120,7 @@
       </section>
       <section class="viz" aria-labelledby="vizMonths">
         <h3 id="vizMonths">Son 12 ayda yayınlanan bölümler</h3>
-        <div class="cols">${months.map((m, i) => `<div class="col" tabindex="0" data-tip="<b>${m.n} bölüm</b>${esc(monthName(m, 'long'))}" aria-label="${esc(monthName(m, 'long'))}: ${m.n} bölüm">
+        <div class="cols">${months.map((m, i) => `<div class="col" tabindex="0" data-key="${m.key}" data-tip="<b>${m.n} bölüm</b>${esc(monthName(m, 'long'))}" aria-label="${esc(monthName(m, 'long'))}: ${m.n} bölüm">
           ${labelIdx.has(i) && m.n ? `<span class="col-val" style="bottom:${((m.n / Math.max(1, maxN)) * 100).toFixed(2)}%">${m.n}</span>` : ''}
           <span class="col-fill${m.n ? '' : ' is-zero'}" style="height:${((m.n / Math.max(1, maxN)) * 100).toFixed(2)}%"></span>
         </div>`).join('')}</div>
@@ -3085,9 +3132,36 @@
         ${cats.length ? hbarsHTML(cats) : '<p class="viz-note">Henüz oyun yok.</p>'}
         ${cats.length ? tableHTML(['Kategori', 'Oyun'], cats.map((c) => [c.name, String(c.value)])) : ''}
       </section>`;
+    if (html === lastStatsHTML) return; // bulut her güncellendiğinde değişmeyen sayfa yeniden çizilmez
+    // açıkken yeniden çizilirse açık tablolar, klavye odağı ve kaydırma yeri korunur
+    // Öğeler bölümüne ve anahtarına göre (sıraya göre değil) bulunur: veri değişip satır eklenince başka öğeye geçilmez.
+    const body = el.statsBody;
+    const sectionOf = (n) => { const sec = n.closest('section.viz'); return sec ? sec.getAttribute('aria-labelledby') : ''; };
+    const keyOf = (n) => (n.matches('summary') ? `${sectionOf(n)}|summary` : n.dataset.key ? `${sectionOf(n)}|${n.dataset.key}` : '');
+    const active = body.contains(document.activeElement) ? document.activeElement : null;
+    const focusKey = active ? keyOf(active) : '';
+    const tipShown = Boolean(active && tipTarget === active && !el.vizTip.hidden);
+    const openTables = new Set($$('details', body).filter((d) => d.open).map(sectionOf));
+    const scroll = el.statsDialog.scrollTop;
+    lastStatsHTML = html;
+    body.innerHTML = html;
+    hideTip();
+    for (const d of $$('details', body)) if (openTables.has(sectionOf(d))) d.open = true;
+    el.statsDialog.scrollTop = scroll;
+    const again = focusKey && $$('[data-key], summary', body).find((n) => keyOf(n) === focusKey);
+    if (again) {
+      restoringFocus = true; // geri verilen odak, öncesinde kutu açık değilse kısa bilgi kutusu açmaz
+      again.focus({ preventScroll: true });
+      restoringFocus = false;
+      if (tipShown) showTip(again);
+    }
   }
 
   function openStats() {
+    if (!el.statsDialog.open) {
+      lastStatsHTML = ''; // her açılışta tablolar kapalı, sayfa başta
+      el.statsBody.textContent = '';
+    }
     renderStatsPage();
     openDialog(el.statsDialog);
     if (location.hash !== '#istatistik') setHash('#istatistik');
@@ -3096,25 +3170,42 @@
   // kısa bilgi kutusu: fare ya da klavye odağı bir çubuğa gelince
   function showTip(target) {
     const tip = el.vizTip;
+    tipTarget = target;
     tip.innerHTML = target.dataset.tip; // içerik esc() ile hazırlandı
     tip.hidden = false;
+    // önceki yerinde ölçülürse kenara sıkışmış (dar ve uzun) boyutu alınır; önce sol üste alınıp ölçülür
+    tip.style.left = '0px';
+    tip.style.top = '0px';
     const r = target.querySelector('.hbar-fill, .col-fill') ? target.querySelector('.hbar-fill, .col-fill').getBoundingClientRect() : target.getBoundingClientRect();
     const t = tip.getBoundingClientRect();
     const x = Math.min(window.innerWidth - t.width - 8, Math.max(8, r.left + r.width / 2 - t.width / 2));
-    const y = r.top - t.height - 8 < 8 ? r.bottom + 8 : r.top - t.height - 8;
+    const head = $('.dialog-head', el.statsDialog);
+    const minTop = (head ? head.getBoundingClientRect().bottom : 0) + 8; // pencere başlığının üstüne binmesin
+    const y = r.top - t.height - 8 < minTop ? r.bottom + 8 : r.top - t.height - 8;
     tip.style.left = `${x}px`;
     tip.style.top = `${y}px`;
   }
-  const hideTip = () => { el.vizTip.hidden = true; };
+  const hideTip = () => { el.vizTip.hidden = true; tipTarget = null; };
   for (const type of ['pointerover', 'focusin']) {
     el.statsBody.addEventListener(type, (e) => {
       const t = e.target.closest('[data-tip]');
-      if (t) showTip(t);
+      if (t && !(type === 'focusin' && restoringFocus)) showTip(t);
     });
   }
   el.statsBody.addEventListener('pointerout', (e) => { if (e.target.closest('[data-tip]')) hideTip(); });
   el.statsBody.addEventListener('focusout', hideTip);
-  el.statsDialog.addEventListener('scroll', hideTip, true);
+  // kaydırınca kutu gizlenir; klavyeyle odaklanılan çubuk görünür olmak için pencereyi kaydırdıysa kutu onunla gelir
+  el.statsDialog.addEventListener('scroll', () => {
+    if (tipTarget && tipTarget === document.activeElement && tipTarget.isConnected && inStatsView(tipTarget)) showTip(tipTarget);
+    else hideTip();
+  }, true);
+  function inStatsView(n) {
+    const r = n.getBoundingClientRect();
+    const d = el.statsDialog.getBoundingClientRect();
+    const head = $('.dialog-head', el.statsDialog);
+    const top = head ? head.getBoundingClientRect().bottom : d.top;
+    return r.top >= top && r.bottom <= d.bottom;
+  }
   el.statsBody.addEventListener('click', (e) => {
     const b = e.target.closest('[data-stats-game]');
     if (!b) return;
@@ -3401,6 +3492,14 @@
       sugError = false;
       renderSuggestions();
       renderTabs();
+      // eskiden öneriden eklenen oyunların "Öneri" rozeti öneri listesinden gelir; oyunlar yalnızca bu değişince
+      // yeniden çizilir (her oyda kart listesi yenilenip klavye odağı kaybolmasın)
+      const key = fromSugKey();
+      if (key !== lastFromSugKey) {
+        lastFromSugKey = key;
+        renderFilters();
+        renderGrid();
+      }
       checkMySuggestions();
     }, () => {
       sugError = true;
@@ -3456,13 +3555,46 @@
     $(`[data-tab="${activeTab}"]`, el.tabs).focus();
   });
 
+  const SUG_SORTS = ['votes', 'new', 'az'];
+  const sugCategory = (x) => (x.category || '').trim() || 'Kategorisiz';
+  const isOpenSug = (x) => x.status !== 'added' && x.status !== 'rejected';
+  // Görünür öneriler: reddedilenler yalnızca sahibine görünür; durum ve kategori filtresi, seçilen sıralama.
+  // "En çok desteklenen"de bekleyenler üstte, listeye eklenenler altta; aynı grupta en çok destek alan önce.
+  function visibleSuggestions() {
+    return (suggestions || []).filter((x) => x.status !== 'rejected' || isEditing());
+  }
   function sortedSuggestions() {
     const rank = (x) => (x.status === 'added' ? 1 : x.status === 'rejected' ? 2 : 0);
-    // bekleyenler (yeni ve düşünülen) üstte, sıraya alınanlar altta; aynı grupta en çok oy alan önce
-    return (suggestions || [])
-      .filter((x) => x.status !== 'rejected' || isEditing())
-      .slice()
-      .sort((a, b) => rank(a) - rank(b) || (b.votes || 0) - (a.votes || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+    const byNew = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
+    const sorters = {
+      votes: (a, b) => rank(a) - rank(b) || (b.votes || 0) - (a.votes || 0) || byNew(a, b),
+      new: byNew,
+      az: (a, b) => a.title.localeCompare(b.title, 'tr') || byNew(a, b)
+    };
+    return visibleSuggestions()
+      .filter((x) => prefs.sugStatus === 'all' || (prefs.sugStatus === 'open' ? isOpenSug(x) : x.status === 'added'))
+      .filter((x) => prefs.sugCat === 'all' || sugCategory(x) === prefs.sugCat)
+      .sort(sorters[prefs.sugSort] || sorters.votes);
+  }
+
+  // Filtre çubuğu: durum sayıları, sıralama ve öneri kategorileri (hiç öneri yoksa gizli)
+  function renderSugTools() {
+    const all = visibleSuggestions();
+    $('#sugTools').hidden = !all.length;
+    if (!SUG_SORTS.includes(prefs.sugSort)) prefs.sugSort = 'votes';
+    if (!['all', 'open', 'added'].includes(prefs.sugStatus)) prefs.sugStatus = 'all';
+    $('[data-sugcount="all"]').textContent = all.length;
+    $('[data-sugcount="open"]').textContent = all.filter(isOpenSug).length;
+    $('[data-sugcount="added"]').textContent = all.filter((x) => x.status === 'added').length;
+    ($(`#sugStatus input[value="${prefs.sugStatus}"]`) || $('#ss-all')).checked = true;
+    $('#sugSort').value = prefs.sugSort;
+    const cats = new Map();
+    for (const x of all) cats.set(sugCategory(x), (cats.get(sugCategory(x)) || 0) + 1);
+    if (prefs.sugCat !== 'all' && !cats.has(prefs.sugCat)) prefs.sugCat = 'all';
+    const list = [...cats.entries()].sort((a, b) => (a[0] === 'Kategorisiz') - (b[0] === 'Kategorisiz') || a[0].localeCompare(b[0], 'tr'));
+    const chip = (value, label, n) => `<button type="button" class="chip-filter" data-sugcat="${esc(value)}" aria-pressed="${prefs.sugCat === value}">${esc(label)} <b>${n}</b></button>`;
+    $('#sugCats').innerHTML = chip('all', 'Tüm kategoriler', all.length) + list.map(([c, n]) => chip(c, c, n)).join('');
+    $('#sugCats').hidden = list.length < 2;
   }
 
   const gameByTitle = (title) => data.games.find((g) => fold(g.title) === fold(title));
@@ -3471,7 +3603,7 @@
   // sırada → "Sıraya aldım", bölümü yayınlandı → "Oynuyorum", bitti → "Oynandı".
   const SUG_LABELS = {
     considering: ['Düşünüyorum', 'is-thinking', ''],
-    queued: ['Sıraya aldım', 'is-queued', 'plus'],
+    queued: ['Sıraya aldım', 'is-queued', 'calendar'],
     ongoing: ['Oynuyorum', 'is-ongoing', 'play'],
     played: ['Oynandı', 'is-played', 'check'],
     rejected: ['Olmayacak', '', 'x']
@@ -3502,12 +3634,17 @@
       else if (!added) actions += `<button type="button" class="btn btn-primary btn-sm" data-sug="add">${icon('plus')}<span>Listeme ekle</span></button>`;
       actions += `<button type="button" class="btn btn-danger btn-sm" data-sug="delete">${icon('trash')}<span>Sil</span></button>`;
     }
+    // destek verildiyse düğme desteği geri çeker (güvenlik kuralları buna izin veriyorsa)
+    const canUnvote = voted && rulesV2 && !added;
+    const voteLabel = !voted ? 'Ben de istiyorum' : canUnvote ? 'Desteğini geri çek' : 'Destek verdin';
+    const rankNo = topRanks.get(x.id);
     return `<li class="sug${added ? ' is-added' : ''}${mine ? ' is-mine' : ''}" data-id="${esc(x.id)}">
-      <button type="button" class="vote-btn" data-sug="vote" aria-pressed="${voted}" ${voted || added ? 'disabled' : ''} aria-label="${voted ? 'Oy verdin' : 'Ben de istiyorum'}: ${esc(x.title)}, ${x.votes || 0} oy">${icon('up')}<b>${x.votes || 0}</b></button>
+      <button type="button" class="vote-btn" data-sug="vote" aria-pressed="${voted}" ${(voted && !canUnvote) || added ? 'disabled' : ''} aria-label="Ben de istiyorum: ${esc(x.title)}, ${x.votes || 0} destek" title="${voteLabel}">${icon('up')}<b>${x.votes || 0}</b></button>
       <div class="sug-main">
         <div class="sug-title-row">
           <h3>${esc(x.title)}</h3>
           ${x.category ? `<span class="chip chip-static">${esc(x.category)}</span>` : ''}
+          ${rankNo ? `<span class="sug-rank" title="En çok desteklenen ${rankNo}. öneri">#${rankNo}</span>` : ''}
           ${mine ? '<span class="mine-chip">Senin önerin</span>' : ''}
           ${sugStatusHTML(sugState(x))}
         </div>
@@ -3518,20 +3655,37 @@
     </li>`;
   }
 
+  // "En çok desteklenen" sıralamasında bekleyen önerilerin ilk üçü (en az 1 destek) #1, #2, #3 ile işaretlenir
+  let topRanks = new Map();
   function renderSuggestions() {
     if (!suggestionsAvailable()) return;
+    // liste yeniden çizilince klavye odağı aynı önerinin aynı düğmesinde (ya da aynı kategori düğmesinde) kalır
+    const active = document.activeElement;
+    const activeSug = active && active.dataset && active.dataset.sug && active.closest('#sugList .sug');
+    const focusSug = activeSug ? [activeSug.dataset.id, active.dataset.sug] : null;
+    const focusCat = active && active.closest && active.closest('#sugCats') && active.dataset.sugcat;
+    renderSugTools();
+    const open = visibleSuggestions().filter((x) => isOpenSug(x) && (x.votes || 0) > 0)
+      .sort((a, b) => (b.votes || 0) - (a.votes || 0) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 3);
+    topRanks = prefs.sugSort === 'votes' ? new Map(open.map((x, i) => [x.id, i + 1])) : new Map();
+    fillDatalist($('#categoryList'), CATEGORY_SUGGESTIONS, data.games.map((x) => x.category));
     const list = sortedSuggestions();
     $('#sugList').innerHTML = list.map(suggestionHTML).join('');
     const empty = $('#sugEmpty');
     let msg = '';
     if (suggestions === null) msg = cloudApi || !cloudError ? 'Öneriler yükleniyor…' : 'Öneriler şu an yüklenemiyor.';
     else if (sugError && !list.length) msg = 'Öneriler şu an gösterilemiyor.';
+    else if (!list.length && visibleSuggestions().length) msg = 'Bu filtrelere uyan öneri yok.';
     else if (!list.length) msg = 'Henüz öneri yok. İlk öneriyi sen yap!';
     empty.textContent = msg;
     empty.hidden = !msg;
-    $('#sugCountLine').textContent = list.length ? `${list.length} öneri` : '';
+    const total = visibleSuggestions().length;
+    $('#sugCountLine').textContent = !total ? '' : list.length === total ? `${total} öneri` : `${total} öneriden ${list.length} tanesi`;
     sg.submit.disabled = !cloudApi;
     renderMySuggestions();
+    const again = focusSug ? $(`#sugList .sug[data-id="${CSS.escape(focusSug[0])}"] [data-sug="${CSS.escape(focusSug[1])}"]`)
+      : focusCat ? $(`#sugCats [data-sugcat="${CSS.escape(focusCat)}"]`) : null;
+    if (again && !again.disabled) again.focus({ preventScroll: true });
   }
 
   // "Senin önerilerin" kutusu: bu tarayıcıdan gönderilen öneriler ve durumları (silinenler görünmez).
@@ -3628,23 +3782,86 @@
     }
   });
 
-  async function voteSuggestion(id) {
+  // Destek ver / geri çek. Yanıt beklenirken ya da hemen ardından (çift dokunma) gelen basış yok sayılır.
+  // Başka sekmede değişmiş olabileceği için önce saklanan liste okunur; ekranda görünen durum ondan farklıysa
+  // bir şey gönderilmez, yalnızca liste yenilenir.
+  const votePending = new Set();
+  const voteToggledAt = new Map();
+  let voteHintShown = false;
+  async function voteSuggestion(id, shownVoted) {
     const x = (suggestions || []).find((y) => y.id === id);
-    if (!x || myVotes.has(id) || !cloudApi) return;
+    if (!x || !cloudApi) return;
+    if (votePending.has(id) || Date.now() - (voteToggledAt.get(id) || 0) < 800) return;
+    const stored = storageGet(VOTES_KEY);
+    if (Array.isArray(stored)) {
+      myVotes.clear();
+      for (const v of stored) myVotes.add(v);
+    }
+    if (shownVoted !== undefined && myVotes.has(id) !== shownVoted) return renderSuggestions();
+    if (myVotes.has(id)) return unvoteSuggestion(x);
+    voteToggledAt.set(id, Date.now());
+    votePending.add(id);
     myVotes.add(id);
     storageSet(VOTES_KEY, Array.from(myVotes));
     x.votes = (x.votes || 0) + 1;
     renderSuggestions();
     try {
       await cloudApi.voteSuggestion(id);
+      if (rulesV2 && !voteHintShown) {
+        voteHintShown = true;
+        toast('Desteğin eklendi. Vazgeçersen aynı düğmeye yeniden bas.');
+      }
     } catch (err) {
       myVotes.delete(id);
       storageSet(VOTES_KEY, Array.from(myVotes));
       x.votes = Math.max(0, (x.votes || 1) - 1);
       renderSuggestions();
       toast('Oy verilemedi. Tekrar dene.', { error: true });
+    } finally {
+      votePending.delete(id);
     }
   }
+
+  async function unvoteSuggestion(x) {
+    if (!rulesV2 || x.status === 'added') return;
+    voteToggledAt.set(x.id, Date.now());
+    votePending.add(x.id);
+    myVotes.delete(x.id);
+    storageSet(VOTES_KEY, Array.from(myVotes));
+    x.votes = Math.max(0, (x.votes || 0) - 1);
+    renderSuggestions();
+    try {
+      await cloudApi.unvoteSuggestion(x.id);
+      toast('Desteğini geri çektin.');
+    } catch (err) {
+      myVotes.add(x.id);
+      storageSet(VOTES_KEY, Array.from(myVotes));
+      x.votes = (x.votes || 0) + 1;
+      renderSuggestions();
+      toast('Destek geri çekilemedi. Tekrar dene.', { error: true });
+    } finally {
+      votePending.delete(x.id);
+    }
+  }
+
+  // filtreler ve sıralama
+  $('#sugStatus').addEventListener('change', (e) => {
+    prefs.sugStatus = e.target.value;
+    savePrefs();
+    renderSuggestions();
+  });
+  $('#sugSort').addEventListener('change', (e) => {
+    prefs.sugSort = e.target.value;
+    savePrefs();
+    renderSuggestions();
+  });
+  $('#sugCats').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sugcat]');
+    if (!b) return;
+    prefs.sugCat = b.dataset.sugcat;
+    savePrefs();
+    renderSuggestions();
+  });
 
   function addSuggestionToList(id) {
     const x = (suggestions || []).find((y) => y.id === id);
@@ -3655,7 +3872,8 @@
       toast(`“${existing.title}” zaten listende; öneri “eklendi” olarak işaretlendi.`);
       return;
     }
-    const game = normalizeGame({ id: newGameId(x.title), title: x.title, category: x.category || 'Diğer', addedAt: new Date().toISOString() });
+    const game = normalizeGame({ id: newGameId(x.title), title: x.title, category: x.category || 'Diğer', addedAt: new Date().toISOString(),
+      suggestion: { id: x.id, name: x.name || '', votes: x.votes || 0 } });
     data.games.push(game);
     commit({ games: [game.id] });
     quiet(track(cloudApi.markSuggestion(id, { status: 'added', gameId: game.id })));
@@ -3667,7 +3885,10 @@
     if (!btn) return;
     const id = btn.closest('.sug').dataset.id;
     const action = btn.dataset.sug;
-    if (action === 'vote') voteSuggestion(id);
+    if (action === 'vote') {
+      if (e.detail > 1) return; // çift tıklamanın ikinci basışı desteği geri almasın
+      voteSuggestion(id, btn.getAttribute('aria-pressed') === 'true');
+    }
     else if (action === 'add') addSuggestionToList(id);
     else if (action === 'mark') addSuggestionToList(id);
     else if (action === 'consider' || action === 'unconsider') {
@@ -3753,6 +3974,8 @@
     }
     if (el.setupDialog.open) renderSetup();
     checkMySuggestions(); // önerilenin durumu oyunundan da gelir (ör. ilk bölüm yayınlanınca "Oynuyorum")
+    notifyOldRules(); // kural sürümü, giriş ve ilk liste hangi sırayla gelirse gelsin uyarı bir kez gösterilir
+    if (cloudLive() && !gamesFromCache) retryRulesCheck();
     // #oyun/… linkiyle açıldıysa ve oyun ilk listede yoksa her yeni listede yeniden aranır; "bulunamadı"
     // kararı yalnızca sunucudan gelen listeyle (ya da hata olunca) verilir
     if (pendingGameHash && (cloudGames !== null || cloudError)) openFromHash(pendingGameHash, cloudFinal());
@@ -3795,6 +4018,37 @@
     openSetup();
   }
 
+  // Yayındaki kuralların sürümü (bkz. cloud.js rulesVersion). Eskiyse sahibine bir kez haber verilir.
+  async function checkRulesVersion() {
+    if (!cloudApi || typeof cloudApi.rulesVersion !== 'function' || rulesChecking) return;
+    rulesChecking = true;
+    rulesTriedAt = Date.now();
+    let v = 0;
+    try {
+      v = await cloudApi.rulesVersion();
+    } finally {
+      rulesChecking = false;
+    }
+    rulesV2 = v >= 2;
+    rulesChecked = v > 0;
+    if (suggestions) renderSuggestions();
+    if (el.setupDialog.open) renderSetup();
+    notifyOldRules();
+  }
+  // Bağlantı yokken ya da yavaşken sonuç bilinemezse (0) sunucudan yeni liste gelince ya da internet dönünce yeniden sorulur.
+  function retryRulesCheck() {
+    if (cloudApi && !rulesChecked && !rulesChecking && Date.now() - rulesTriedAt > 30000) checkRulesVersion();
+  }
+  window.addEventListener('online', () => {
+    rulesTriedAt = 0;
+    retryRulesCheck();
+  });
+  function notifyOldRules() {
+    if (!owner || !rulesChecked || rulesV2 || rulesNoticeShown || !cloudLive()) return;
+    rulesNoticeShown = true;
+    toast('Güvenlik kurallarında bir güncelleme var (ziyaretçiler desteğini geri çekebilsin diye). Kurulum’dan kuralları yeniden yayınla.', { action: { label: 'Kurulum', run: openSetup } });
+  }
+
   function onCloudReady() {
     const api = window.cloud;
     if (mode !== 'cloud') return;
@@ -3806,12 +4060,14 @@
     }
     if (cloudApi) return;
     cloudApi = api;
+    checkRulesVersion();
     cloudApi.onAuthChange((user) => {
       owner = user;
       if (!owner && prefs.editing) prefs.editing = false;
       render();
       if (owner && location.hash === '#kurulum') openSetup();
       maybeShowSetup();
+      notifyOldRules();
       if (el.setupDialog.open) renderSetup();
     });
     subscribeCloud();
@@ -3937,7 +4193,8 @@
       : '<p>Önce bağlantı kurulmalı.</p>'));
     const missingDb = cloudError && /not-found|failed-precondition/.test(cloudError.code);
     const denied = cloudError && cloudError.code === 'permission-denied';
-    const rulesOk = cloudLive();
+    const rulesLive = cloudLive();
+    const rulesOk = rulesLive && (rulesV2 || !rulesChecked);
     let rulesBody = '<p>Giriş yapınca burada sana özel güvenlik kuralları görünecek.</p>';
     if (owner && cloudApi) {
       if (missingDb) {
@@ -3946,7 +4203,7 @@
           <button type="button" class="btn btn-ghost btn-sm" data-setup="retry">Tekrar kontrol et</button></div>`;
       } else {
         const rules = cloudApi.rulesFor(owner.email);
-        rulesBody = `<p>${denied ? 'Veritabanı şu an kimsenin okumasına izin vermiyor. ' : ''}Aşağıdaki kuralları kopyala; Firebase'de <b>Firestore Database → Rules</b> sekmesindeki her şeyi silip yapıştır ve <b>Publish</b>'e bas. Kurallar oyunları herkese gösterir ama yalnızca senin (${esc(owner.email)}) değiştirmene izin verir.</p>
+        rulesBody = `<p>${denied ? 'Veritabanı şu an kimsenin okumasına izin vermiyor. ' : ''}${rulesLive && !rulesOk ? '<b>Kurallar güncellendi:</b> ziyaretçiler önerilere verdikleri desteği geri çekebilsin diye kuralları bir kez daha yayınlaman gerekiyor. ' : ''}Aşağıdaki kuralları kopyala; Firebase'de <b>Firestore Database → Rules</b> sekmesindeki her şeyi silip yapıştır ve <b>Publish</b>'e bas. Kurallar oyunları herkese gösterir ama yalnızca senin (${esc(owner.email)}) değiştirmene izin verir.</p>
           <textarea class="export-text" id="setupRules" rows="8" readonly aria-label="Güvenlik kuralları">${esc(rules)}</textarea>
           <div class="setup-actions"><button type="button" class="btn btn-primary btn-sm" data-setup="copy-rules">${icon('copy')}<span>Kuralları kopyala</span></button>
           <a class="btn btn-ghost btn-sm" href="${esc(consoleUrl)}/firestore/rules" target="_blank" rel="noopener">Kurallar sayfasını aç</a>
@@ -3955,11 +4212,11 @@
     }
     parts.push(setupStep(rulesOk, 'Güvenlik kuralları', rulesBody));
     const count = loadData().games.length;
-    parts.push(setupStep(rulesOk && cloudInitialized(), 'Listeyi buluta aktar', rulesOk && owner
+    parts.push(setupStep(rulesLive && cloudInitialized(), 'Listeyi buluta aktar', rulesLive && owner
       ? `<p>Şu anki liste (${count} oyun) ve site ayarları buluta yüklenir. Sonra her değişiklik otomatik kaydedilir.</p><button type="button" class="btn btn-primary btn-sm" data-setup="migrate">Listeyi buluta aktar</button>`
       : '<p>Önceki adımlar bitince açılır.</p>'));
     const ytDone = Boolean(safeLink(data.site.youtubeUrl));
-    parts.push(setupStep(ytDone, 'YouTube kanal linki', owner && rulesOk
+    parts.push(setupStep(ytDone, 'YouTube kanal linki', owner && rulesLive
       ? '<p>Kanal linkini girince “Abone ol” düğmesi ve kanaldaki son video (en geç bir saat içinde) görünür.</p><button type="button" class="btn btn-ghost btn-sm" data-setup="settings">Site ayarlarını aç</button>'
       : '<p>Giriş yapınca “Site ayarları”ndan eklenir.</p>'));
     const allDone = connected && owner && rulesOk && cloudInitialized() && ytDone;
@@ -3983,6 +4240,7 @@
       openLogin();
     } else if (action === 'retry') {
       subscribeCloud();
+      checkRulesVersion();
       toast('Kontrol ediliyor…');
     } else if (action === 'settings') {
       closeDialog(el.setupDialog);
@@ -4035,6 +4293,12 @@
   }, true);
 
   el.chips.addEventListener('click', (e) => {
+    if (e.target.closest('[data-fromsug]')) {
+      prefs.fromSug = !prefs.fromSug;
+      savePrefs();
+      render();
+      return;
+    }
     const btn = e.target.closest('[data-category]');
     if (!btn) return;
     prefs.category = btn.dataset.category;
@@ -4068,6 +4332,7 @@
       el.search.value = '';
       prefs.status = 'all';
       prefs.category = 'all';
+      prefs.fromSug = false;
       savePrefs();
       render();
     }

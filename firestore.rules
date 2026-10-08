@@ -33,11 +33,12 @@ service cloud.firestore {
         && d.createdAt == request.time;
     }
 
-    // Oy: yalnızca "votes" değişir ve tam 1 artar
+    // Oy: yalnızca "votes" değişir; tam 1 artar ya da (desteği geri çekince) 1 azalır, sıfırın altına inmez
     function isVote() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
         && request.resource.data.votes is int
-        && request.resource.data.votes == resource.data.get('votes', 0) + 1;
+        && (request.resource.data.votes == resource.data.get('votes', 0) + 1
+          || (request.resource.data.votes == resource.data.get('votes', 0) - 1 && request.resource.data.votes >= 0));
     }
 
     // Site ayarları (başlık, kanal adı, YouTube linki…)
@@ -67,6 +68,11 @@ service cloud.firestore {
       allow create: if newSuggestionOk(request.resource.data);
       allow update: if isOwner() || isVote();
       allow delete: if isOwner();
+    }
+
+    // Kuralların sürüm işareti: site bu (boş) belgeyi okuyabiliyorsa kurallar günceldir
+    match /meta/{docId} {
+      allow read: if docId == 'kurallar-v2';
     }
 
     // Burada adı geçmeyen her şey kapalıdır.

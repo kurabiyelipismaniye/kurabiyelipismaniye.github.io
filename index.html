@@ -32,7 +32,7 @@
 <meta name="twitter:image" content="https://kurabiyelipismaniye.github.io/icons/og-image.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Rubik:wght@400;500;600&family=Unbounded:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Rubik:wght@400;500;600&family=Unbounded:wght@600;800&display=swap" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -237,6 +237,24 @@
       <div class="sug-list-head">
         <h2>Gelen öneriler</h2>
         <span class="result-line" id="sugCountLine"></span>
+      </div>
+      <div class="sug-tools" id="sugTools" hidden>
+        <div class="toolbar-row">
+          <div class="segmented" role="radiogroup" aria-label="Öneri durumuna göre filtrele" id="sugStatus">
+            <input type="radio" name="sugstatus" id="ss-all" value="all" checked><label for="ss-all">Tümü <b data-sugcount="all">0</b></label>
+            <input type="radio" name="sugstatus" id="ss-open" value="open"><label for="ss-open">Bekleyen <b data-sugcount="open">0</b></label>
+            <input type="radio" name="sugstatus" id="ss-added" value="added"><label for="ss-added" title="Listeye eklenen öneriler">Listede <b data-sugcount="added">0</b></label>
+          </div>
+          <label class="sort">
+            <span class="visually-hidden">Önerileri sırala</span>
+            <select id="sugSort">
+              <option value="votes">En çok desteklenen</option>
+              <option value="new">En yeni</option>
+              <option value="az">İsme göre (A–Z)</option>
+            </select>
+          </label>
+        </div>
+        <div class="chips" id="sugCats" role="group" aria-label="Önerileri kategoriye göre filtrele"></div>
       </div>
       <ol class="sug-list" id="sugList"></ol>
       <p class="sug-empty" id="sugEmpty" hidden></p>

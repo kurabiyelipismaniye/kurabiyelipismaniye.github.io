@@ -50,11 +50,12 @@ service cloud.firestore {
         && d.createdAt == request.time;
     }
 
-    // Oy: yalnızca "votes" değişir ve tam 1 artar
+    // Oy: yalnızca "votes" değişir; tam 1 artar ya da (desteği geri çekince) 1 azalır, sıfırın altına inmez
     function isVote() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
         && request.resource.data.votes is int
-        && request.resource.data.votes == resource.data.get('votes', 0) + 1;
+        && (request.resource.data.votes == resource.data.get('votes', 0) + 1
+          || (request.resource.data.votes == resource.data.get('votes', 0) - 1 && request.resource.data.votes >= 0));
     }
 
     // Site ayarları (başlık, kanal adı, YouTube linki…)
@@ -84,6 +85,11 @@ service cloud.firestore {
       allow create: if newSuggestionOk(request.resource.data);
       allow update: if isOwner() || isVote();
       allow delete: if isOwner();
+    }
+
+    // Kuralların sürüm işareti: site bu (boş) belgeyi okuyabiliyorsa kurallar günceldir
+    match /meta/{docId} {
+      allow read: if docId == 'kurallar-v2';
     }
 
     // Burada adı geçmeyen her şey kapalıdır.
@@ -190,7 +196,7 @@ async function start(cfg) {
     import(`${SDK}firebase-firestore.js`)
   ]);
   const {
-    doc, collection, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
+    doc, collection, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
     onSnapshot, writeBatch, serverTimestamp, increment
   } = fs;
   const emu = cfg.firebaseEmulators || null;
@@ -415,6 +421,16 @@ async function start(cfg) {
       return ref.id;
     }),
     voteSuggestion: safe((id) => updateDoc(suggestionRef(id), { votes: increment(1) })),
+    unvoteSuggestion: safe((id) => updateDoc(suggestionRef(id), { votes: increment(-1) })),
+    // Yayındaki güvenlik kurallarının sürümü: 2 = güncel (destek geri çekilebilir), 1 = eski, 0 = anlaşılamadı
+    async rulesVersion() {
+      try {
+        await getDoc(doc(db, 'meta', 'kurallar-v2'));
+        return 2;
+      } catch (err) {
+        return err && err.code === 'permission-denied' ? 1 : 0;
+      }
+    },
     // Yalnızca sahip: öneri düşünülüyor / listeye eklendi / reddedildi / yeniden "yeni"
     markSuggestion: safe(async (id, change) => {
       const { status, gameId } = change && typeof change === 'object' ? change : {};
