@@ -7,7 +7,7 @@ const SDK = 'https://www.gstatic.com/firebasejs/12.19.0/';
 
 // Görsel ve öneri alanlarının üst sınırları (firestore.rules ile aynı)
 const LIMITS = { cover: 400000, image: 950000, title: 80, note: 400, name: 40, category: 40 };
-const STATUSES = ['new', 'added', 'rejected'];
+const STATUSES = ['new', 'considering', 'added', 'rejected'];
 
 // Bir yazma grubunda en çok 450 işlem ve yaklaşık 8 MB veri gönderilir (Firestore sınırı 500 / 10 MB)
 const BATCH_OPS = 450;
@@ -415,7 +415,7 @@ async function start(cfg) {
       return ref.id;
     }),
     voteSuggestion: safe((id) => updateDoc(suggestionRef(id), { votes: increment(1) })),
-    // Yalnızca sahip: öneri listeye eklendi / reddedildi / yeniden "yeni"
+    // Yalnızca sahip: öneri düşünülüyor / listeye eklendi / reddedildi / yeniden "yeni"
     markSuggestion: safe(async (id, change) => {
       const { status, gameId } = change && typeof change === 'object' ? change : {};
       if (!STATUSES.includes(status)) throw invalid(`Geçersiz durum: ${String(status)}`);

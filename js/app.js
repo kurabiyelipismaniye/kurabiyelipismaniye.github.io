@@ -2871,6 +2871,13 @@
   const VOTES_KEY = 'oyunArsivi.oylar.v1';
   const LAST_SUG_KEY = 'oyunArsivi.sonOneri.v1';
   const myVotes = new Set(Array.isArray(storageGet(VOTES_KEY)) ? storageGet(VOTES_KEY) : []);
+  // Bu tarayıcıdan gönderilen öneriler ve en son gösterilen durumları: { [öneri kimliği]: durum anahtarı }.
+  // Durum değişince öneren kişi siteye geldiğinde bir kez haber alır.
+  const MY_SUGS_KEY = 'oyunArsivi.onerilerim.v1';
+  const mySugs = (() => {
+    const v = storageGet(MY_SUGS_KEY);
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  })();
   // Sekmeler yalnızca veritabanına gerçekten ulaşılabildiğinde görünür; kurulum bitmeden ziyaretçiler
   // çalışmayan bir öneri formu görmesin.
   const suggestionsAvailable = () => mode === 'cloud' && cloudLive();
@@ -2895,6 +2902,7 @@
       sugError = false;
       renderSuggestions();
       renderTabs();
+      checkMySuggestions();
     }, () => {
       sugError = true;
       if (suggestions === null) suggestions = [];
@@ -2951,6 +2959,7 @@
 
   function sortedSuggestions() {
     const rank = (x) => (x.status === 'added' ? 1 : x.status === 'rejected' ? 2 : 0);
+    // bekleyenler (yeni ve düşünülen) üstte, sıraya alınanlar altta; aynı grupta en çok oy alan önce
     return (suggestions || [])
       .filter((x) => x.status !== 'rejected' || isEditing())
       .slice()
@@ -2959,24 +2968,49 @@
 
   const gameByTitle = (title) => data.games.find((g) => fold(g.title) === fold(title));
 
+  // Önerinin ziyaretçiye görünen durumu. Listeye eklenen önerinin durumu oyunun durumundan gelir:
+  // sırada → "Sıraya aldım", bölümü yayınlandı → "Oynuyorum", bitti → "Oynandı".
+  const SUG_LABELS = {
+    considering: ['Düşünüyorum', 'is-thinking', ''],
+    queued: ['Sıraya aldım', 'is-queued', 'plus'],
+    ongoing: ['Oynuyorum', 'is-ongoing', 'play'],
+    played: ['Oynandı', 'is-played', 'check'],
+    rejected: ['Olmayacak', '', 'x']
+  };
+  function sugState(x) {
+    if (x.status === 'considering' || x.status === 'rejected') return x.status;
+    if (x.status !== 'added') return 'new';
+    const g = (x.gameId && findGame(x.gameId)) || gameByTitle(x.title);
+    const state = g ? gameState(g) : 'todo';
+    return state === 'played' ? 'played' : state === 'ongoing' ? 'ongoing' : 'queued';
+  }
+  function sugStatusHTML(key) {
+    const label = SUG_LABELS[key];
+    return label ? `<span class="status ${label[1]}">${label[2] ? icon(label[2]) : ''}${label[0]}</span>` : '';
+  }
+
   function suggestionHTML(x) {
     const voted = myVotes.has(x.id);
     const added = x.status === 'added';
+    const mine = x.id in mySugs;
     const inList = (x.gameId && findGame(x.gameId)) || gameByTitle(x.title);
     const when = x.createdAt ? relativeDay(localDay(x.createdAt)) : 'az önce';
     let actions = '';
     if (isEditing()) {
+      if (!added && x.status !== 'considering') actions += `<button type="button" class="btn btn-ghost btn-sm" data-sug="consider">${icon('star')}<span>Düşünüyorum</span></button>`;
+      if (x.status === 'considering') actions += `<button type="button" class="btn btn-ghost btn-sm" data-sug="unconsider">${icon('x')}<span>Düşünmeyi bırak</span></button>`;
       if (!added && inList) actions += `<button type="button" class="btn btn-ghost btn-sm" data-sug="mark">${icon('check')}<span>Listede var, işaretle</span></button>`;
       else if (!added) actions += `<button type="button" class="btn btn-primary btn-sm" data-sug="add">${icon('plus')}<span>Listeme ekle</span></button>`;
       actions += `<button type="button" class="btn btn-danger btn-sm" data-sug="delete">${icon('trash')}<span>Sil</span></button>`;
     }
-    return `<li class="sug${added ? ' is-added' : ''}" data-id="${esc(x.id)}">
+    return `<li class="sug${added ? ' is-added' : ''}${mine ? ' is-mine' : ''}" data-id="${esc(x.id)}">
       <button type="button" class="vote-btn" data-sug="vote" aria-pressed="${voted}" ${voted || added ? 'disabled' : ''} aria-label="${voted ? 'Oy verdin' : 'Ben de istiyorum'}: ${esc(x.title)}, ${x.votes || 0} oy">${icon('up')}<b>${x.votes || 0}</b></button>
       <div class="sug-main">
         <div class="sug-title-row">
           <h3>${esc(x.title)}</h3>
           ${x.category ? `<span class="chip chip-static">${esc(x.category)}</span>` : ''}
-          ${added ? `<span class="status is-played">${icon('check')}Listeye eklendi</span>` : ''}
+          ${mine ? '<span class="mine-chip">Senin önerin</span>' : ''}
+          ${sugStatusHTML(sugState(x))}
         </div>
         ${x.note ? `<p class="sug-note">${esc(x.note)}</p>` : ''}
         <p class="sug-meta">${esc(x.name || 'Anonim')} · ${esc(when)}</p>
@@ -2998,6 +3032,36 @@
     empty.hidden = !msg;
     $('#sugCountLine').textContent = list.length ? `${list.length} öneri` : '';
     sg.submit.disabled = !cloudApi;
+    renderMySuggestions();
+  }
+
+  // "Senin önerilerin" kutusu: bu tarayıcıdan gönderilen öneriler ve durumları (silinenler görünmez).
+  function renderMySuggestions() {
+    const box = $('#mySugs');
+    if (!suggestions) return;
+    const mine = suggestions.filter((x) => x.id in mySugs);
+    box.hidden = !mine.length;
+    $('#mySugList').innerHTML = mine.map((x) => `<li class="my-sug"><b>${esc(x.title)}</b>${sugStatusHTML(sugState(x)) || '<span class="status">Yeni</span>'}</li>`).join('');
+  }
+
+  // Öneri listesi gelince: gönderdiğin önerilerden durumu değişen olduysa bir kez haber verilir.
+  // Listede olmayan (silinmiş ya da önbellekteki eski listede henüz görünmeyen) öneri atlanır, kaydı silinmez.
+  function checkMySuggestions() {
+    if (!suggestions || sugError) return;
+    let changed = false;
+    const news = [];
+    for (const id of Object.keys(mySugs)) {
+      const x = suggestions.find((y) => y.id === id);
+      if (!x) continue;
+      const key = sugState(x);
+      if (mySugs[id] !== key) {
+        if (mySugs[id] && SUG_LABELS[key]) news.push(`“${x.title}”: ${SUG_LABELS[key][0]}`);
+        mySugs[id] = key;
+        changed = true;
+      }
+    }
+    if (changed) storageSet(MY_SUGS_KEY, mySugs);
+    if (news.length) toast(`Önerin güncellendi — ${news.join(', ')}`, { action: { label: 'Göster', run: () => setTab('suggestions') } });
   }
 
   function updateDupHint() {
@@ -3040,8 +3104,13 @@
     storageSet(LAST_SUG_KEY, Date.now());
     sg.submit.disabled = true;
     try {
-      await cloudApi.addSuggestion(sent);
-      toast('Önerin gönderildi. Teşekkürler!');
+      const id = await cloudApi.addSuggestion(sent);
+      if (id) {
+        mySugs[id] = 'new';
+        storageSet(MY_SUGS_KEY, mySugs);
+        renderSuggestions();
+      }
+      toast('Önerin gönderildi. Teşekkürler! Durumunu bu sayfada “Senin önerilerin” bölümünden takip edebilirsin.');
     } catch (err) {
       storageRemove(LAST_SUG_KEY);
       // gönderilemediyse, kişi bu arada başka bir şey yazmadıysa yazdıkları geri gelir
@@ -3099,6 +3168,9 @@
     if (action === 'vote') voteSuggestion(id);
     else if (action === 'add') addSuggestionToList(id);
     else if (action === 'mark') addSuggestionToList(id);
+    else if (action === 'consider' || action === 'unconsider') {
+      quiet(track(cloudApi.markSuggestion(id, { status: action === 'consider' ? 'considering' : 'new' })));
+    }
     else if (action === 'delete') {
       if (btn.dataset.confirm !== '1') {
         btn.dataset.confirm = '1';
