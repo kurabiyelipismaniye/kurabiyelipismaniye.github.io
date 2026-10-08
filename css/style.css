@@ -1198,6 +1198,7 @@ code {
 .inbox-meta { font: 500 .75rem/1.3 var(--font-mono); color: var(--muted); }
 .inbox-guess { font-size: .82rem; color: var(--muted); }
 .inbox-guess b { color: var(--fg); }
+.inbox-short { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; margin-right: 4px; border-radius: 5px; background: var(--yt); color: var(--yt-ink); font: 700 .66rem/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .inbox-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .inbox-game {
   height: 36px;

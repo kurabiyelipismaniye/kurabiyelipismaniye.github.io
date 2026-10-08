@@ -2794,7 +2794,11 @@
   let inboxHTML = '';
   const inbox = { section: $('#videoInbox'), list: $('#inboxList'), count: $('#inboxCount') };
 
-  const titleWords = (s) => fold(s).replace(/[^a-z0-9]+/g, ' ').trim();
+  // Karşılaştırma için sadeleştirilmiş başlık: "#3" bölüm numarası "ep3" olur, tek başına Roma rakamları sayıya
+  // çevrilir ("Hades II" = "Hades 2"), noktalama ve emoji boşluk sayılır.
+  const ROMAN = { ii: '2', iii: '3', iv: '4', v: '5', vi: '6', vii: '7', viii: '8', ix: '9', x: '10' };
+  const titleWords = (s) => fold(String(s || '').replace(/#\s*(\d+)/g, ' ep$1 '))
+    .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').map((w) => ROMAN[w] || w).join(' ');
   // Başlığın son "|" sonrası; sondaki etiketler ve bölüm numarası ("#12", "#Shorts", "Bölüm 3", "Part 2") atılır
   function seriesTag(title) {
     const parts = String(title || '').split('|');
@@ -2804,20 +2808,30 @@
 
   function guessGame(video) {
     const vt = ` ${titleWords(video.title)} `;
+    const tokens = new Set(vt.trim().split(' '));
     const tag = seriesTag(video.title);
+    // Oyunun adı başlıkta geçiyor ama hemen ardından bir sayı geliyorsa ("Hades 2", "Resident Evil 4") başka oyundur
+    const hasPhrase = (phrase) => {
+      for (let i = vt.indexOf(` ${phrase} `); i >= 0; i = vt.indexOf(` ${phrase} `, i + 1)) {
+        if (!/^\d+$/.test(vt.slice(i + phrase.length + 2).split(' ')[0])) return true;
+      }
+      return false;
+    };
     let best = null;
     let second = 0;
     for (const g of data.games) {
       const gt = titleWords(g.title);
+      const gw = gt.split(' ');
       let score = 0;
       if (tag && g.episodes.some((e) => seriesTag(e.title) === tag)) score = 1000;
-      else if (gt.length >= 3 && vt.includes(` ${gt} `)) score = 500 + gt.length;
+      else if (gt.length >= 3 && hasPhrase(gt)) score = 500 + gt.length;
+      // seri etiketi oyunun adının başı: "… | Fears To Fathom #1" ↔ "Fears To Fathom: Home Alone"
+      else if (tag && (tag.includes(' ') || tag.length >= 6) && ` ${gt} `.startsWith(` ${tag} `)) score = 100 + tag.length;
       else {
-        const gw = gt.split(' ');
-        const tokens = new Set(vt.trim().split(' '));
         for (let k = gw.length; k >= 2; k--) {
           const head = gw.slice(0, k).join(' ');
-          if ((k < gw.length && vt.includes(` ${head} `)) || tokens.has(head.replace(/ /g, ''))) {
+          // boşluksuz etiket ("#fearstofathom") ya da seri etiketi yoksa en az üç kelimelik baş kısım
+          if (tokens.has(head.replace(/ /g, '')) || (!tag && k >= 3 && k < gw.length && hasPhrase(head))) {
             score = 100 + head.length;
             break;
           }
@@ -2848,7 +2862,8 @@
     const games = data.games.slice().sort((a, b) => a.title.localeCompare(b.title, 'tr'));
     const html = list.map((v) => {
       const guess = guessGame(v);
-      const chosen = inboxChoice.has(v.id) ? inboxChoice.get(v.id) : (guess ? guess.id : '');
+      // Shorts genelde bölüm değildir: tahmin gösterilir ama seçili gelmez
+      const chosen = inboxChoice.has(v.id) ? inboxChoice.get(v.id) : (guess && !v.isShort ? guess.id : '');
       const day = localDay(v.published);
       const when = [formatDate(day, 'short'), relativeDay(day)].filter(Boolean).join(' · ');
       const options = games.map((g) => `<option value="${esc(g.id)}"${g.id === chosen ? ' selected' : ''}>${esc(g.title)}</option>`).join('');
@@ -2857,7 +2872,9 @@
         <div class="inbox-main">
           <span class="inbox-title">${esc(v.title)}</span>
           <span class="inbox-meta">${esc(when)}</span>
-          <p class="inbox-guess">${guess ? `Tahmin: <b>${esc(guess.title)}</b>` : 'Hangi oyuna ait olduğu tahmin edilemedi; listeden seç.'}</p>
+          <p class="inbox-guess">${v.isShort
+            ? `<span class="inbox-short">Shorts</span> ${guess ? `Muhtemelen <b>${esc(guess.title)}</b> ile ilgili. ` : ''}Bölüm olarak eklemeyeceksen “Yoksay”.`
+            : guess ? `Tahmin: <b>${esc(guess.title)}</b>` : 'Hangi oyuna ait olduğu tahmin edilemedi; listeden seç.'}</p>
           <div class="inbox-actions">
             <select class="inbox-game" aria-label="Bölümün ekleneceği oyun: ${esc(v.title)}"><option value="">Oyun seç…</option>${options}</select>
             <button type="button" class="btn btn-primary btn-sm" data-inbox="add">${icon('plus')}<span>Bölüm olarak ekle</span></button>
@@ -2904,7 +2921,18 @@
     }
     if (findEpisodeByVideo(v.id)) return renderInbox();
     const ep = normalizeEpisode({ id: uid(), url: v.url, title: v.title, date: localDay(v.published) });
-    g.episodes = sortEpisodes([...g.episodes, ep]);
+    // aynı gün yüklenen bölümler yükleme saatine göre sıralanır (saat yalnızca kanalın son videolarında bilinir)
+    const published = (e) => {
+      const x = latest.videos.find((y) => y.id === youtubeId(e.url));
+      return x ? Date.parse(x.published) || null : null;
+    };
+    const list = sortEpisodes([...g.episodes, ep]);
+    // aynı gün içinde daha geç yüklenmiş bir bölüm varsa yeni bölüm onun önüne alınır
+    const at = list.indexOf(ep);
+    const mine = published(ep);
+    const later = mine === null ? -1 : list.findIndex((e, i) => i < at && e.date === ep.date && published(e) > mine);
+    if (later >= 0) list.splice(later, 0, ...list.splice(at, 1));
+    g.episodes = list;
     delete g.example;
     inboxChoice.delete(v.id);
     commit({ games: [g.id] });
@@ -3250,7 +3278,8 @@
             title: String(v.title),
             published: String(v.published || ''),
             url: `https://www.youtube.com/watch?v=${v.id}`,
-            thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+            thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
+            isShort: v.isShort === true
           }));
         if (!videos.length) continue;
         latest = { channelUrl: safeLink(json.channelUrl), videos };
@@ -3514,10 +3543,13 @@
     $('#mySugList').innerHTML = mine.map((x) => `<li class="my-sug"><b>${esc(x.title)}</b>${sugStatusHTML(sugState(x)) || '<span class="status">Yeni</span>'}</li>`).join('');
   }
 
-  // Öneri listesi gelince: gönderdiğin önerilerden durumu değişen olduysa bir kez haber verilir.
+  // Öneri listesi ya da oyunlar değişince: gönderdiğin önerilerden durumu değişen olduysa bir kez haber verilir.
   // Listede olmayan (silinmiş ya da önbellekteki eski listede henüz görünmeyen) öneri atlanır, kaydı silinmez.
+  // Durumun bir kısmı oyundan geldiği için oyunlar sunucudan gelmeden karar verilmez. Başka bir sekmede
+  // kaydedilmiş öneriler ve haberler kaybolmasın diye önce saklanan liste okunur.
   function checkMySuggestions() {
-    if (!suggestions || sugError) return;
+    if (!suggestions || sugError || cloudGames === null || gamesFromCache) return;
+    Object.assign(mySugs, storageGet(MY_SUGS_KEY) || {});
     let changed = false;
     const news = [];
     for (const id of Object.keys(mySugs)) {
@@ -3576,7 +3608,7 @@
     try {
       const id = await cloudApi.addSuggestion(sent);
       if (id) {
-        mySugs[id] = 'new';
+        Object.assign(mySugs, storageGet(MY_SUGS_KEY) || {}, { [id]: 'new' });
         storageSet(MY_SUGS_KEY, mySugs);
         renderSuggestions();
       }
@@ -3720,6 +3752,7 @@
       else if (!gamesFromCache) closeDialog(el.detailDialog);
     }
     if (el.setupDialog.open) renderSetup();
+    checkMySuggestions(); // önerilenin durumu oyunundan da gelir (ör. ilk bölüm yayınlanınca "Oynuyorum")
     // #oyun/… linkiyle açıldıysa ve oyun ilk listede yoksa her yeni listede yeniden aranır; "bulunamadı"
     // kararı yalnızca sunucudan gelen listeyle (ya da hata olunca) verilir
     if (pendingGameHash && (cloudGames !== null || cloudError)) openFromHash(pendingGameHash, cloudFinal());
