@@ -1,7 +1,7 @@
 // Oyun Arşivi verisi. Firebase'deki listeden otomatik oluşturulur (scripts/sync.mjs); elle düzenlemene gerek yok.
 // Site Firebase'e ulaşamadığında bu liste gösterilir. Yüklenen kapak görselleri dosya küçük kalsın diye buraya alınmaz.
 window.SITE_DATA = {
-  "version": 1791405003434,
+  "version": 1791455551684,
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -10,6 +10,20 @@ window.SITE_DATA = {
     "githubEditUrl": "https://github.com/kurabiyelipismaniye/kurabiyelipismaniye.github.io/edit/main/data/games.js"
   },
   "games": [
+    {
+      "id": "mouthwashing",
+      "title": "Mouthwashing",
+      "category": "Korku",
+      "platform": "PC",
+      "description": "",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 0,
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-08T10:16:51.966Z",
+      "episodes": []
+    },
     {
       "id": "muyiejdq7slrx",
       "title": "Yes, Your Grace",

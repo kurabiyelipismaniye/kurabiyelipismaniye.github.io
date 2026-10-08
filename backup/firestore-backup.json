@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T05:30:03.954Z",
+  "exportedAt": "2026-10-08T10:32:31.682Z",
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -8,6 +8,21 @@
     "githubEditUrl": "https://github.com/kurabiyelipismaniye/kurabiyelipismaniye.github.io/edit/main/data/games.js"
   },
   "games": [
+    {
+      "id": "mouthwashing",
+      "title": "Mouthwashing",
+      "category": "Korku",
+      "platform": "PC",
+      "description": "",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 0,
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-08T10:16:51.966Z",
+      "episodes": [],
+      "images": []
+    },
     {
       "id": "muyiejdq7slrx",
       "title": "Yes, Your Grace",

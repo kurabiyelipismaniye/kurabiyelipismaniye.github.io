@@ -1,6 +1,11 @@
 {
-  "updatedAt": "2026-10-07T21:10:52.598Z",
+  "updatedAt": "2026-10-08T10:32:31.873Z",
   "games": {
+    "mouthwashing": {
+      "title": "Mouthwashing",
+      "appid": 2475490,
+      "name": "Mouthwashing"
+    },
     "muyiejdq7slrx": {
       "title": "Yes, Your Grace",
       "appid": 1115690,
