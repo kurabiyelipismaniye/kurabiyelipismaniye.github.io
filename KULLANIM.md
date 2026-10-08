@@ -56,6 +56,11 @@ Durumu elle seçmen gerekmez:
 > `data/games.js` içindeki 10 oyun ve bölümleri örnek olarak eklendi. **Örnekleri sil** ile hepsini kaldırabilir
 > ya da birini düzenleyip kendi bilgilerinle kaydedebilirsin (kaydedince “Örnek” etiketi kalkar).
 
+**Oynama sırası:** düzenleme modunda **Sırayı düzenle**'ye bas; “Sırada” olan oyunları tutamaçtan (⋮⋮) sürükleyerek
+(telefonda parmakla) ya da oklarla sırala ve **Sırayı kaydet**. Kartlarda “1. sırada”, “2. sırada” diye görünür;
+ziyaretçiler sıralama menüsünden **Oynama sırası**'nı seçerek listeyi bu sırayla görebilir (önce devam edenler,
+sonra sıradakiler, en sonda bitenler). Yeni eklenen oyun, sıralanana kadar listenin sonunda bekler.
+
 ## Yeni bölüm yükleyince
 
 1. Düzenleme modunda oyunun kartına tıkla ve **Bölüm ekle**'ye bas.

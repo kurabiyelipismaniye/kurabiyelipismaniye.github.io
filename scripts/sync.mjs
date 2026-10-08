@@ -41,7 +41,7 @@ const BROWSER_HEADERS = {
 
 // data/games.js okunaklı kalsın diye bilinen alanlar sitenin kullandığı sırayla yazılır, gerisi alfabetik
 const SITE_KEYS = ['channelName', 'title', 'tagline', 'youtubeUrl', 'githubEditUrl'];
-const GAME_KEYS = ['id', 'title', 'category', 'platform', 'description', 'cover', 'steamUrl', 'rating', 'played', 'playedAt', 'addedAt', 'episodes', 'example'];
+const GAME_KEYS = ['id', 'title', 'category', 'platform', 'description', 'cover', 'steamUrl', 'rating', 'queueOrder', 'played', 'playedAt', 'addedAt', 'episodes', 'example'];
 const EPISODE_KEYS = ['id', 'title', 'url', 'date'];
 const IMAGE_KEYS = ['id', 'createdAt', 'data'];
 const SUGGESTION_KEYS = ['id', 'title', 'note', 'name', 'category', 'votes', 'status', 'gameId', 'createdAt'];

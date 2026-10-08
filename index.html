@@ -153,6 +153,7 @@
       <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn"><svg class="icon"><use href="#i-sliders"/></svg><span>Site ayarları</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="publishBtn"><svg class="icon"><use href="#i-upload"/></svg><span>Yayınla / Yedekle</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="setupBtn" hidden><svg class="icon"><use href="#i-cloud"/></svg><span>Kurulum</span></button>
+      <button type="button" class="btn btn-ghost btn-sm" id="queueBtn"><svg class="icon"><use href="#i-sliders"/></svg><span>Sırayı düzenle</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="clearExamples" hidden><svg class="icon"><use href="#i-trash"/></svg><span>Örnekleri sil</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn" hidden><svg class="icon"><use href="#i-logout"/></svg><span>Çıkış</span></button>
       <button type="button" class="btn btn-ghost btn-sm" id="editDone">Bitti</button>
@@ -189,6 +190,7 @@
           <option value="az">İsme göre (A–Z)</option>
           <option value="rating">Puanıma göre</option>
           <option value="finished">Son bitirilen</option>
+          <option value="queue">Oynama sırası</option>
         </select>
       </label>
     </div>
@@ -504,6 +506,23 @@
   </div>
   <div class="dialog-body stats-body" id="statsBody"></div>
   <div class="viz-tip" id="vizTip" role="tooltip" hidden></div>
+</dialog>
+
+<!-- Sıradaki oyunların sırası -->
+<dialog id="queueDialog" class="dialog dialog-sm" aria-labelledby="queueTitle">
+  <div class="dialog-head">
+    <h2 id="queueTitle">Oynama sırası</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Kapat"><svg class="icon"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="dialog-body">
+    <p class="hint">“Sırada” olan oyunları tutamaçtan (⋮⋮) sürükleyerek ya da oklarla sırala. En üstteki, sıradaki ilk oyundur; kartlarda “1. sırada” diye görünür.</p>
+    <ol class="queue-list" id="queueList"></ol>
+    <p class="visually-hidden" id="queueLive" aria-live="polite"></p>
+  </div>
+  <div class="dialog-foot">
+    <button type="button" class="btn btn-ghost" data-close>Vazgeç</button>
+    <button type="button" class="btn btn-primary" id="queueSave">Sırayı kaydet</button>
+  </div>
 </dialog>
 
 <!-- Görsel görüntüleyici -->

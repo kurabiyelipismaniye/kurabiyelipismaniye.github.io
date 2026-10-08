@@ -246,6 +246,7 @@
       cover: String(g.cover || '').trim(),
       steamUrl: String(g.steamUrl || '').trim(), // elle girilen mağaza linki; "yok": link gösterilmez
       rating: Math.max(0, Math.min(5, Math.round(Number(g.rating) || 0))),
+      ...(Number.isFinite(Number(g.queueOrder)) && g.queueOrder !== null && g.queueOrder !== '' ? { queueOrder: Number(g.queueOrder) } : {}),
       played,
       playedAt: played && g.playedAt ? String(g.playedAt) : null,
       addedAt: String(g.addedAt || ''), // bilinmiyorsa boş kalır; "şimdi" yazmak her yüklemede değişirdi
@@ -550,6 +551,18 @@
     return `<span class="stars" role="img" aria-label="5 üzerinden ${rating} puan">${s}</span>`;
   }
 
+  // "Sırada" olan oyunların oynama sırası: sahibinin belirlediği sıra (queueOrder), sıralanmamışlar sonda
+  // (önce eklenen önce). Sonuç: oyun kimliği → 1, 2, 3…
+  function queueRanks() {
+    const todo = data.games.filter((g) => gameState(g) === 'todo');
+    const has = (g) => Number.isFinite(g.queueOrder);
+    todo.sort((a, b) => (has(a) && has(b) ? a.queueOrder - b.queueOrder : has(a) ? -1 : has(b) ? 1 : 0)
+      || String(a.addedAt).localeCompare(String(b.addedAt)) || a.title.localeCompare(b.title, 'tr'));
+    return new Map(todo.map((g, i) => [g.id, i + 1]));
+  }
+  let ranks = new Map();
+  const anyQueueOrder = () => data.games.some((g) => gameState(g) === 'todo' && Number.isFinite(g.queueOrder));
+
   function statusHTML(g) {
     if (isEditing()) {
       return `<div class="card-foot-right">
@@ -562,7 +575,7 @@
     const state = gameState(g);
     if (state === 'played') return `<span class="status is-played">${icon('check')}Oynandı</span>`;
     if (state === 'ongoing') return '<span class="status is-ongoing">Devam ediyor</span>';
-    return '<span class="status">Sırada</span>';
+    return `<span class="status">${ranks.has(g.id) && anyQueueOrder() ? `${ranks.get(g.id)}. sırada` : 'Sırada'}</span>`;
   }
 
   function coverBadgeHTML(g) {
@@ -621,7 +634,17 @@
       az: byTitle,
       rating: (a, b) => b.rating - a.rating || byTitle(a, b),
       episode: (a, b) => seriesInfo(b).last.localeCompare(seriesInfo(a).last) || byTitle(a, b),
-      finished: (a, b) => String(b.playedAt || '').localeCompare(String(a.playedAt || '')) || byTitle(a, b)
+      finished: (a, b) => String(b.playedAt || '').localeCompare(String(a.playedAt || '')) || byTitle(a, b),
+      // oynama sırası: devam edenler (son bölümü en yeni olan önce), sonra sıradakiler (sahibinin sırası), sonra bitenler
+      queue: (a, b) => {
+        const group = { ongoing: 0, todo: 1, played: 2 };
+        const ga = group[gameState(a)];
+        const gb = group[gameState(b)];
+        if (ga !== gb) return ga - gb;
+        if (ga === 0) return seriesInfo(b).last.localeCompare(seriesInfo(a).last) || byTitle(a, b);
+        if (ga === 1) return (ranks.get(a.id) || 0) - (ranks.get(b.id) || 0);
+        return String(b.playedAt || '').localeCompare(String(a.playedAt || '')) || byTitle(a, b);
+      }
     };
     return list.sort(sorters[prefs.sort] || sorters.recent);
   }
@@ -683,6 +706,7 @@
   }
 
   function renderGrid() {
+    ranks = queueRanks();
     const list = visibleGames();
     el.grid.innerHTML = list.map(cardHTML).join('');
     justToggled = null;
@@ -3078,6 +3102,119 @@
     if (location.hash === '#istatistik') setHash(activeTab === 'suggestions' ? '#oneriler' : '');
   });
   $('#statsBtn').addEventListener('click', openStats);
+
+  /* ---------- oynama sırası (sürükle-bırak) ---------- */
+  // Düzenleme modunda "Sırayı düzenle": "Sırada" olan oyunlar tutamaçtan sürüklenerek (fare ya da parmakla) ya da
+  // ok düğmeleriyle sıralanır. Kaydedince her oyuna sırası (queueOrder: 1, 2, 3…) yazılır; yalnızca değişenler kaydedilir.
+  const qd = { dialog: $('#queueDialog'), list: $('#queueList'), live: $('#queueLive'), save: $('#queueSave') };
+  let queueIds = [];
+
+  function renderQueueList(focusId, focusDir) {
+    const games = queueIds.map((id) => findGame(id)).filter(Boolean);
+    qd.list.innerHTML = games.length ? games.map((g, i) => `<li class="queue-item" data-id="${esc(g.id)}">
+        <button type="button" class="queue-handle" aria-label="${esc(g.title)}: sürükle" tabindex="-1">⋮⋮</button>
+        <span class="queue-name">${esc(g.title)}</span>
+        <span class="queue-moves">
+          <button type="button" class="icon-btn" data-move="-1" aria-label="${esc(g.title)}: yukarı taşı" ${i === 0 ? 'disabled' : ''}>${icon('up')}</button>
+          <button type="button" class="icon-btn" data-move="1" aria-label="${esc(g.title)}: aşağı taşı" ${i === games.length - 1 ? 'disabled' : ''}><svg class="icon" aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-up"/></svg></button>
+        </span>
+      </li>`).join('') : '<li class="queue-empty">“Sırada” olan oyun yok. Henüz bölümü yayınlanmamış oyunlar burada sıralanır.</li>';
+    qd.save.disabled = games.length < 2;
+    if (focusId) {
+      const item = qd.list.querySelector(`[data-id="${CSS.escape(focusId)}"]`);
+      const btn = item && (item.querySelector(`[data-move="${focusDir}"]:not(:disabled)`) || item.querySelector('[data-move]:not(:disabled)'));
+      if (btn) btn.focus();
+    }
+  }
+
+  function openQueue() {
+    ranks = queueRanks();
+    queueIds = [...ranks.keys()];
+    renderQueueList();
+    openDialog(qd.dialog);
+  }
+
+  function moveQueue(id, dir) {
+    const i = queueIds.indexOf(id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= queueIds.length) return;
+    [queueIds[i], queueIds[j]] = [queueIds[j], queueIds[i]];
+    renderQueueList(id, String(dir));
+    const g = findGame(id);
+    qd.live.textContent = g ? `${g.title}: ${j + 1}. sıra` : '';
+  }
+
+  qd.list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-move]');
+    if (btn) moveQueue(btn.closest('[data-id]').dataset.id, Number(btn.dataset.move));
+  });
+
+  // Sürükleme: tutulan satır parmağı/fareyi izler; komşusunun yarısını geçince yer değiştirir.
+  let drag = null;
+  qd.list.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.queue-handle');
+    if (!handle || e.button > 0) return;
+    const item = handle.closest('.queue-item');
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    drag = { item, handle, startY: e.clientY, pointerId: e.pointerId };
+    item.classList.add('is-dragging');
+  });
+  qd.list.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    let dy = e.clientY - drag.startY;
+    const { item } = drag;
+    const next = item.nextElementSibling;
+    const prev = item.previousElementSibling;
+    // sürüklenen satır sayfadan çıkarılırsa tarayıcı tutuşu bırakır; bu yüzden komşusu yer değiştirir
+    if (next && dy > next.offsetHeight / 2) {
+      item.before(next);
+      drag.startY += next.offsetHeight + 6;
+      dy = e.clientY - drag.startY;
+    } else if (prev && dy < -prev.offsetHeight / 2) {
+      item.after(prev);
+      drag.startY -= prev.offsetHeight + 6;
+      dy = e.clientY - drag.startY;
+    }
+    item.style.transform = `translateY(${dy}px)`;
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    const { item } = drag;
+    drag = null;
+    item.classList.remove('is-dragging');
+    item.style.transform = '';
+    const id = item.dataset.id;
+    queueIds = $$('.queue-item', qd.list).map((li) => li.dataset.id);
+    renderQueueList();
+    const g = findGame(id);
+    qd.live.textContent = g ? `${g.title}: ${queueIds.indexOf(id) + 1}. sıra` : '';
+  };
+  qd.list.addEventListener('pointerup', endDrag);
+  qd.list.addEventListener('pointercancel', endDrag);
+
+  qd.save.addEventListener('click', () => {
+    const changed = [];
+    queueIds.forEach((id, i) => {
+      const g = findGame(id);
+      if (g && g.queueOrder !== i + 1) {
+        g.queueOrder = i + 1;
+        changed.push(id);
+      }
+    });
+    closeDialog(qd.dialog);
+    if (!changed.length) return;
+    commit({ games: changed });
+    toast('Oynama sırası kaydedildi.');
+  });
+  qd.dialog.addEventListener('click', (e) => {
+    if (e.target === qd.dialog || e.target.closest('[data-close]')) closeDialog(qd.dialog);
+  });
+  qd.dialog.addEventListener('close', () => {
+    drag = null;
+    if (el.toasts.parentElement === qd.dialog) document.body.append(el.toasts);
+  });
+  $('#queueBtn').addEventListener('click', openQueue);
 
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
