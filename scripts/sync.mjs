@@ -133,12 +133,12 @@ function httpError(status, body, url) {
 }
 
 // Zaman aşımı ve bir kez yeniden deneme; 4xx'te (retry404 dışında) tekrar denenmez
-async function request(url, { headers = {}, retry404 = false } = {}) {
+async function request(url, { headers = {}, retry404 = false, method = 'GET', payload } = {}) {
   let last;
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt) await sleep(RETRY_MS);
     try {
-      const res = await fetch(url, { headers, redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT_MS) });
+      const res = await fetch(url, { method, body: payload, headers, redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT_MS) });
       const body = await res.text();
       if (res.ok) return body;
       last = httpError(res.status, body, url);
@@ -552,7 +552,10 @@ async function syncSteam(games) {
 }
 
 /* ---------- bölüm süreleri ---------- */
-// YouTube'un RSS akışında süre yok; her bölüm videosunun sayfasındaki "lengthSeconds" bir kez okunur ve saklanır.
+// YouTube'un RSS akışında süre yok. Süreler önce kanalın video ve canlı yayın listesinden okunur (YouTube'un kendi
+// sitesinin kullandığı "browse" isteği; tek istekte ~30 video). GitHub'ın sunucularına video sayfası çoğu zaman
+// "çok fazla istek" (429) döndüğü için video sayfasındaki "lengthSeconds" yalnızca listede olmayan videolar için denenir.
+// Okunan süre bir kez saklanır.
 // Süresi okunamayan (gizli, silinmiş ya da henüz yayınlanmamış) videolar günde bir yeniden denenir. Son iki günde
 // yayınlanan bölümler (prömiyer, planlanmış video, canlı yayın dahil) her çalışmada önce denenir; süre yayından sonraki
 // ilk çalışmada gelir. İleri tarihli bölümler en sona kalır, böylece çok sayıda planlanmış bölüm diğerlerini bekletmez.
@@ -587,6 +590,81 @@ function episodeVideoIds(games, now = Date.now()) {
   return { ids: [...ids].sort(byStr), recent, future };
 }
 
+const BROWSE_TABS = ['EgZ2aWRlb3PyBgQKAjoA', 'EgdzdHJlYW1z8gYECgJ6AA=='];  // "Videolar" ve "Canlı" sekmeleri
+const BROWSE_MAX_PAGES = 6;                                              // sekme başına en çok ~180 video
+const INNERTUBE_CONTEXT = { client: { clientName: 'WEB', clientVersion: '2.20250925.01.00', hl: 'en', gl: 'US' } };
+
+// "1:02:03" / "12:34" → saniye
+function clockSeconds(text) {
+  const m = /^(?:(\d+):)?(\d{1,2}):(\d{2})$/.exec(String(text).trim());
+  return m ? (Number(m[1]) || 0) * 3600 + Number(m[2]) * 60 + Number(m[3]) : 0;
+}
+// Bir video kutusunun içindeki süre yazısı ("12:34"); yaklaşan ya da süren yayınlarda yoktur
+function lengthIn(node, depth = 0) {
+  if (depth > 14) return 0;
+  if (typeof node === 'string') return clockSeconds(node);
+  if (Array.isArray(node)) {
+    for (const x of node) { const s = lengthIn(x, depth + 1); if (s) return s; }
+    return 0;
+  }
+  if (!isObj(node)) return 0;
+  for (const k of Object.keys(node)) {
+    if (k === 'title' || k === 'accessibility' || k === 'navigationEndpoint') continue; // başlıktaki "1:30" gibi yazılar sayılmasın
+    const s = lengthIn(node[k], depth + 1);
+    if (s) return s;
+  }
+  return 0;
+}
+// Yanıttaki videoların kimlikleri ve süreleri: eski (videoRenderer) ve yeni (lockupViewModel) liste biçimleri
+function collectLengths(node, out) {
+  if (Array.isArray(node)) { for (const x of node) collectLengths(x, out); return; }
+  if (!isObj(node)) return;
+  const id = typeof node.videoId === 'string' ? node.videoId
+    : node.contentType === 'LOCKUP_CONTENT_TYPE_VIDEO' && typeof node.contentId === 'string' ? node.contentId : '';
+  if (/^[\w-]{11}$/.test(id) && !(id in out)) {
+    const sec = lengthIn(node);
+    if (sec > 0) {
+      out[id] = sec;
+      return;
+    }
+  }
+  for (const k of Object.keys(node)) collectLengths(node[k], out);
+}
+// Listenin devamı için verilen son anahtar
+function lastContinuation(node, found = { token: '' }) {
+  if (Array.isArray(node)) { for (const x of node) lastContinuation(x, found); return found.token; }
+  if (!isObj(node)) return found.token;
+  if (isObj(node.continuationItemRenderer)) {
+    const t = node.continuationItemRenderer.continuationEndpoint?.continuationCommand?.token;
+    if (typeof t === 'string' && t) found.token = t;
+  }
+  for (const k of Object.keys(node)) lastContinuation(node[k], found);
+  return found.token;
+}
+// İstenen videolar bulunana ya da liste bitene kadar kanalın sekmeleri sayfa sayfa okunur
+async function channelLengths(channelId, want) {
+  const found = {};
+  const missing = () => want.filter((id) => !(id in found));
+  for (const params of BROWSE_TABS) {
+    let body = { context: INNERTUBE_CONTEXT, browseId: channelId, params };
+    for (let page = 0; page < BROWSE_MAX_PAGES; page++) {
+      if (page) await sleep(DURATION_DELAY_MS);
+      const text = await request(`${YOUTUBE_BASE}/youtubei/v1/browse?prettyPrint=false`, {
+        method: 'POST',
+        headers: { ...BROWSER_HEADERS, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        payload: JSON.stringify(body)
+      });
+      const json = JSON.parse(text);
+      collectLengths(json, found);
+      if (!missing().length) return found;
+      const token = lastContinuation(json);
+      if (!token) break;
+      body = { context: INNERTUBE_CONTEXT, continuation: token };
+    }
+  }
+  return found;
+}
+
 function parseDuration(html) {
   const m = html.match(/"lengthSeconds":"(\d+)"/) || html.match(/itemprop="duration" content="PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?"/);
   if (!m) return 0;
@@ -596,6 +674,8 @@ function parseDuration(html) {
 
 async function syncDurations(games) {
   const prev = readJson(FILES.durations);
+  const latest = readJson(FILES.latest);
+  const channelId = latest && CHANNEL_ID.test(String(latest.channelId)) ? latest.channelId : '';
   const oldVideos = prev && isObj(prev.videos) ? prev.videos : {};
   const oldFailed = prev && isObj(prev.failed) ? prev.failed : {};
   const now = Date.now();
@@ -610,8 +690,19 @@ async function syncDurations(games) {
   }
   const rank = (id) => (recent.has(id) ? 0 : future.has(id) ? 2 : 1);
   todo.sort((a, b) => rank(a) - rank(b)); // yeni bölümler önce, planlanmışlar en son
+  let rest = todo;
+  if (todo.length && channelId) {
+    try {
+      const fromChannel = await channelLengths(channelId, todo);
+      rest = todo.filter((id) => !(fromChannel[id] > 0));
+      for (const id of todo) if (fromChannel[id] > 0) videos[id] = fromChannel[id];
+      if (todo.length > rest.length) log(`Bölüm süreleri: ${todo.length - rest.length} video kanalın listesinden okundu.`);
+    } catch (err) {
+      warn(`Kanalın video listesi okunamadı: ${err.message}. Video sayfaları denenecek.`);
+    }
+  }
   let looked = 0;
-  for (const id of todo) {
+  for (const id of rest) {
     if (looked >= DURATION_MAX_LOOKUPS) break;
     if (looked) await sleep(DURATION_DELAY_MS);
     looked++;
@@ -621,11 +712,12 @@ async function syncDurations(games) {
       else failed[id] = new Date(now).toISOString().slice(0, 10);
     } catch (err) {
       warn(`Video süresi okunamadı (${id}): ${err.message}. Kalanlar sonraki çalışmada denenecek.`);
-      if (oldFailed[id]) failed[id] = oldFailed[id];
+      // kanalın listesinde de olmayan video her saat yeniden aranmasın diye günlük beklemeye alınır
+      failed[id] = new Date(now).toISOString().slice(0, 10);
       break; // YouTube'a ulaşılamıyorsa bu çalışmada başka deneme yapılmaz
     }
   }
-  if (todo.length > looked) log(`Bölüm süreleri: ${todo.length - looked} video sonraki çalışmada okunacak.`);
+  if (rest.length > looked) log(`Bölüm süreleri: ${rest.length - looked} video sonraki çalışmada okunacak.`);
   const content = { videos, failed };
   if (prev && stable({ videos: oldVideos, failed: oldFailed }) === stable(content)) {
     log(`${FILES.durations}: değişiklik yok.`);
