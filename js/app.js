@@ -474,6 +474,9 @@
     statOngoing: $('#statOngoing'),
     statTodo: $('#statTodo'),
     statEpisodes: $('#statEpisodes'),
+    statsDialog: $('#statsDialog'),
+    statsBody: $('#statsBody'),
+    vizTip: $('#vizTip'),
     clearExamples: $('#clearExamples'),
     setupBtn: $('#setupBtn'),
     logoutBtn: $('#logoutBtn'),
@@ -764,6 +767,7 @@
     renderSchedule();
     renderWheelButton();
     renderInbox();
+    if (el.statsDialog.open) renderStatsPage();
     if (latest) renderLatest();
     if (suggestions) renderSuggestions();
   }
@@ -871,6 +875,7 @@
   window.addEventListener('hashchange', () => {
     if (GAME_HASH.test(location.hash)) openFromHash(location.hash, mode === 'local' || cloudFinal());
     else if (location.hash === '#cark') openWheel();
+    else if (location.hash === '#istatistik') openStats();
   });
 
   async function copyGameLink(g) {
@@ -1049,6 +1054,8 @@
       ['Durum', status],
       ['Listeye eklendi', esc(formatDate(g.addedAt) || '—')]
     ];
+    const total = gameDuration(g);
+    if (total.seconds) facts.splice(4, 0, ['Toplam süre', esc(formatDuration(total.seconds) + (total.missing ? ' +' : ''))]);
 
     const actions = [];
     if (!isEditing()) actions.push(watchButtonHTML(g));
@@ -2890,6 +2897,188 @@
     });
   });
 
+  /* ---------- bölüm süreleri ve istatistikler ---------- */
+  // data/durations.json'u saatlik görev yazar: { videos: { [YouTube kimliği]: saniye } }.
+  let durations = {};
+
+  function formatDuration(sec) {
+    const m = Math.round(sec / 60);
+    if (m < 1) return '1 dk’dan az';
+    const h = Math.floor(m / 60);
+    return h ? `${h} sa${m % 60 ? ` ${m % 60} dk` : ''}` : `${m} dk`;
+  }
+  // Oyunun yayınlanmış bölümlerinin toplam süresi; süresi henüz bilinmeyen bölüm sayısıyla
+  function gameDuration(g) {
+    let seconds = 0;
+    let missing = 0;
+    for (const e of airedEpisodes(g)) {
+      const sec = durations[youtubeId(e.url)];
+      if (sec > 0) seconds += sec;
+      else missing++;
+    }
+    return { seconds, missing };
+  }
+
+  async function loadDurations() {
+    const gh = CONFIG.github || {};
+    const bucket = Math.floor(Date.now() / 600000);
+    const sources = [];
+    if (gh.repo && /^https?:$/.test(location.protocol)) sources.push(`https://raw.githubusercontent.com/${gh.repo}/${gh.branch || 'main'}/data/durations.json?v=${bucket}`);
+    sources.push(`data/durations.json?v=${bucket}`);
+    for (const url of sources) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) continue;
+        const json = await res.json();
+        if (!json || typeof json.videos !== 'object' || Array.isArray(json.videos)) continue;
+        durations = json.videos;
+        if (el.statsDialog.open) renderStatsPage();
+        if (el.detailDialog.open && findGame(detailId) && !$('#detailPlayer iframe', el.detailContent)) refreshDetail();
+        return;
+      } catch (err) { /* bir sonraki kaynağı dene */ }
+    }
+  }
+
+  // Grafikler düz HTML: her çubuk bir düğme ya da odaklanabilir öğe; üzerine gelince ya da odaklanınca kısa bilgi
+  // kutusu çıkar (data-tip). Her grafiğin altında aynı veriyi gösteren bir tablo var.
+  function hbarsHTML(rows, { unit, open = false } = {}) {
+    const max = Math.max(1, ...rows.map((r) => r.value));
+    return `<ul class="hbars">${rows.map((r) => {
+      const tag = r.id && open ? 'button type="button"' : 'div tabindex="0"';
+      const end = r.id && open ? 'button' : 'div';
+      return `<li><${tag} class="hbar${r.other ? ' is-other' : ''}"${r.id && open ? ` data-stats-game="${esc(r.id)}"` : ''} data-tip="${esc(r.tip)}" aria-label="${esc(r.name)}: ${esc(r.label)}">
+        <span class="hbar-name">${esc(r.name)}</span>
+        <span class="hbar-track"><span class="hbar-fill" style="--r:${(r.value / max).toFixed(4)}"></span><span class="hbar-val">${esc(r.label)}</span></span>
+      </${end}></li>`;
+    }).join('')}</ul>`;
+  }
+  const tableHTML = (head, rows) => `<details><summary>Tablo olarak göster</summary><table><thead><tr>${head.map((h, i) => `<th${i ? ' class="num"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`;
+
+  const STATS_TOP = 10;
+  function renderStatsPage() {
+    const games = data.games;
+    const aired = games.flatMap((g) => airedEpisodes(g).map((e) => ({ g, e })));
+    const known = aired.filter(({ e }) => durations[youtubeId(e.url)] > 0);
+    const totalSec = known.reduce((n, { e }) => n + durations[youtubeId(e.url)], 0);
+    const played = games.filter((g) => g.played).length;
+    const missing = aired.length - known.length;
+
+    const kpis = [
+      ['Toplam video süresi', totalSec ? formatDuration(totalSec) : '—', totalSec
+        ? (missing ? `${missing} bölümün süresi henüz bilinmiyor` : `${known.length} bölümün toplamı`)
+        : 'Süreler saatlik görevle gelir', true],
+      ['Yayınlanan bölüm', String(aired.length), `${games.filter((g) => airedEpisodes(g).length).length} oyunda`],
+      ['Bitirilen oyun', String(played), `${games.length} oyundan`],
+      ['Ortalama bölüm', known.length ? formatDuration(totalSec / known.length) : '—', known.length ? 'süresi bilinen bölümlerde' : '']
+    ];
+
+    // 1) oyunlara göre süre (süre yoksa bölüm sayısı); ilk 10, kalanı "Diğer"
+    const bySec = totalSec > 0;
+    let rows = games.map((g) => {
+      const d = gameDuration(g);
+      const eps = airedEpisodes(g).length;
+      return { id: g.id, name: g.title, value: bySec ? d.seconds : eps, eps, sec: d.seconds };
+    }).filter((r) => r.value > 0).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'tr'));
+    const fmt = (v) => (bySec ? formatDuration(v) : `${v} bölüm`);
+    const tableRows = rows.map((r) => [r.name, bySec ? formatDuration(r.sec) : '—', String(r.eps)]);
+    if (rows.length > STATS_TOP + 1) {
+      const rest = rows.slice(STATS_TOP);
+      rows = rows.slice(0, STATS_TOP);
+      const v = rest.reduce((n, r) => n + r.value, 0);
+      rows.push({ name: `Diğer ${rest.length} oyun`, value: v, other: true, eps: rest.reduce((n, r) => n + r.eps, 0), sec: rest.reduce((n, r) => n + r.sec, 0) });
+    }
+    for (const r of rows) {
+      r.label = fmt(r.value);
+      r.tip = `<b>${esc(r.label)}</b>${esc(r.name)} · ${r.eps} bölüm${r.id ? ' — aç' : ''}`;
+    }
+
+    // 2) son 12 ay: yayınlanan bölüm sayısı
+    const now = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, d, n: 0 });
+    }
+    for (const { e } of aired) {
+      const m = months.find((x) => e.date && e.date.startsWith(x.key));
+      if (m) m.n++;
+    }
+    const maxN = Math.max(0, ...months.map((m) => m.n));
+    const labelIdx = new Set([months.length - 1, months.findIndex((m) => m.n === maxN && maxN > 0)]);
+    const monthName = (m, style) => m.d.toLocaleDateString('tr-TR', { month: style, year: style === 'long' ? 'numeric' : undefined });
+
+    // 3) kategoriler
+    const cats = categoryCounts().map(([c, n]) => ({ name: c, value: n, label: `${n} oyun`, tip: `<b>${n} oyun</b>${esc(c)}` }))
+      .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'tr'));
+
+    el.statsBody.innerHTML = `
+      <dl class="kpis">${kpis.map(([k, v, note, hero]) => `<div class="kpi${hero ? ' kpi-hero' : ''}"><dt>${k}</dt><dd>${esc(v)}</dd>${note ? `<small>${esc(note)}</small>` : ''}</div>`).join('')}</dl>
+      <section class="viz" aria-labelledby="vizGames">
+        <h3 id="vizGames">${bySec ? 'Oyunlara göre toplam video süresi' : 'Oyunlara göre bölüm sayısı'}</h3>
+        ${rows.length ? hbarsHTML(rows, { open: true }) : '<p class="viz-note">Henüz yayınlanmış bölüm yok.</p>'}
+        ${!bySec && aired.length ? '<p class="viz-note">Video süreleri saatlik görevle gelince bu grafik süreye göre gösterilir.</p>' : ''}
+        ${tableRows.length ? tableHTML(['Oyun', 'Süre', 'Bölüm'], tableRows) : ''}
+      </section>
+      <section class="viz" aria-labelledby="vizMonths">
+        <h3 id="vizMonths">Son 12 ayda yayınlanan bölümler</h3>
+        <div class="cols">${months.map((m, i) => `<div class="col" tabindex="0" data-tip="<b>${m.n} bölüm</b>${esc(monthName(m, 'long'))}" aria-label="${esc(monthName(m, 'long'))}: ${m.n} bölüm">
+          ${labelIdx.has(i) && m.n ? `<span class="col-val" style="bottom:${((m.n / Math.max(1, maxN)) * 100).toFixed(2)}%">${m.n}</span>` : ''}
+          <span class="col-fill${m.n ? '' : ' is-zero'}" style="height:${((m.n / Math.max(1, maxN)) * 100).toFixed(2)}%"></span>
+        </div>`).join('')}</div>
+        <div class="col-axis" aria-hidden="true">${months.map((m) => `<span>${esc(monthName(m, 'short'))}</span>`).join('')}</div>
+        ${tableHTML(['Ay', 'Bölüm'], months.map((m) => [monthName(m, 'long'), String(m.n)]))}
+      </section>
+      <section class="viz" aria-labelledby="vizCats">
+        <h3 id="vizCats">Kategorilere göre oyunlar</h3>
+        ${cats.length ? hbarsHTML(cats) : '<p class="viz-note">Henüz oyun yok.</p>'}
+        ${cats.length ? tableHTML(['Kategori', 'Oyun'], cats.map((c) => [c.name, String(c.value)])) : ''}
+      </section>`;
+  }
+
+  function openStats() {
+    renderStatsPage();
+    openDialog(el.statsDialog);
+    if (location.hash !== '#istatistik') setHash('#istatistik');
+  }
+
+  // kısa bilgi kutusu: fare ya da klavye odağı bir çubuğa gelince
+  function showTip(target) {
+    const tip = el.vizTip;
+    tip.innerHTML = target.dataset.tip; // içerik esc() ile hazırlandı
+    tip.hidden = false;
+    const r = target.querySelector('.hbar-fill, .col-fill') ? target.querySelector('.hbar-fill, .col-fill').getBoundingClientRect() : target.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const x = Math.min(window.innerWidth - t.width - 8, Math.max(8, r.left + r.width / 2 - t.width / 2));
+    const y = r.top - t.height - 8 < 8 ? r.bottom + 8 : r.top - t.height - 8;
+    tip.style.left = `${x}px`;
+    tip.style.top = `${y}px`;
+  }
+  const hideTip = () => { el.vizTip.hidden = true; };
+  for (const type of ['pointerover', 'focusin']) {
+    el.statsBody.addEventListener(type, (e) => {
+      const t = e.target.closest('[data-tip]');
+      if (t) showTip(t);
+    });
+  }
+  el.statsBody.addEventListener('pointerout', (e) => { if (e.target.closest('[data-tip]')) hideTip(); });
+  el.statsBody.addEventListener('focusout', hideTip);
+  el.statsDialog.addEventListener('scroll', hideTip, true);
+  el.statsBody.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-stats-game]');
+    if (!b) return;
+    closeDialog(el.statsDialog);
+    openDetail(b.dataset.statsGame);
+  });
+  el.statsDialog.addEventListener('click', (e) => {
+    if (e.target === el.statsDialog || e.target.closest('[data-close]')) closeDialog(el.statsDialog);
+  });
+  el.statsDialog.addEventListener('close', () => {
+    hideTip();
+    if (el.toasts.parentElement === el.statsDialog) document.body.append(el.toasts);
+    if (location.hash === '#istatistik') setHash(activeTab === 'suggestions' ? '#oneriler' : '');
+  });
+  $('#statsBtn').addEventListener('click', openStats);
+
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
   let latest = null;
@@ -3367,6 +3556,7 @@
     if (startHash === '#oneriler') setTab('suggestions');
     loadLatest();
     loadSteam();
+    loadDurations();
   }
 
   /* ---------- bulut bağlantısı ---------- */
@@ -3742,6 +3932,7 @@
   render();
   if (startHash === '#kurulum') openSetup();
   else if (startHash === '#cark') openWheel();
+  else if (startHash === '#istatistik') openStats();
   else if ((startHash === '#duzenle' || startHash === '#giris') && mode === 'cloud') openLogin();
   else if (GAME_HASH.test(startHash)) openFromHash(startHash, mode === 'local');
   if (typeof initExtras === 'function') initExtras(startHash);

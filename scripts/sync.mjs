@@ -4,6 +4,7 @@
       site Firebase'e ulaşamadığında gösterilen data/games.js dosyasını günceller.
    2) YouTube kanalının RSS akışındaki son videoları data/latest.json dosyasına yazar.
    3) Oyunların Steam mağaza sayfasını adıyla arar ve data/steam.json dosyasına yazar.
+   4) Bölüm videolarının süresini YouTube'dan okur ve data/durations.json dosyasına yazar (istatistikler için).
    Dosyalar yalnızca içerik değiştiğinde yeniden yazılır. Bağımlılık yok: Node 18+ ve yerleşik fetch yeterli.
    Testler için: FIRESTORE_BASE (ör. http://127.0.0.1:8080), YOUTUBE_BASE (ör. http://127.0.0.1:9000) ve STEAM_BASE. */
 import fs from 'node:fs';
@@ -17,6 +18,7 @@ const FILES = {
   games: 'data/games.js',
   latest: 'data/latest.json',
   steam: 'data/steam.json',
+  durations: 'data/durations.json',
   backup: 'backup/firestore-backup.json'
 };
 
@@ -549,6 +551,73 @@ async function syncSteam(games) {
   log(`${FILES.steam} güncellendi: ${found} oyunun Steam sayfası bulundu.`);
 }
 
+/* ---------- bölüm süreleri ---------- */
+// YouTube'un RSS akışında süre yok; her bölüm videosunun sayfasındaki "lengthSeconds" bir kez okunur ve saklanır.
+// Süresi okunamayan (henüz yayınlanmamış, gizli ya da silinmiş) videolar günde bir yeniden denenir.
+const DURATION_MAX_LOOKUPS = 20;
+const DURATION_RETRY_MS = 86400000;
+const DURATION_DELAY_MS = 1000;
+// sitedeki youtubeId ile aynı: watch?v=, youtu.be/, embed/, shorts/, live/, v/
+const YT_ID = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))(?!videoseries|live_stream)([A-Za-z0-9_-]{11})/;
+
+function episodeVideoIds(games) {
+  const ids = new Set();
+  for (const g of games) {
+    if (!isObj(g) || !Array.isArray(g.episodes)) continue;
+    for (const e of g.episodes) {
+      const m = isObj(e) && typeof e.url === 'string' ? e.url.replace(/&amp;/gi, '&').match(YT_ID) : null;
+      if (m) ids.add(m[1]);
+    }
+  }
+  return [...ids].sort(byStr);
+}
+
+function parseDuration(html) {
+  const m = html.match(/"lengthSeconds":"(\d+)"/) || html.match(/itemprop="duration" content="PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?"/);
+  if (!m) return 0;
+  if (m.length === 2) return Number(m[1]) || 0;
+  return (Number(m[1]) || 0) * 3600 + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0);
+}
+
+async function syncDurations(games) {
+  const prev = readJson(FILES.durations);
+  const oldVideos = prev && isObj(prev.videos) ? prev.videos : {};
+  const oldFailed = prev && isObj(prev.failed) ? prev.failed : {};
+  const now = Date.now();
+  const videos = {};
+  const failed = {};
+  const todo = [];
+  for (const id of episodeVideoIds(games)) {
+    if (Number.isInteger(oldVideos[id]) && oldVideos[id] > 0) videos[id] = oldVideos[id];
+    else if (oldFailed[id] && now - Date.parse(oldFailed[id]) < DURATION_RETRY_MS) failed[id] = oldFailed[id];
+    else todo.push(id);
+  }
+  let looked = 0;
+  for (const id of todo) {
+    if (looked >= DURATION_MAX_LOOKUPS) break;
+    if (looked) await sleep(DURATION_DELAY_MS);
+    looked++;
+    try {
+      const sec = parseDuration(await request(`${YOUTUBE_BASE}/watch?v=${id}`, { headers: BROWSER_HEADERS }));
+      if (sec > 0) videos[id] = sec;
+      else failed[id] = new Date(now).toISOString().slice(0, 10);
+    } catch (err) {
+      warn(`Video süresi okunamadı (${id}): ${err.message}. Kalanlar sonraki çalışmada denenecek.`);
+      if (oldFailed[id]) failed[id] = oldFailed[id];
+      break; // YouTube'a ulaşılamıyorsa bu çalışmada başka deneme yapılmaz
+    }
+  }
+  if (todo.length > looked) log(`Bölüm süreleri: ${todo.length - looked} video sonraki çalışmada okunacak.`);
+  const content = { videos, failed };
+  if (prev && stable({ videos: oldVideos, failed: oldFailed }) === stable(content)) {
+    log(`${FILES.durations}: değişiklik yok.`);
+    return;
+  }
+  const total = Object.values(videos).reduce((n, x) => n + x, 0);
+  writeText(FILES.durations, `${JSON.stringify({ updatedAt: new Date(now).toISOString(), ...content }, null, 2)}\n`);
+  log(`${FILES.durations} güncellendi: ${Object.keys(videos).length} videonun süresi biliniyor (toplam ${Math.round(total / 60)} dakika).`);
+}
+
 /* ---------- ana akış ---------- */
 async function main() {
   let cfg;
@@ -603,6 +672,12 @@ async function main() {
     await syncSteam(games);
   } catch (err) {
     warn(`Steam adımı tamamlanamadı, ${FILES.steam} olduğu gibi bırakıldı: ${err.message}`);
+  }
+
+  try {
+    await syncDurations(games);
+  } catch (err) {
+    warn(`Bölüm süreleri alınamadı, ${FILES.durations} olduğu gibi bırakıldı: ${err.message}`);
   }
 }
 

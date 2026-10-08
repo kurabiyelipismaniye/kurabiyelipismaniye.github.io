@@ -13,6 +13,10 @@ her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayın
   “yarın / 3 gün sonra”, oyunun adı ve bölümü. İlk 4'ü görünür, fazlası “Tümünü göster” ile açılır. Bölümün linki varsa
   yanındaki simgeyle açılır (ör. YouTube prömiyer sayfası). İleri tarihli bölüm yoksa bu bölüm görünmez.
 - **Kayıt dosyası:** kaç oyunu bitirdiğin, kaçının devam ettiği, kaçının sırada olduğu, toplam bölüm sayısı ve yüzde olarak ilerleme çubuğu
+- **İstatistikler:** “Kayıt dosyası” kartındaki **İstatistikler** bağlantısı (ya da adresin sonuna `#istatistik`):
+  toplam video süresi, yayınlanan bölüm, bitirilen oyun, ortalama bölüm süresi; oyunlara göre toplam süre, son 12 ayda
+  yayınlanan bölümler ve kategorilere göre oyunlar. Video süreleri saatlik görevle YouTube'dan okunur; yeni bölümün süresi
+  en geç bir saat içinde eklenir. Oyunun penceresinde de **Toplam süre** yazar.
 - **Arama:** oyun adı, kategori, platform, açıklama ya da bölüm başlıklarında arar
 - **Filtreler:** Tümü / Oynadıklarım / Devam edenler / Sıradakiler, kategori düğmeleri, sıralama (son eklenen, son yayınlanan bölüm, A–Z, puan, son bitirilen)
 - **Oyun kartları:** kapak, bölüm sayısı, kategori, platform, kısa açıklama, puan ve durum (Oynandı / Devam ediyor / Sırada)
@@ -143,6 +147,7 @@ alanını da ona göre güncelle (ör. `https://github.com/KULLANICI/DEPO/edit/D
 | `data/games.js` | Oyun listesi, bölümler ve site ayarları (yayınladığın dosya) |
 | `icons/`, `favicon.ico`, `apple-touch-icon.png` | Site simgesi, uygulama simgeleri ve paylaşım kartı görseli |
 | `manifest.webmanifest`, `sw.js` | Telefona uygulama olarak ekleme ve internetsizken son kopyayı açma |
+| `data/durations.json` | Bölüm videolarının süreleri (saatlik görev yazar, istatistikler için) |
 | `data/steam.json` | Oyunların otomatik bulunan Steam sayfaları (saatlik görev yazar, elle düzenleme) |
 
 Bilgisayarında denemek için `index.html` dosyasına çift tıklaman yeterli.

@@ -105,6 +105,7 @@
           <div><dt>Sırada</dt><dd id="statTodo">0</dd></div>
           <div><dt>Bölüm</dt><dd id="statEpisodes">0</dd></div>
         </dl>
+        <button type="button" class="stats-link" id="statsBtn">İstatistikler<svg class="icon"><use href="#i-right"/></svg></button>
       </section>
     </div>
   </header>
@@ -493,6 +494,16 @@
       <div class="wheel-chips" id="wheelChips"></div>
     </details>
   </div>
+</dialog>
+
+<!-- İstatistikler -->
+<dialog id="statsDialog" class="dialog dialog-stats" aria-labelledby="statsTitle">
+  <div class="dialog-head">
+    <h2 id="statsTitle">İstatistikler</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Kapat"><svg class="icon"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="dialog-body stats-body" id="statsBody"></div>
+  <div class="viz-tip" id="vizTip" role="tooltip" hidden></div>
 </dialog>
 
 <!-- Görsel görüntüleyici -->
