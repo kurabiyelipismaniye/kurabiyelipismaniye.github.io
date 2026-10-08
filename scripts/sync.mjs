@@ -729,8 +729,14 @@ async function syncDurations(games) {
       if (sec > 0) videos[id] = sec;
       else failed[id] = today;
     } catch (err) {
-      const left = rest.length - looked;
-      warn(`Video süresi okunamadı (${id}): ${err.message}. ${left > 1 ? `Bu ve kalan ${left - 1} video` : 'Bu video'} yarın yeniden denenecek.`);
+      // son iki günde yayınlananlar beklemeden her çalışmada yeniden denenir; ötekiler yarın
+      const waiting = [id, ...rest.slice(rest.indexOf(id) + 1)];
+      const later = waiting.filter((x) => !recent.has(x)).length;
+      const soon = waiting.length - later;
+      const parts = [];
+      if (later) parts.push(`${later} video yarın`);
+      if (soon) parts.push(`yeni yayınlanan ${soon} video bir sonraki çalışmada`);
+      warn(`Video süresi okunamadı (${id}): ${err.message}. ${parts.join(', ')} yeniden denenecek.`);
       // kanalın listesinde de olmayan video her saat yeniden aranmasın diye günlük beklemeye alınır
       failed[id] = today;
       refused = true; // YouTube'a ulaşılamıyorsa bu çalışmada başka deneme yapılmaz
