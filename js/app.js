@@ -881,9 +881,15 @@
     else d.removeAttribute('open');
   }
   for (const d of [el.detailDialog, el.formDialog, el.settingsDialog, el.dataDialog, el.loginDialog, el.setupDialog, el.lightbox]) {
-    // X düğmesine ya da arka plana tıklayınca kapat (görsel penceresinde resmin çevresindeki siyah alan da arka plan sayılır)
+    // X düğmesine ya da arka plana tıklayınca kapat (görsel penceresinde resmin çevresindeki siyah alan da arka plan sayılır).
+    // Basış da arka planda başlamış olmalı: pencerede metin seçip fareyi dışarıda bırakmak pencereyi kapatmaz.
+    const isBackdrop = (t) => t === d || (d === el.lightbox && t.classList.contains('lightbox-stage'));
+    let pressedBackdrop = false;
+    d.addEventListener('pointerdown', (e) => { pressedBackdrop = isBackdrop(e.target); });
     d.addEventListener('click', (e) => {
-      if (e.target === d || (d === el.lightbox && e.target.classList.contains('lightbox-stage'))) closeDialog(d);
+      const fromBackdrop = pressedBackdrop;
+      pressedBackdrop = false;
+      if (fromBackdrop && isBackdrop(e.target)) closeDialog(d);
       if (e.target.closest('[data-close]')) closeDialog(d);
     });
     // pencere kapanınca açık bildirimler sayfada görünmeye devam etsin
@@ -1095,14 +1101,17 @@
 
   // Pencere yenilenirken (bulut güncellemesi, Steam bilgisi) odaklı düğme kaybolmasın diye sırası hatırlanır.
   const detailFocusables = () => $$('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])', el.detailContent);
+  // pencere yenilenince aynı düğmeyi bulmak için: ne yaptığı, hangi bölüm / görsel, link adresi
+  const detailKey = (n) => [n.tagName, n.dataset.detail || '', n.dataset.ep || '', n.dataset.index || '', n.getAttribute('href') || '', 'close' in n.dataset ? 'x' : ''].join('|');
 
   function openDetail(id, opts = {}) {
     const g = findGame(id);
     if (!g) return;
     pendingGameHash = ''; // başka bir oyun açıldıysa bekleyen link sonradan araya girmesin
     const keepPlayer = opts.keepPlayer && detailId === id;
-    const focusIndex = keepPlayer && el.detailContent.contains(document.activeElement)
-      ? detailFocusables().indexOf(document.activeElement) : -1;
+    const focused = keepPlayer && el.detailContent.contains(document.activeElement) ? document.activeElement : null;
+    const focusIndex = focused ? detailFocusables().indexOf(focused) : -1;
+    const focusKey = focused ? detailKey(focused) : '';
     if (!keepPlayer) playingEpId = null;
     detailId = id;
     const state = gameState(g);
@@ -1172,12 +1181,13 @@
     }
     openDialog(el.detailDialog);
     if (location.hash !== gameHash(g)) setHash(gameHash(g));
+    loadGallery(g.id, keepPlayer); // kayıtlı görseller hemen çizilir; odak ve kaydırma ondan sonra geri verilir
     if (keepPlayer) el.detailDialog.scrollTop = scrollTop;
     if (focusIndex >= 0) {
-      const target = detailFocusables()[focusIndex];
+      const list = detailFocusables();
+      const target = list.find((n) => detailKey(n) === focusKey) || list[focusIndex];
       if (target) target.focus({ preventScroll: true });
     }
-    loadGallery(g.id, keepPlayer);
   }
 
   const refreshDetail = () => {
@@ -3407,11 +3417,15 @@
       return;
     }
     const [v, ...rest] = latest.videos;
+    // Burada bir video oynuyorsa sayfadan çıkarılmaz (çıkarılırsa baştan başlar ya da durur). Başka bir video oynuyorsa
+    // (bu arada kanala yenisi geldi) bölüm, video kapatılana kadar olduğu gibi kalır.
+    const playingNow = $('#latestPlayer iframe', el.latestBody);
+    if (playingNow && !playingNow.src.includes(`/embed/${v.id}`)) return;
     // Kanaldaki son video "Şimdi oynuyorum" vitrinindeki bölümse ikinci kez büyük gösterilmez;
     // bu bölümde yalnızca öteki videolar listelenir.
     const featured = nowPlayingGames()[0];
     const featuredEp = featured && newestAired(featured);
-    if (featuredEp && youtubeId(featuredEp.url) === v.id) {
+    if (!playingNow && featuredEp && youtubeId(featuredEp.url) === v.id) {
       el.latestTitle.textContent = 'Kanaldaki diğer videolar';
       el.latestBody.innerHTML = latestMoreHTML(rest);
     } else {
