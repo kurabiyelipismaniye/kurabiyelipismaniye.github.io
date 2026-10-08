@@ -641,28 +641,34 @@ function lastContinuation(node, found = { token: '' }) {
   for (const k of Object.keys(node)) lastContinuation(node[k], found);
   return found.token;
 }
-// İstenen videolar bulunana ya da liste bitene kadar kanalın sekmeleri sayfa sayfa okunur
+// İstenen videolar bulunana ya da liste bitene kadar kanalın sekmeleri sayfa sayfa okunur. Bir sayfa okunamazsa o sekme
+// orada bırakılır; o ana kadar bulunanlar korunur.
 async function channelLengths(channelId, want) {
   const found = {};
+  const errors = [];
   const missing = () => want.filter((id) => !(id in found));
   for (const params of BROWSE_TABS) {
     let body = { context: INNERTUBE_CONTEXT, browseId: channelId, params };
-    for (let page = 0; page < BROWSE_MAX_PAGES; page++) {
-      if (page) await sleep(DURATION_DELAY_MS);
-      const text = await request(`${YOUTUBE_BASE}/youtubei/v1/browse?prettyPrint=false`, {
-        method: 'POST',
-        headers: { ...BROWSER_HEADERS, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        payload: JSON.stringify(body)
-      });
-      const json = JSON.parse(text);
-      collectLengths(json, found);
-      if (!missing().length) return found;
-      const token = lastContinuation(json);
-      if (!token) break;
-      body = { context: INNERTUBE_CONTEXT, continuation: token };
+    try {
+      for (let page = 0; page < BROWSE_MAX_PAGES; page++) {
+        if (page) await sleep(DURATION_DELAY_MS);
+        const text = await request(`${YOUTUBE_BASE}/youtubei/v1/browse?prettyPrint=false`, {
+          method: 'POST',
+          headers: { ...BROWSER_HEADERS, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          payload: JSON.stringify(body)
+        });
+        const json = JSON.parse(text);
+        collectLengths(json, found);
+        if (!missing().length) return { found, errors };
+        const token = lastContinuation(json);
+        if (!token) break;
+        body = { context: INNERTUBE_CONTEXT, continuation: token };
+      }
+    } catch (err) {
+      errors.push(err.message);
     }
   }
-  return found;
+  return { found, errors };
 }
 
 function parseDuration(html) {
@@ -693,7 +699,8 @@ async function syncDurations(games) {
   let rest = todo;
   if (todo.length && channelId) {
     try {
-      const fromChannel = await channelLengths(channelId, todo);
+      const { found: fromChannel, errors } = await channelLengths(channelId, todo);
+      if (errors.length) warn(`Kanalın video listesi tam okunamadı: ${errors[0]}. Bulunamayanlar için video sayfaları denenecek.`);
       rest = todo.filter((id) => !(fromChannel[id] > 0));
       for (const id of todo) if (fromChannel[id] > 0) videos[id] = fromChannel[id];
       if (todo.length > rest.length) log(`Bölüm süreleri: ${todo.length - rest.length} video kanalın listesinden okundu.`);
@@ -701,23 +708,35 @@ async function syncDurations(games) {
       warn(`Kanalın video listesi okunamadı: ${err.message}. Video sayfaları denenecek.`);
     }
   }
+  const today = new Date(now).toISOString().slice(0, 10);
   let looked = 0;
+  let refused = false;
   for (const id of rest) {
-    if (looked >= DURATION_MAX_LOOKUPS) break;
+    // YouTube bu çalışmada video sayfasını reddettiyse kalanların hepsi yarına kalır; böylece her saat liste baştan
+    // taranıp dosya bir tarih yüzünden yeniden kaydedilmez
+    if (refused) {
+      failed[id] = oldFailed[id] && Date.parse(oldFailed[id]) >= Date.parse(today) ? oldFailed[id] : today;
+      continue;
+    }
+    if (looked >= DURATION_MAX_LOOKUPS) {
+      if (oldFailed[id]) failed[id] = oldFailed[id];
+      continue;
+    }
     if (looked) await sleep(DURATION_DELAY_MS);
     looked++;
     try {
       const sec = parseDuration(await request(`${YOUTUBE_BASE}/watch?v=${id}`, { headers: BROWSER_HEADERS }));
       if (sec > 0) videos[id] = sec;
-      else failed[id] = new Date(now).toISOString().slice(0, 10);
+      else failed[id] = today;
     } catch (err) {
-      warn(`Video süresi okunamadı (${id}): ${err.message}. Kalanlar sonraki çalışmada denenecek.`);
+      const left = rest.length - looked;
+      warn(`Video süresi okunamadı (${id}): ${err.message}. ${left > 1 ? `Bu ve kalan ${left - 1} video` : 'Bu video'} yarın yeniden denenecek.`);
       // kanalın listesinde de olmayan video her saat yeniden aranmasın diye günlük beklemeye alınır
-      failed[id] = new Date(now).toISOString().slice(0, 10);
-      break; // YouTube'a ulaşılamıyorsa bu çalışmada başka deneme yapılmaz
+      failed[id] = today;
+      refused = true; // YouTube'a ulaşılamıyorsa bu çalışmada başka deneme yapılmaz
     }
   }
-  if (rest.length > looked) log(`Bölüm süreleri: ${rest.length - looked} video sonraki çalışmada okunacak.`);
+  if (!refused && rest.length > looked) log(`Bölüm süreleri: ${rest.length - looked} video sonraki çalışmada okunacak.`);
   const content = { videos, failed };
   if (prev && stable({ videos: oldVideos, failed: oldFailed }) === stable(content)) {
     log(`${FILES.durations}: değişiklik yok.`);
