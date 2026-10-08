@@ -59,6 +59,12 @@ Durumu elle seçmen gerekmez:
    Başlığı boş bırakırsan bölüm “5. bölüm” gibi numarasıyla görünür (internet bağlantısı izin verirse başlık videodan kendiliğinden gelir).
 3. **Değişiklikleri kaydet**, sonra herkesin görmesi için **Yayınla**.
 
+**Daha kısa yol:** düzenleme modunda sayfanın üstünde **Kanalda bölüme eklenmemiş videolar** kutusu çıkar. Kanalın son
+videolarından henüz hiçbir oyuna eklenmemiş olanları gösterir ve her birinin hangi oyuna ait olduğunu başlığından tahmin eder
+(ör. “… | Yes, Your Grace #3” → Yes, Your Grace; “#fearstofathom” → Fears To Fathom). Tahmin doğruysa
+**Bölüm olarak ekle**'ye basman yeter; link, başlık ve tarih kendiliğinden dolar. Tahmin yoksa ya da yanlışsa listeden oyunu
+seç. Bölüm olmayacak videolar (ör. Shorts) için **Yoksay**. Yeni videolar saatlik görevle en geç bir saat içinde gelir.
+
 İleri bir tarih girersen (planlanmış video ya da prömiyer) bölüm listede **Yayınlanacak** olarak, seri özetinde
 **Sıradaki bölüm** olarak, sayfanın üstündeki **Yakında** listesinde de tarihiyle görünür. O gün gelince kendiliğinden yayınlanmış sayılır.
 

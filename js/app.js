@@ -763,6 +763,7 @@
     renderNowPlaying();
     renderSchedule();
     renderWheelButton();
+    renderInbox();
     if (latest) renderLatest();
     if (suggestions) renderSuggestions();
   }
@@ -2747,6 +2748,148 @@
     if (location.hash === '#cark') setHash(activeTab === 'suggestions' ? '#oneriler' : '');
   });
 
+  /* ---------- kanaldaki yeni videolar: bölüm olarak ekleme ---------- */
+  // Düzenleme modunda, kanalın son videolarından hiçbir oyuna bölüm olarak eklenmemiş olanlar listelenir.
+  // Hangi oyuna ait olduğu başlıktan tahmin edilir (en güçlüden zayıfa):
+  //   1) aynı seri etiketiyle eklenmiş bir bölüm: "… | Fears To Fathom #2" ↔ "… | Fears To Fathom #1"
+  //   2) oyunun tam adı başlıkta geçiyor: "Kral Zehirlendi | Yes, Your Grace #2" → Yes, Your Grace
+  //   3) oyunun adının başı (en az iki kelime) geçiyor: "Fears To Fathom: Home Alone" ↔ "… Fears To Fathom #1";
+  //      ya da boşluksuz hâli bir etiket olarak geçiyor: "… #fearstofathom"
+  // İki oyun eşit güçte eşleşirse tahmin yapılmaz. "Yoksay" denen videolar bu tarayıcıda hatırlanır.
+  const IGNORED_VIDEOS_KEY = 'oyunArsivi.yoksayilanVideolar.v1';
+  const ignoredVideos = new Set(Array.isArray(storageGet(IGNORED_VIDEOS_KEY)) ? storageGet(IGNORED_VIDEOS_KEY) : []);
+  const inboxChoice = new Map(); // video kimliği → elle seçilen oyun (yeniden çizimde kaybolmasın)
+  const INBOX_MAX = 6;
+  let inboxHTML = '';
+  const inbox = { section: $('#videoInbox'), list: $('#inboxList'), count: $('#inboxCount') };
+
+  const titleWords = (s) => fold(s).replace(/[^a-z0-9]+/g, ' ').trim();
+  // Başlığın son "|" sonrası; sondaki etiketler ve bölüm numarası ("#12", "#Shorts", "Bölüm 3", "Part 2") atılır
+  function seriesTag(title) {
+    const parts = String(title || '').split('|');
+    if (parts.length < 2) return '';
+    return titleWords(parts[parts.length - 1].replace(/(?:\s*(?:#\S*|\b(?:bölüm|bolum|part|ep|episode)\s*\d+))+\s*$/i, ''));
+  }
+
+  function guessGame(video) {
+    const vt = ` ${titleWords(video.title)} `;
+    const tag = seriesTag(video.title);
+    let best = null;
+    let second = 0;
+    for (const g of data.games) {
+      const gt = titleWords(g.title);
+      let score = 0;
+      if (tag && g.episodes.some((e) => seriesTag(e.title) === tag)) score = 1000;
+      else if (gt.length >= 3 && vt.includes(` ${gt} `)) score = 500 + gt.length;
+      else {
+        const gw = gt.split(' ');
+        const tokens = new Set(vt.trim().split(' '));
+        for (let k = gw.length; k >= 2; k--) {
+          const head = gw.slice(0, k).join(' ');
+          if ((k < gw.length && vt.includes(` ${head} `)) || tokens.has(head.replace(/ /g, ''))) {
+            score = 100 + head.length;
+            break;
+          }
+        }
+      }
+      if (best && score === best.score) second = score;
+      else if (score > (best ? best.score : 0)) {
+        second = best ? best.score : 0;
+        best = { g, score };
+      } else if (score > second) second = score;
+    }
+    return best && best.score > second ? best.g : null;
+  }
+
+  function inboxVideos() {
+    if (!latest || !isEditing()) return [];
+    return latest.videos.filter((v) => !ignoredVideos.has(v.id) && !findEpisodeByVideo(v.id)).slice(0, INBOX_MAX);
+  }
+
+  function renderInbox() {
+    const list = inboxVideos();
+    if (!list.length) {
+      inbox.section.hidden = true;
+      inbox.list.innerHTML = '';
+      inboxHTML = '';
+      return;
+    }
+    const games = data.games.slice().sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+    const html = list.map((v) => {
+      const guess = guessGame(v);
+      const chosen = inboxChoice.has(v.id) ? inboxChoice.get(v.id) : (guess ? guess.id : '');
+      const day = localDay(v.published);
+      const when = [formatDate(day, 'short'), relativeDay(day)].filter(Boolean).join(' · ');
+      const options = games.map((g) => `<option value="${esc(g.id)}"${g.id === chosen ? ' selected' : ''}>${esc(g.title)}</option>`).join('');
+      return `<li class="inbox-item" data-video="${esc(v.id)}">
+        <a class="inbox-thumb" href="${esc(v.url)}" target="_blank" rel="noopener" aria-label="Videoyu YouTube'da aç: ${esc(v.title)}"><img src="${esc(v.thumbnail)}" alt="" loading="lazy"></a>
+        <div class="inbox-main">
+          <span class="inbox-title">${esc(v.title)}</span>
+          <span class="inbox-meta">${esc(when)}</span>
+          <p class="inbox-guess">${guess ? `Tahmin: <b>${esc(guess.title)}</b>` : 'Hangi oyuna ait olduğu tahmin edilemedi; listeden seç.'}</p>
+          <div class="inbox-actions">
+            <select class="inbox-game" aria-label="Bölümün ekleneceği oyun: ${esc(v.title)}"><option value="">Oyun seç…</option>${options}</select>
+            <button type="button" class="btn btn-primary btn-sm" data-inbox="add">${icon('plus')}<span>Bölüm olarak ekle</span></button>
+            <button type="button" class="btn btn-ghost btn-sm" data-inbox="ignore">Yoksay</button>
+          </div>
+        </div>
+      </li>`;
+    }).join('');
+    const total = latest.videos.filter((v) => !ignoredVideos.has(v.id) && !findEpisodeByVideo(v.id)).length;
+    inbox.count.textContent = total > list.length ? `${list.length} / ${total} video` : `${total} video`;
+    if (html !== inboxHTML) {
+      inbox.list.innerHTML = html;
+      inboxHTML = html;
+    }
+    inbox.section.hidden = false;
+  }
+
+  inbox.list.addEventListener('change', (e) => {
+    const sel = e.target.closest('.inbox-game');
+    if (sel) inboxChoice.set(sel.closest('[data-video]').dataset.video, sel.value);
+  });
+
+  inbox.list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-inbox]');
+    if (!btn || !latest) return;
+    const item = btn.closest('[data-video]');
+    const v = latest.videos.find((x) => x.id === item.dataset.video);
+    if (!v) return;
+    if (btn.dataset.inbox === 'ignore') {
+      ignoredVideos.add(v.id);
+      storageSet(IGNORED_VIDEOS_KEY, Array.from(ignoredVideos).slice(-200));
+      inboxChoice.delete(v.id);
+      renderInbox();
+      toast('Video bu listeden kaldırıldı.', {
+        action: { label: 'Geri al', run: () => { ignoredVideos.delete(v.id); storageSet(IGNORED_VIDEOS_KEY, Array.from(ignoredVideos)); renderInbox(); } }
+      });
+      return;
+    }
+    const g = findGame($('.inbox-game', item).value);
+    if (!g) {
+      toast('Önce videonun ait olduğu oyunu seç.', { error: true });
+      $('.inbox-game', item).focus();
+      return;
+    }
+    if (findEpisodeByVideo(v.id)) return renderInbox();
+    const ep = normalizeEpisode({ id: uid(), url: v.url, title: v.title, date: localDay(v.published) });
+    g.episodes = sortEpisodes([...g.episodes, ep]);
+    delete g.example;
+    inboxChoice.delete(v.id);
+    commit({ games: [g.id] });
+    toast(`“${g.title}” oyununa ${episodeName(episodeNo(g, ep))} olarak eklendi.`, {
+      action: {
+        label: 'Geri al',
+        run: () => {
+          const game = findGame(g.id);
+          if (!game) return;
+          game.episodes = game.episodes.filter((x) => x.id !== ep.id);
+          commit({ games: [game.id] });
+        }
+      }
+    });
+  });
+
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
   let latest = null;
@@ -2786,6 +2929,7 @@
         if (!videos.length) continue;
         latest = { channelUrl: safeLink(json.channelUrl), videos };
         renderLatest();
+        renderInbox();
         syncPickerButton();
         return;
       } catch (err) {
