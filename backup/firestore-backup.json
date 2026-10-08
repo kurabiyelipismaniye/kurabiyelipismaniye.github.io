@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-07T20:30:03.432Z",
+  "exportedAt": "2026-10-08T05:30:03.954Z",
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -57,5 +57,16 @@
       "images": []
     }
   ],
-  "suggestions": []
+  "suggestions": [
+    {
+      "id": "sG1MyhWW6zdfhfsscXL8",
+      "title": "The Stanley Parable",
+      "note": "Oyna diye",
+      "name": "Bir dost",
+      "category": "Ne bilim. Bulmaca?",
+      "votes": 1,
+      "status": "new",
+      "createdAt": 1791436139390
+    }
+  ]
 }
