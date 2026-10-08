@@ -442,10 +442,12 @@
 
   /* ---------- tercihler ---------- */
   const prefs = Object.assign(
-    { editing: false, theme: '', status: 'all', category: 'all', sort: 'recent' },
+    { editing: false, theme: '', status: 'all', category: 'all', sort: 'recent', wheelPools: ['todo'], wheelSound: true },
     storageGet(PREFS_KEY) || {}
   );
   if (!['all', 'played', 'ongoing', 'todo'].includes(prefs.status)) prefs.status = 'all';
+  if (!Array.isArray(prefs.wheelPools)) prefs.wheelPools = ['todo'];
+  prefs.wheelPools = prefs.wheelPools.filter((p) => p === 'todo' || p === 'ongoing');
   const savePrefs = () => storageSet(PREFS_KEY, prefs);
   // Yerel modda herkes kendi tarayıcısında düzenleyebilir; bulut modunda yalnızca giriş yapan sahibi.
   const canEdit = () => mode === 'local' || Boolean(owner && cloudApi);
@@ -760,6 +762,7 @@
     renderTabs();
     renderNowPlaying();
     renderSchedule();
+    renderWheelButton();
     if (latest) renderLatest();
     if (suggestions) renderSuggestions();
   }
@@ -866,6 +869,7 @@
 
   window.addEventListener('hashchange', () => {
     if (GAME_HASH.test(location.hash)) openFromHash(location.hash, mode === 'local' || cloudFinal());
+    else if (location.hash === '#cark') openWheel();
   });
 
   async function copyGameLink(g) {
@@ -2378,6 +2382,371 @@
     }
   }
 
+  /* ---------- sıradaki ne olsun? çarkı ---------- */
+  // Bekleyen ("Sırada") oyunlardan biri rastgele seçilir; istenirse devam edenler de çarka katılır ve oyunlar
+  // tek tek çıkarılabilir. Kazanan önce rastgele (crypto) seçilir, animasyon yalnızca onu gösterir.
+  // Hangi grupların çarkta olduğu ve ses tercihi bu tarayıcıda saklanır; çıkarılan oyunlar sayfa açıkken hatırlanır.
+  const wh = {
+    open: $('#wheelBtn'),
+    dialog: $('#wheelDialog'),
+    stage: $('#wheelStage'),
+    rotor: $('#wheelRotor'),
+    ticker: $('#wheelTicker'),
+    result: $('#wheelResult'),
+    spin: $('#wheelSpin'),
+    chips: $('#wheelChips'),
+    count: $('#wheelCount'),
+    sound: $('#wheelSound')
+  };
+  const wheelExcluded = new Set();
+  let wheelAngle = 0;     // çarkın dönüşü (derece, saat yönünde)
+  let wheelRaf = 0;       // dönerken animasyon karesi; 0: durgun
+  let wheelWinner = null; // son kazananın kimliği
+  let wheelDrawn = '';    // çizili dilimlerin anahtarı; değişmediyse yeniden çizilmez
+  let wheelChipsHTML = '';
+  let angleIds = '';      // çarkın şu anki açısının ait olduğu dilim listesi (kazanan okun altında kalsın diye)
+
+  const wheelPool = () => data.games
+    .filter((g) => prefs.wheelPools.includes(gameState(g)))
+    .sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+  const wheelCandidates = () => wheelPool().filter((g) => !wheelExcluded.has(g.id));
+  const idsOf = (list) => list.map((g) => g.id).join('|');
+
+  // 0 ≤ sonuç < n, eşit olasılıkla (crypto varsa onunla, yoksa Math.random)
+  function randomInt(n) {
+    const c = window.crypto;
+    if (c && c.getRandomValues) {
+      const limit = Math.floor(0x100000000 / n) * n;
+      const buf = new Uint32Array(1);
+      do c.getRandomValues(buf); while (buf[0] >= limit);
+      return buf[0] % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+
+  // Çarktaki oyun yoksa düğme gizlenir (hepsi oynandıysa ya da liste boşsa).
+  function renderWheelButton() {
+    wh.open.hidden = !data.games.some((g) => gameState(g) !== 'played');
+    if (wh.dialog.open) renderWheel();
+  }
+
+  // Dilimin üst ucu tepedeki oka göre saat yönünde açı (derece); nokta: merkezden r uzaklıkta
+  const wheelPoint = (deg, r) => {
+    const a = (deg * Math.PI) / 180;
+    return `${(r * Math.sin(a)).toFixed(3)} ${(-r * Math.cos(a)).toFixed(3)}`;
+  };
+  const slicePath = (i, s, r) => `M0 0 L${wheelPoint(i * s, r)} A${r} ${r} 0 ${s > 180 ? 1 : 0} 1 ${wheelPoint((i + 1) * s, r)} Z`;
+  // Okun altındaki dilim: çark r derece dönmüşse okun gösterdiği yer çarkın -r açısıdır
+  const sliceAt = (angle, n) => Math.floor(((((-angle) % 360) + 360) % 360) / (360 / n)) % n;
+
+  // Dilim yazıları dıştan içe uzanır; göbeğe değmesin diye ölçülüp sığana kadar kısaltılır.
+  function fitWheelLabels() {
+    for (const t of $$('.wheel-label', wh.rotor)) {
+      const full = t.dataset.full || '';
+      let len = full.length;
+      t.textContent = full;
+      while (len > 1 && t.getComputedTextLength() > 74) {
+        len--;
+        t.textContent = `${full.slice(0, len).trimEnd()}…`;
+      }
+    }
+  }
+
+  function renderWheel() {
+    const pool = wheelPool();
+    const list = pool.filter((g) => !wheelExcluded.has(g.id));
+    const spinning = Boolean(wheelRaf);
+    for (const btn of $$('[data-pool]', wh.dialog)) {
+      const key = btn.dataset.pool;
+      btn.setAttribute('aria-pressed', String(prefs.wheelPools.includes(key)));
+      btn.disabled = spinning;
+      $('b', btn).textContent = data.games.filter((g) => gameState(g) === key).length;
+    }
+    wh.sound.setAttribute('aria-pressed', String(prefs.wheelSound));
+    $('use', wh.sound).setAttribute('href', prefs.wheelSound ? '#i-sound-on' : '#i-sound-off');
+    wh.count.textContent = pool.length ? `${list.length} / ${pool.length}` : '0';
+    // etiketler yalnızca değişince yeniden yazılır; odaklı etiket yeniden yazılınca odak yerinde kalır
+    const chipsHTML = pool.map((g) => `<button type="button" class="chip-filter" data-wheel-game="${esc(g.id)}" aria-pressed="${!wheelExcluded.has(g.id)}"${spinning ? ' disabled' : ''}>${esc(g.title)}</button>`).join('');
+    if (chipsHTML !== wheelChipsHTML) {
+      const focused = wh.chips.contains(document.activeElement) ? document.activeElement.dataset.wheelGame : null;
+      wh.chips.innerHTML = chipsHTML;
+      wheelChipsHTML = chipsHTML;
+      if (focused) {
+        const again = $$('[data-wheel-game]', wh.chips).find((b) => b.dataset.wheelGame === focused);
+        if (again) again.focus({ preventScroll: true });
+      }
+    }
+    // dönerken düğme odağını kaybetmesin diye kapatılmaz, yalnızca "meşgul" gösterilir
+    wh.spin.disabled = !list.length && !spinning;
+    wh.spin.setAttribute('aria-disabled', String(spinning));
+    if (spinning) return; // dönerken dilimler değişmez; bitince güncel listeyle çizilir
+
+    let note = '';
+    if (wheelWinner) {
+      const idx = list.findIndex((g) => g.id === wheelWinner);
+      if (idx < 0) {
+        // liste değişti ve kazanan artık çarkta değil (silindi, oynandı ya da çıkarıldı)
+        wheelWinner = null;
+        note = '<p class="wheel-note">Liste güncellendi ve son kazanan artık çarkta değil. Tekrar çevir.</p>';
+      } else if (idsOf(list) !== angleIds) {
+        // dilimler değiştiyse çark, kazananın yeni dilimi okun altına gelecek şekilde ayarlanır
+        const s = 360 / list.length;
+        wheelAngle = (360 - (idx * s + s / 2)) % 360;
+        angleIds = idsOf(list);
+      }
+    }
+    wh.spin.textContent = wheelWinner ? 'Tekrar çevir' : 'Çevir';
+
+    const key = JSON.stringify([list.map((g) => [g.id, g.title]), wheelWinner, wheelAngle]);
+    if (key !== wheelDrawn) {
+      wheelDrawn = key;
+      if (!list.length) {
+        wh.rotor.innerHTML = '<circle class="wheel-empty" r="100"/><text class="wheel-empty-text" text-anchor="middle" y="-30">Çarkta oyun yok</text>';
+        wh.ticker.textContent = '';
+        if (!wheelWinner && !note) {
+          note = `<p class="wheel-note">${pool.length ? 'Bütün oyunları çarktan çıkardın; aşağıdaki listeden geri ekle.' : 'Seçili grupta oyun yok. Yukarıdan bir grup seç.'}</p>`;
+        }
+      } else {
+        if (!wheelWinner && !note) wh.result.innerHTML = '';
+        const n = list.length;
+        const s = 360 / n;
+        const size = n <= 6 ? 9 : n <= 12 ? 7.5 : n <= 20 ? 6 : n <= 32 ? 4.6 : 0;
+        let win = '';
+        wh.rotor.innerHTML = list.map((g, i) => {
+          const fill = `hsl(${hashHue(g.title)} 62% ${i % 2 ? 36 : 45}%)`;
+          const shape = n === 1
+            ? `<circle class="wheel-slice" r="100" style="fill:${fill}"/>`
+            : `<path class="wheel-slice" d="${slicePath(i, s, 100)}" style="fill:${fill}"/>`;
+          // kazananın çerçevesi en sonda ve biraz içeride çizilir; komşular ve kenar onu örtmesin
+          if (g.id === wheelWinner) win = n === 1 ? '<circle class="wheel-win-ring" r="96"/>' : `<path class="wheel-win-ring" d="${slicePath(i, s, 96)}"/>`;
+          if (!size) return shape;
+          const mid = i * s + s / 2;
+          return `${shape}<text class="wheel-label" transform="rotate(${(mid - 90).toFixed(3)})" x="92" dy=".35em" text-anchor="end" font-size="${size}" data-full="${esc(g.title)}">${esc(g.title)}</text>`;
+        }).join('') + win;
+        wh.rotor.setAttribute('transform', `rotate(${wheelAngle.toFixed(3)})`);
+        if (wh.dialog.open) fitWheelLabels();
+        if (!wheelWinner) wh.ticker.textContent = `${n} oyun çarkta`;
+      }
+    }
+    if (note) wh.result.innerHTML = note;
+  }
+
+  /* ses: kısa "tık"lar ve kazanınca üç notalık bir arpej (Web Audio; desteklenmezse sessiz) */
+  let audio = null;
+  let lastTick = 0;
+  // Ses bağlamı kullanıcının dokunuşuyla (Çevir'e basınca) kurulur ve uyandırılır; iPhone'da başka türlü sessiz kalır.
+  function wakeAudio() {
+    if (!prefs.wheelSound) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audio = audio || new Ctx();
+      if (audio.state !== 'running') audio.resume().catch(() => {});
+    } catch (err) { /* ses yoksa sessiz devam */ }
+  }
+  function beep(freq, dur, gain = 0.05, when = 0) {
+    if (!prefs.wheelSound || !audio) return;
+    try {
+      const t = audio.currentTime + when;
+      const osc = audio.createOscillator();
+      const vol = audio.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      vol.gain.setValueAtTime(gain, t);
+      vol.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(vol).connect(audio.destination);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    } catch (err) { /* ses çalınamazsa sessiz devam */ }
+  }
+  function tick(now) {
+    if (now - lastTick < 40) return; // çok hızlı dönerken tıklar birbirine karışmasın
+    lastTick = now;
+    beep(1500, 0.03, 0.035);
+  }
+
+  // Konfeti ekranın tamamını kaplayan sabit bir katmanda uçar; pencerede kaydırma çubuğu oluşturmaz.
+  function confetti() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const r = wh.stage.getBoundingClientRect();
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 36; i++) {
+      const p = document.createElement('span');
+      p.className = 'confetti';
+      const a = (i / 36) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 120 + Math.random() * 160;
+      p.style.left = `${Math.round(r.left + r.width / 2)}px`;
+      p.style.top = `${Math.round(r.top + r.height / 2)}px`;
+      p.style.setProperty('--x', `${Math.round(Math.cos(a) * dist)}px`);
+      p.style.setProperty('--y', `${Math.round(Math.sin(a) * dist)}px`);
+      p.style.setProperty('--r', `${Math.round(Math.random() * 720 - 360)}deg`);
+      p.style.setProperty('--h', String(Math.round(Math.random() * 360)));
+      layer.append(p);
+    }
+    wh.dialog.append(layer);
+    setTimeout(() => layer.remove(), 1500);
+  }
+
+  function stopWheel() {
+    if (wheelRaf) cancelAnimationFrame(wheelRaf);
+    wheelRaf = 0;
+    wh.dialog.classList.remove('is-spinning');
+  }
+
+  function spinWheel() {
+    if (wheelRaf) return;
+    wakeAudio();
+    wheelWinner = null;
+    wheelDrawn = '';
+    renderWheel();
+    const list = wheelCandidates();
+    if (!list.length) return;
+    const n = list.length;
+    const s = 360 / n;
+    const win = randomInt(n);
+    const spunIds = idsOf(list);
+    // kazananın dilimi içinde rastgele bir nokta (kenarlara çok yakın olmasın) okun altına gelir
+    const target = (360 - (win * s + s * (0.15 + Math.random() * 0.7))) % 360;
+    const from = wheelAngle;
+    const delta = ((target - (((from % 360) + 360) % 360)) + 360) % 360;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const total = (reduce ? 0 : 360 * (5 + randomInt(3))) + delta;
+    const duration = reduce ? 500 : 5200 + randomInt(1400);
+    const t0 = performance.now();
+    let shown = -1;
+    wh.result.innerHTML = '';
+    wh.dialog.classList.add('is-spinning');
+    const frame = (now) => {
+      const t = Math.min(1, (now - t0) / duration);
+      wheelAngle = from + total * (1 - Math.pow(1 - t, 4)); // yavaşlayarak durur
+      wh.rotor.setAttribute('transform', `rotate(${wheelAngle.toFixed(3)})`);
+      const idx = sliceAt(wheelAngle, n);
+      if (idx !== shown) {
+        shown = idx;
+        wh.ticker.textContent = list[idx].title;
+        if (t < 1) tick(now);
+      }
+      if (t < 1) {
+        wheelRaf = requestAnimationFrame(frame);
+        return;
+      }
+      stopWheel();
+      finishSpin(list[win].id, spunIds);
+    };
+    wheelRaf = requestAnimationFrame(frame);
+    renderWheel(); // grupları ve etiketleri "meşgul" göster
+  }
+
+  function finishSpin(id, spunIds) {
+    wheelAngle %= 360;
+    angleIds = spunIds;
+    // dönerken liste değiştiyse kazanan yeniden aranır; artık çarkta değilse ilan edilmez
+    const g = wheelCandidates().find((x) => x.id === id);
+    if (!g) {
+      wheelWinner = null;
+      wheelDrawn = '';
+      renderWheel();
+      wh.result.innerHTML = '<p class="wheel-note">Çark dönerken liste güncellendi ve gelen oyun artık çarkta değil. Tekrar çevir.</p>';
+      if (!wh.dialog.contains(document.activeElement)) wh.spin.focus({ preventScroll: true });
+      return;
+    }
+    wheelWinner = g.id;
+    const state = { todo: 'Sırada', ongoing: 'Devam ediyor', played: 'Oynandı' }[gameState(g)];
+    const meta = [g.category, g.platform, state].filter(Boolean).map(esc).join(' · ');
+    const others = wheelCandidates().length > 1;
+    wh.result.innerHTML = `<div class="wheel-win">
+        <span class="eyebrow">Sıradaki oyun</span>
+        <h3>${esc(g.title)}</h3>
+        <span class="wheel-win-meta">${meta}</span>
+        <div class="wheel-win-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-wheel="open">${icon('pad')}<span>Oyunu aç</span></button>
+          ${others ? `<button type="button" class="btn btn-ghost btn-sm" data-wheel="drop">${icon('x')}<span>Çarktan çıkar, tekrar çevir</span></button>` : ''}
+        </div>
+      </div>`;
+    wh.ticker.textContent = ''; // kazanan aşağıdaki kartta büyük yazıyor
+    renderWheel();
+    if (!wh.dialog.contains(document.activeElement)) wh.spin.focus({ preventScroll: true });
+    beep(660, 0.14, 0.06);
+    beep(880, 0.14, 0.06, 0.12);
+    beep(1320, 0.3, 0.06, 0.24);
+    confetti();
+  }
+
+  function openWheel() {
+    const fresh = !wh.dialog.open;
+    if (fresh) {
+      wheelWinner = null;
+      wheelDrawn = '';
+      wh.ticker.textContent = '';
+      // seçili gruplarda hiç oyun yoksa (ör. "Sırada" oyun kalmadıysa) oyunu olan gruplar seçilir
+      if (!wheelPool().length) {
+        const filled = ['todo', 'ongoing'].filter((k) => data.games.some((g) => gameState(g) === k));
+        if (filled.length) {
+          prefs.wheelPools = filled;
+          savePrefs();
+        }
+      }
+    }
+    openDialog(wh.dialog);
+    renderWheel(); // pencere açıkken çizilir; dilim yazıları ancak görünürken ölçülebilir
+    if (location.hash !== '#cark') setHash('#cark');
+    if (fresh) wh.spin.focus({ preventScroll: true });
+  }
+
+  wh.open.addEventListener('click', openWheel);
+  wh.spin.addEventListener('click', spinWheel);
+  wh.sound.addEventListener('click', () => {
+    prefs.wheelSound = !prefs.wheelSound;
+    savePrefs();
+    wakeAudio();
+    renderWheel();
+  });
+  wh.dialog.addEventListener('click', (e) => {
+    if (e.target === wh.dialog || e.target.closest('[data-close]')) {
+      closeDialog(wh.dialog);
+      return;
+    }
+    if (wheelRaf) return;
+    const pool = e.target.closest('[data-pool]');
+    if (pool) {
+      const key = pool.dataset.pool;
+      prefs.wheelPools = prefs.wheelPools.includes(key) ? prefs.wheelPools.filter((p) => p !== key) : [...prefs.wheelPools, key];
+      savePrefs();
+      wheelWinner = null;
+      renderWheel();
+      return;
+    }
+    const chip = e.target.closest('[data-wheel-game]');
+    if (chip) {
+      const id = chip.dataset.wheelGame;
+      if (wheelExcluded.has(id)) wheelExcluded.delete(id);
+      else wheelExcluded.add(id);
+      wheelWinner = null;
+      renderWheel();
+      return;
+    }
+    const act = e.target.closest('[data-wheel]');
+    if (!act || !wheelWinner) return;
+    if (act.dataset.wheel === 'open') {
+      const id = wheelWinner;
+      closeDialog(wh.dialog);
+      openDetail(id);
+    } else if (act.dataset.wheel === 'drop') {
+      wheelExcluded.add(wheelWinner);
+      wh.spin.focus({ preventScroll: true }); // basılan düğme birazdan kaldırılacak; odak çevir düğmesine geçer
+      spinWheel();
+    }
+  });
+  wh.dialog.addEventListener('close', () => {
+    stopWheel();
+    renderWheel();
+    for (const layer of $$('.confetti-layer', wh.dialog)) layer.remove();
+    if (el.toasts.parentElement === wh.dialog) document.body.append(el.toasts);
+    if (location.hash === '#cark') setHash(activeTab === 'suggestions' ? '#oneriler' : '');
+  });
+
   /* ---------- kanaldaki son video ---------- */
   // data/latest.json'u GitHub'daki otomatik görev her saat günceller (scripts/sync.mjs).
   let latest = null;
@@ -3125,6 +3494,7 @@
   applyTheme();
   render();
   if (startHash === '#kurulum') openSetup();
+  else if (startHash === '#cark') openWheel();
   else if ((startHash === '#duzenle' || startHash === '#giris') && mode === 'cloud') openLogin();
   else if (GAME_HASH.test(startHash)) openFromHash(startHash, mode === 'local');
   if (typeof initExtras === 'function') initExtras(startHash);

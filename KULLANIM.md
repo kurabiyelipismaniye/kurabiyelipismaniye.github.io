@@ -23,6 +23,9 @@ her oyuna açıklama, kategori, platform, puan, kapak görseli ve kanalda yayın
   Bu linke tıklayan, siteyi o oyunun penceresi açık hâlde görür. Linki oyunun penceresindeki **Linki kopyala** ile
   alıp video açıklamasına yapıştırabilirsin; pencere açıkken adres çubuğunda da yazar. Link oyunun kimliğinden
   oluşur; oyunun adını sonradan değiştirsen de çalışmaya devam eder.
+- **Sıradaki ne olsun? çarkı:** başlığın altındaki sarı düğme (ya da adresin sonuna `#cark`). Sırada bekleyen
+  oyunlardan birini dönen bir çarkla rastgele seçer; istersen devam edenleri de çarka katabilir, tek tek oyun çıkarabilirsin.
+  Sesli (sağ üstten kapatılabilir), yayında doğrudan kullanılabilir. Sonuçtan **Oyunu aç** ya da **Çarktan çıkar, tekrar çevir**.
 - **Steam'de gör:** oyunun Steam mağaza sayfası varsa penceresinde bu düğme çıkar (aşağıda “Steam sayfası”na bak).
 - Açık ve koyu tema, telefonda da düzgün görünür
 
