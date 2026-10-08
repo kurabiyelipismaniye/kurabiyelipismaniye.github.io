@@ -3,9 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Oyun Arşivi</title>
+<title>Oyun Arşivi · Kurabiyeli Pişmaniye</title>
 <meta name="description" content="YouTube kanalımda oynadığım ve sırada bekleyen oyunların listesi.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FFC83D'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='%231E1600' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- site simgesi ve telefona eklenince görünen simge -->
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F3F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#100E16" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Oyun Arşivi">
+<!-- link paylaşılınca (WhatsApp, Discord, X…) görünen kart; görsel adresi tam yazılmalı -->
+<link rel="canonical" href="https://kurabiyelipismaniye.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:site_name" content="Kurabiyeli Pişmaniye">
+<meta property="og:title" content="Oyun Arşivi · Kurabiyeli Pişmaniye">
+<meta property="og:description" content="Kanalda oynadığım ve sırada bekleyen oyunlar, bölümleri ve yayın takvimi.">
+<meta property="og:url" content="https://kurabiyelipismaniye.github.io/">
+<meta property="og:image" content="https://kurabiyelipismaniye.github.io/icons/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Oyun Arşivi · Kurabiyeli Pişmaniye">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Oyun Arşivi · Kurabiyeli Pişmaniye">
+<meta name="twitter:description" content="Kanalda oynadığım ve sırada bekleyen oyunlar, bölümleri ve yayın takvimi.">
+<meta name="twitter:image" content="https://kurabiyelipismaniye.github.io/icons/og-image.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Rubik:wght@400;500;600&family=Unbounded:wght@600;800&display=swap">
@@ -211,6 +235,7 @@
   <footer class="footer">
     <span id="footerText"></span>
     <a id="footerYt" href="#" target="_blank" rel="noopener" hidden>YouTube kanalı</a>
+    <button type="button" class="btn btn-ghost btn-sm" id="installBtn" hidden><svg class="icon"><use href="#i-download"/></svg><span>Uygulama olarak yükle</span></button>
   </footer>
 </div>
 

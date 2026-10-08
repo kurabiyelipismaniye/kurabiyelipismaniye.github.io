@@ -3187,6 +3187,37 @@
     }
   });
 
+  /* ---------- telefona uygulama olarak ekleme ---------- */
+  // sw.js internet yokken son kopyayı açar ve sitenin "uygulama olarak yüklenebilmesini" sağlar. Yalnızca
+  // https'te (ya da bilgisayarda localhost'ta) çalışır. Tarayıcı yüklemeyi önerirse altta bir düğme çıkar;
+  // iPhone'da bu düğme çıkmaz, Safari'de Paylaş → "Ana Ekrana Ekle" kullanılır.
+  let installPrompt = null;
+  const installBtn = $('#installBtn');
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* çevrimdışı yedek olmadan da site çalışır */ });
+    });
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    installBtn.hidden = false;
+  });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    installBtn.hidden = true;
+    toast('Oyun Arşivi uygulama olarak yüklendi.');
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    const prompt = installPrompt;
+    installPrompt = null;
+    installBtn.hidden = true;
+    try {
+      await prompt.prompt();
+    } catch (err) { /* kullanıcı vazgeçti */ }
+  });
+
   // açılışta yapılan ek işler (son video, #oneriler adresi)
   function initExtras(startHash) {
     if (startHash === '#oneriler') setTab('suggestions');

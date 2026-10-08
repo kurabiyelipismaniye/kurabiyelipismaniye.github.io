@@ -93,6 +93,24 @@ yedeği **Dosya seç** ile geri yükleyebilirsin.
 
 > Tarayıcı verilerini temizlersen yayınlamadığın değişiklikler silinir. Arada bir yayınla ya da yedek indir.
 
+## Telefona uygulama olarak eklemek
+
+Site telefonda uygulama gibi ana ekrana eklenebilir; kendi simgesiyle, tarayıcı çubuğu olmadan açılır.
+İnternet yokken de en son açılan hâli görünür.
+
+- **Android (Chrome):** sayfanın altında **Uygulama olarak yükle** düğmesi çıkar; ya da sağ üstteki ⋮ menüsünden
+  **Uygulamayı yükle / Ana ekrana ekle**.
+- **iPhone (Safari):** alttaki Paylaş düğmesi → **Ana Ekrana Ekle**.
+- **Bilgisayar (Chrome/Edge):** adres çubuğunun sağındaki yükle simgesi ya da sayfanın altındaki düğme.
+
+Siteye yaptığın değişiklikler uygulamada da hemen görünür; internet varken her zaman güncel hâli açılır.
+
+## Link paylaşınca çıkan kart
+
+Sitenin linki WhatsApp, Discord, X gibi yerlerde paylaşılınca kapaklı bir kart çıkar (`icons/og-image.jpg`).
+Site başka bir adrese taşınırsa `index.html`'in başındaki `https://kurabiyelipismaniye.github.io/` adreslerini
+yenisiyle değiştirmek gerekir.
+
 ## Siteyi GitHub Pages'te yayına almak
 
 1. GitHub'da bu deponun (`kurabiyelipismaniye/kurabiyelipismaniye.github.io`) **Settings → Pages** sayfasına git.
@@ -117,6 +135,8 @@ alanını da ona göre güncelle (ör. `https://github.com/KULLANICI/DEPO/edit/D
 | `css/style.css` | Görünüm, renkler, yazı tipleri |
 | `js/app.js` | Ekleme, tik atma, bölümler, filtreleme, yayınlama |
 | `data/games.js` | Oyun listesi, bölümler ve site ayarları (yayınladığın dosya) |
+| `icons/`, `favicon.ico`, `apple-touch-icon.png` | Site simgesi, uygulama simgeleri ve paylaşım kartı görseli |
+| `manifest.webmanifest`, `sw.js` | Telefona uygulama olarak ekleme ve internetsizken son kopyayı açma |
 | `data/steam.json` | Oyunların otomatik bulunan Steam sayfaları (saatlik görev yazar, elle düzenleme) |
 
 Bilgisayarında denemek için `index.html` dosyasına çift tıklaman yeterli.
