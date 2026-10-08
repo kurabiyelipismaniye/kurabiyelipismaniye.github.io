@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T10:32:31.682Z",
+  "exportedAt": "2026-10-08T16:34:09.857Z",
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -67,6 +67,28 @@
           "title": "14 YAŞINDA EVDE TEK BAŞINA KALDIM 😱 | Fears To Fathom #1",
           "url": "https://www.youtube.com/watch?v=oYz5CR3vPp0",
           "date": "2026-10-04"
+        }
+      ],
+      "images": []
+    },
+    {
+      "id": "project-zomboid",
+      "title": "Project Zomboid",
+      "category": "Hayatta Kalma",
+      "platform": "PC",
+      "description": "",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 0,
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-08T16:09:18.990Z",
+      "episodes": [
+        {
+          "id": "muzqed80m8fwk",
+          "title": "",
+          "url": "",
+          "date": "2026-10-09"
         }
       ],
       "images": []

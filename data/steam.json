@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-08T10:32:31.873Z",
+  "updatedAt": "2026-10-08T16:34:10.007Z",
   "games": {
     "mouthwashing": {
       "title": "Mouthwashing",
@@ -15,6 +15,11 @@
       "title": "Fears To Fathom: Home Alone",
       "appid": 1671340,
       "name": "Fears to Fathom - Home Alone"
+    },
+    "project-zomboid": {
+      "title": "Project Zomboid",
+      "appid": 108600,
+      "name": "Project Zomboid"
     }
   }
 }

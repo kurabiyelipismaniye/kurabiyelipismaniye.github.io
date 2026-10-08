@@ -1,7 +1,7 @@
 // Oyun Arşivi verisi. Firebase'deki listeden otomatik oluşturulur (scripts/sync.mjs); elle düzenlemene gerek yok.
 // Site Firebase'e ulaşamadığında bu liste gösterilir. Yüklenen kapak görselleri dosya küçük kalsın diye buraya alınmaz.
 window.SITE_DATA = {
-  "version": 1791455551684,
+  "version": 1791477249860,
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -67,6 +67,27 @@ window.SITE_DATA = {
           "title": "14 YAŞINDA EVDE TEK BAŞINA KALDIM 😱 | Fears To Fathom #1",
           "url": "https://www.youtube.com/watch?v=oYz5CR3vPp0",
           "date": "2026-10-04"
+        }
+      ]
+    },
+    {
+      "id": "project-zomboid",
+      "title": "Project Zomboid",
+      "category": "Hayatta Kalma",
+      "platform": "PC",
+      "description": "",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 0,
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-08T16:09:18.990Z",
+      "episodes": [
+        {
+          "id": "muzqed80m8fwk",
+          "title": "",
+          "url": "",
+          "date": "2026-10-09"
         }
       ]
     }
