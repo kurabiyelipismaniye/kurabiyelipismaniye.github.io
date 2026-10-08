@@ -541,6 +541,8 @@ main { display: flex; flex-direction: column; gap: 14px; }
 }
 .cover-video .icon { width: 14px; height: 14px; }
 .cover-video.is-soon { padding-left: 9px; }
+/* çizilen kapakta oyunun adı sağ alttaki "N BÖLÜM" / "YAKINDA" etiketinin altında kalmasın */
+.cover:has(.cover-video) .gen-cover { padding-bottom: 42px; }
 
 .stamp {
   position: absolute;
@@ -1438,9 +1440,11 @@ button.hbar { cursor: pointer; }
 }
 .vote-btn .icon { width: 20px; height: 20px; }
 .vote-btn b { font: 700 .9rem/1 var(--font-mono); font-variant-numeric: tabular-nums; }
-.vote-btn:hover:not(:disabled) { border-color: var(--accent); }
+.vote-btn:hover:not(:disabled):not([aria-disabled="true"]) { border-color: var(--accent); }
 .vote-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
-.vote-btn:disabled { cursor: default; }
+.vote-btn:disabled, .vote-btn[aria-disabled="true"] { cursor: default; }
+.vote-btn[aria-busy="true"] { cursor: progress; }
+.vote-btn[aria-busy="true"] b { opacity: .5; transition: opacity .2s .5s; } /* hızlı kayıtta yanıp sönmesin */
 .sug-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .sug-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sug-title-row h3 { font: 700 1.02rem/1.25 var(--font-display); overflow-wrap: anywhere; }
@@ -1472,7 +1476,7 @@ button.hbar { cursor: pointer; }
 .my-sug .status { flex: none; height: 26px; font-size: .75rem; }
 .sug-tools { display: flex; flex-direction: column; gap: 10px; }
 .sug-rank { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font: 700 .7rem/1 var(--font-mono); }
-.vote-btn[aria-pressed="true"]:not(:disabled) { cursor: pointer; }
+.vote-btn[aria-pressed="true"]:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]) { cursor: pointer; }
 .from-sug { display: inline-flex; align-items: center; gap: 3px; height: 22px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--accent-text); color: var(--accent-text); font: 700 .66rem/1 var(--font-mono); letter-spacing: .04em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .from-sug .icon { width: 12px; height: 12px; flex: none; }
 .chip-filter.is-sugfilter { border-color: var(--accent-text); }

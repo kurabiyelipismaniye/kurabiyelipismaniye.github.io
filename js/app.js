@@ -355,6 +355,8 @@
   let rulesV2 = false;          // yayındaki güvenlik kuralları güncel mi (destek geri çekilebilir)
   let rulesChecking = false;
   let rulesTriedAt = 0;
+  let rulesRetryTimer = 0;
+  let rulesRetryDelay = 30000;
   let rulesChecked = false;
   let rulesNoticeShown = false;
   let pendingSaves = 0;
@@ -878,10 +880,10 @@
     if (typeof d.close === 'function') d.close();
     else d.removeAttribute('open');
   }
-  for (const d of [el.detailDialog, el.formDialog, el.settingsDialog, el.dataDialog]) {
-    // arka plana tıklayınca kapat
+  for (const d of [el.detailDialog, el.formDialog, el.settingsDialog, el.dataDialog, el.loginDialog, el.setupDialog, el.lightbox]) {
+    // X düğmesine ya da arka plana tıklayınca kapat (görsel penceresinde resmin çevresindeki siyah alan da arka plan sayılır)
     d.addEventListener('click', (e) => {
-      if (e.target === d) closeDialog(d);
+      if (e.target === d || (d === el.lightbox && e.target.classList.contains('lightbox-stage'))) closeDialog(d);
       if (e.target.closest('[data-close]')) closeDialog(d);
     });
     // pencere kapanınca açık bildirimler sayfada görünmeye devam etsin
@@ -1139,11 +1141,12 @@
     const oldPlayer = keepPlayer ? $('#detailPlayer', el.detailContent) : null;
     const scrollTop = keepPlayer ? el.detailDialog.scrollTop : 0;
 
-    el.detailContent.innerHTML = `
+    const mediaPart = `
       <div class="detail-media">
         <div id="detailPlayer">${mediaHTML(g)}</div>
         <button type="button" class="icon-btn detail-close" data-close aria-label="Kapat">${icon('x')}</button>
-      </div>
+      </div>`;
+    const bodyPart = `
       <div class="detail-body">
         <div class="detail-title">
           ${g.example ? '<span class="example-chip">Örnek</span>' : ''}
@@ -1156,10 +1159,16 @@
         ${galleryEnabled() ? '<section class="gallery" id="gallerySection" aria-labelledby="galleryTitle" hidden></section>' : ''}
         ${actionsHTML ? `<div class="detail-actions">${actionsHTML}</div>` : ''}
       </div>`;
-    // bulut güncellemesi gelince oynayan video kesilmesin
-    if (oldPlayer && oldPlayer.querySelector('iframe')) {
-      $('#detailPlayer', el.detailContent).replaceWith(oldPlayer);
+    // Bulut güncellemesi gelince oynayan video kesilmesin: video sayfadan bir an bile çıkarılırsa baştan başlar,
+    // bu yüzden o sırada yalnızca alttaki bilgiler yenilenir.
+    const oldBody = oldPlayer && oldPlayer.querySelector('iframe') ? $('.detail-body', el.detailContent) : null;
+    if (oldBody) {
+      const box = document.createElement('div');
+      box.innerHTML = bodyPart;
+      oldBody.replaceWith(box.firstElementChild);
       for (const row of $$('.ep', el.detailContent)) row.classList.toggle('is-playing', row.dataset.ep === playingEpId);
+    } else {
+      el.detailContent.innerHTML = mediaPart + bodyPart;
     }
     openDialog(el.detailDialog);
     if (location.hash !== gameHash(g)) setHash(gameHash(g));
@@ -1178,6 +1187,8 @@
   function playEpisode(g, epId) {
     const ep = g.episodes.find((e) => e.id === epId);
     if (!ep || !hasVideo(ep)) return;
+    stopNowPlaying(); // aynı anda tek video çalsın
+    stopLatestPlayer();
     $('#detailPlayer', el.detailContent).innerHTML = playerHTML(g, ep);
     playingEpId = epId;
     for (const row of $$('.ep', el.detailContent)) row.classList.toggle('is-playing', row.dataset.ep === epId);
@@ -3413,17 +3424,30 @@
         ? `<button type="button" class="cover" data-latest-play="${esc(v.id)}" aria-label="Videoyu oynat: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></button>`
         : `<a class="cover" href="${esc(v.url)}" target="_blank" rel="noopener" aria-label="Videoyu YouTube'da aç: ${esc(v.title)}">${thumb}<span class="play-big">${icon('play')}</span></a>`;
       const playing = $('#latestPlayer iframe', el.latestBody);
-      el.latestBody.innerHTML = `<article class="latest-main">
-          <div class="latest-media" id="latestPlayer">${media}</div>
-          <div class="latest-info">
+      const info = `
             <p class="latest-when">${esc(when)}</p>
             <h3 class="latest-title"><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.title)}</a></h3>
             ${match ? `<button type="button" class="latest-game" data-latest-game="${esc(match.g.id)}">${icon('pad')}<span>${esc(match.g.title)} · ${episodeName(match.n)}</span></button>` : ''}
-            <div class="latest-actions"><a class="btn btn-yt btn-sm" href="${esc(v.url)}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a></div>
-          </div>
+            <div class="latest-actions"><a class="btn btn-yt btn-sm" href="${esc(v.url)}" target="_blank" rel="noopener">${icon('youtube')}<span>YouTube'da izle</span></a></div>`;
+      const article = playing && playing.src.includes(`/embed/${v.id}`) ? $('.latest-main', el.latestBody) : null;
+      if (article) {
+        // bu video oynarken sayfadan çıkarılırsa baştan başlar; yalnızca yanındaki bilgiler ve liste yenilenir
+        const box = $('.latest-info', article);
+        if (box.dataset.html !== info) {
+          box.innerHTML = info;
+          box.dataset.html = info;
+        }
+        while (article.nextSibling) article.nextSibling.remove();
+        article.insertAdjacentHTML('afterend', latestMoreHTML(rest));
+      } else {
+        el.latestBody.innerHTML = `<article class="latest-main">
+          <div class="latest-media" id="latestPlayer">${media}</div>
+          <div class="latest-info">${info}</div>
         </article>
         ${latestMoreHTML(rest)}`;
-      if (playing) $('#latestPlayer', el.latestBody).replaceChildren(playing.parentElement);
+        $('.latest-info', el.latestBody).dataset.html = info;
+        if (playing) $('#latestPlayer', el.latestBody).replaceChildren(playing.parentElement);
+      }
     }
     const channel = safeLink(data.site.youtubeUrl) || latest.channelUrl;
     el.latestChannel.hidden = !channel;
@@ -3455,6 +3479,9 @@
   /* ---------- sekmeler ve öneriler ---------- */
   // Öneriler ziyaretçilerin yazabildiği bir veritabanı gerektirdiği için yalnızca bulut modunda var.
   let suggestions = null;
+  const votePending = new Set();   // kaydı süren destek / geri çekme (öneri kimliği)
+  const voteToggledAt = new Map();
+  let voteHintShown = false;
   let sugError = false;
   let unsubSug = null;
   let activeTab = 'games';
@@ -3636,10 +3663,10 @@
     }
     // destek verildiyse düğme desteği geri çeker (güvenlik kuralları buna izin veriyorsa)
     const canUnvote = voted && rulesV2 && !added;
-    const voteLabel = !voted ? 'Ben de istiyorum' : canUnvote ? 'Desteğini geri çek' : 'Destek verdin';
+    const voteLabel = votePending.has(x.id) ? 'Kaydediliyor…' : !voted ? 'Ben de istiyorum' : canUnvote ? 'Desteğini geri çek' : 'Destek verdin';
     const rankNo = topRanks.get(x.id);
     return `<li class="sug${added ? ' is-added' : ''}${mine ? ' is-mine' : ''}" data-id="${esc(x.id)}">
-      <button type="button" class="vote-btn" data-sug="vote" aria-pressed="${voted}" ${(voted && !canUnvote) || added ? 'disabled' : ''} aria-label="Ben de istiyorum: ${esc(x.title)}, ${x.votes || 0} destek" title="${voteLabel}">${icon('up')}<b>${x.votes || 0}</b></button>
+      <button type="button" class="vote-btn" data-sug="vote" aria-pressed="${voted}"${votePending.has(x.id) ? ' aria-busy="true"' : ''} ${(voted && !canUnvote) || added ? 'aria-disabled="true"' : ''} aria-label="Ben de istiyorum: ${esc(x.title)}, ${x.votes || 0} destek" title="${voteLabel}">${icon('up')}<b>${x.votes || 0}</b></button>
       <div class="sug-main">
         <div class="sug-title-row">
           <h3>${esc(x.title)}</h3>
@@ -3683,9 +3710,17 @@
     $('#sugCountLine').textContent = !total ? '' : list.length === total ? `${total} öneri` : `${total} öneriden ${list.length} tanesi`;
     sg.submit.disabled = !cloudApi;
     renderMySuggestions();
-    const again = focusSug ? $(`#sugList .sug[data-id="${CSS.escape(focusSug[0])}"] [data-sug="${CSS.escape(focusSug[1])}"]`)
-      : focusCat ? $(`#sugCats [data-sugcat="${CSS.escape(focusCat)}"]`) : null;
-    if (again && !again.disabled) again.focus({ preventScroll: true });
+    let again = null;
+    if (focusSug) {
+      const item = $(`#sugList .sug[data-id="${CSS.escape(focusSug[0])}"]`);
+      const twin = { consider: 'unconsider', unconsider: 'consider' }[focusSug[1]]; // düğme durum değiştirince yerine geçen
+      const usable = (n) => n && !n.disabled;
+      if (item) {
+        again = [focusSug[1], twin].map((a) => a && $(`[data-sug="${a}"]`, item)).find(usable) ||
+          $$('button, a[href]', item).find(usable) || null;
+      }
+    } else if (focusCat) again = $(`#sugCats [data-sugcat="${CSS.escape(focusCat)}"]`);
+    if (again) again.focus({ preventScroll: true });
   }
 
   // "Senin önerilerin" kutusu: bu tarayıcıdan gönderilen öneriler ve durumları (silinenler görünmez).
@@ -3785,13 +3820,14 @@
   // Destek ver / geri çek. Yanıt beklenirken ya da hemen ardından (çift dokunma) gelen basış yok sayılır.
   // Başka sekmede değişmiş olabileceği için önce saklanan liste okunur; ekranda görünen durum ondan farklıysa
   // bir şey gönderilmez, yalnızca liste yenilenir.
-  const votePending = new Set();
-  const voteToggledAt = new Map();
-  let voteHintShown = false;
   async function voteSuggestion(id, shownVoted) {
     const x = (suggestions || []).find((y) => y.id === id);
-    if (!x || !cloudApi) return;
-    if (votePending.has(id) || Date.now() - (voteToggledAt.get(id) || 0) < 800) return;
+    if (!x || !cloudApi || x.status === 'added') return;
+    if (votePending.has(id)) {
+      toast('Önceki işlemin henüz kaydedilmedi; bağlantı gelince otomatik kaydedilir. Sonra yeniden deneyebilirsin.');
+      return;
+    }
+    if (Date.now() - (voteToggledAt.get(id) || 0) < 800) return;
     const stored = storageGet(VOTES_KEY);
     if (Array.isArray(stored)) {
       myVotes.clear();
@@ -3819,6 +3855,7 @@
       toast('Oy verilemedi. Tekrar dene.', { error: true });
     } finally {
       votePending.delete(id);
+      renderSuggestions();
     }
   }
 
@@ -3841,6 +3878,7 @@
       toast('Destek geri çekilemedi. Tekrar dene.', { error: true });
     } finally {
       votePending.delete(x.id);
+      renderSuggestions();
     }
   }
 
@@ -3886,7 +3924,7 @@
     const id = btn.closest('.sug').dataset.id;
     const action = btn.dataset.sug;
     if (action === 'vote') {
-      if (e.detail > 1) return; // çift tıklamanın ikinci basışı desteği geri almasın
+      if (e.detail > 1 || btn.getAttribute('aria-disabled') === 'true') return; // çift tıklamanın ikinci basışı desteği geri almasın
       voteSuggestion(id, btn.getAttribute('aria-pressed') === 'true');
     }
     else if (action === 'add') addSuggestionToList(id);
@@ -4031,6 +4069,14 @@
     }
     rulesV2 = v >= 2;
     rulesChecked = v > 0;
+    if (!v) {
+      // bilinemedi (bağlantı yok ya da kuruluyor): sunucudan gelen ilk yeni listede hemen, gelmezse giderek seyrelen
+      // aralıklarla yeniden sorulur
+      rulesTriedAt = 0;
+      clearTimeout(rulesRetryTimer);
+      rulesRetryTimer = setTimeout(retryRulesCheck, rulesRetryDelay);
+      rulesRetryDelay = Math.min(rulesRetryDelay * 2, 300000);
+    }
     if (suggestions) renderSuggestions();
     if (el.setupDialog.open) renderSetup();
     notifyOldRules();
@@ -4040,8 +4086,10 @@
     if (cloudApi && !rulesChecked && !rulesChecking && Date.now() - rulesTriedAt > 30000) checkRulesVersion();
   }
   window.addEventListener('online', () => {
+    // Firestore bağlantıyı biraz sonra kurar; hemen sorulursa yine "çevrimdışı" cevabı gelir
     rulesTriedAt = 0;
-    retryRulesCheck();
+    clearTimeout(rulesRetryTimer);
+    rulesRetryTimer = setTimeout(retryRulesCheck, 3000);
   });
   function notifyOldRules() {
     if (!owner || !rulesChecked || rulesV2 || rulesNoticeShown || !cloudLive()) return;
