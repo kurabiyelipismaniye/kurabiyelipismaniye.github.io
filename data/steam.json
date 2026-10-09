@@ -1,6 +1,11 @@
 {
-  "updatedAt": "2026-10-08T16:34:10.007Z",
+  "updatedAt": "2026-10-09T06:37:01.778Z",
   "games": {
+    "bills-must-be-paid": {
+      "title": "Bills Must Be Paid",
+      "appid": 4421010,
+      "name": "Bills Must Be Paid"
+    },
     "mouthwashing": {
       "title": "Mouthwashing",
       "appid": 2475490,
@@ -20,6 +25,11 @@
       "title": "Project Zomboid",
       "appid": 108600,
       "name": "Project Zomboid"
+    },
+    "the-stanley-parable-2": {
+      "title": "The Stanley Parable",
+      "appid": 221910,
+      "name": "The Stanley Parable"
     }
   }
 }

@@ -1,7 +1,7 @@
 // Oyun Arşivi verisi. Firebase'deki listeden otomatik oluşturulur (scripts/sync.mjs); elle düzenlemene gerek yok.
 // Site Firebase'e ulaşamadığında bu liste gösterilir. Yüklenen kapak görselleri dosya küçük kalsın diye buraya alınmaz.
 window.SITE_DATA = {
-  "version": 1791477249860,
+  "version": 1791527819687,
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -10,6 +10,20 @@ window.SITE_DATA = {
     "githubEditUrl": "https://github.com/kurabiyelipismaniye/kurabiyelipismaniye.github.io/edit/main/data/games.js"
   },
   "games": [
+    {
+      "id": "bills-must-be-paid",
+      "title": "Bills Must Be Paid",
+      "category": "Strateji",
+      "platform": "PC",
+      "description": "",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 5,
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-09T06:35:30.789Z",
+      "episodes": []
+    },
     {
       "id": "mouthwashing",
       "title": "Mouthwashing",
@@ -82,14 +96,26 @@ window.SITE_DATA = {
       "played": false,
       "playedAt": null,
       "addedAt": "2026-10-08T16:09:18.990Z",
-      "episodes": [
-        {
-          "id": "muzqed80m8fwk",
-          "title": "",
-          "url": "",
-          "date": "2026-10-09"
-        }
-      ]
+      "episodes": []
+    },
+    {
+      "id": "the-stanley-parable-2",
+      "title": "The Stanley Parable",
+      "category": "Ne bilim. Bulmaca?",
+      "platform": "",
+      "description": "",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 0,
+      "suggestion": {
+        "id": "sG1MyhWW6zdfhfsscXL8",
+        "name": "Bir dost",
+        "votes": 1
+      },
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-09T06:36:43.620Z",
+      "episodes": []
     }
   ]
 };
