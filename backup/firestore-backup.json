@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:36:59.684Z",
+  "exportedAt": "2026-10-09T09:32:01.453Z",
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -20,7 +20,14 @@
       "played": false,
       "playedAt": null,
       "addedAt": "2026-10-09T06:35:30.789Z",
-      "episodes": [],
+      "episodes": [
+        {
+          "id": "mv0pob8mwkto9",
+          "title": "🐷 BİR DOMUZDAN 4000$ ÇIKTI… PEKİ NASIL BORCA BATTIM?! 💸 | Bills Must Be Paid",
+          "url": "https://youtu.be/KFc4ZydDplw",
+          "date": "2026-10-09"
+        }
+      ],
       "images": []
     },
     {

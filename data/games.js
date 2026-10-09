@@ -1,7 +1,7 @@
 // Oyun Arşivi verisi. Firebase'deki listeden otomatik oluşturulur (scripts/sync.mjs); elle düzenlemene gerek yok.
 // Site Firebase'e ulaşamadığında bu liste gösterilir. Yüklenen kapak görselleri dosya küçük kalsın diye buraya alınmaz.
 window.SITE_DATA = {
-  "version": 1791527819687,
+  "version": 1791538321456,
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -22,7 +22,14 @@ window.SITE_DATA = {
       "played": false,
       "playedAt": null,
       "addedAt": "2026-10-09T06:35:30.789Z",
-      "episodes": []
+      "episodes": [
+        {
+          "id": "mv0pob8mwkto9",
+          "title": "🐷 BİR DOMUZDAN 4000$ ÇIKTI… PEKİ NASIL BORCA BATTIM?! 💸 | Bills Must Be Paid",
+          "url": "https://youtu.be/KFc4ZydDplw",
+          "date": "2026-10-09"
+        }
+      ]
     },
     {
       "id": "mouthwashing",
