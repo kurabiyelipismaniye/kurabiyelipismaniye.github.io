@@ -1,10 +1,15 @@
 {
-  "updatedAt": "2026-10-09T06:37:01.778Z",
+  "updatedAt": "2026-10-11T07:30:03.646Z",
   "games": {
     "bills-must-be-paid": {
       "title": "Bills Must Be Paid",
       "appid": 4421010,
       "name": "Bills Must Be Paid"
+    },
+    "minecraft": {
+      "title": "Minecraft",
+      "appid": null,
+      "checkedAt": "2026-10-11"
     },
     "mouthwashing": {
       "title": "Mouthwashing",

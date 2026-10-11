@@ -1,7 +1,7 @@
 // Oyun Arşivi verisi. Firebase'deki listeden otomatik oluşturulur (scripts/sync.mjs); elle düzenlemene gerek yok.
 // Site Firebase'e ulaşamadığında bu liste gösterilir. Yüklenen kapak görselleri dosya küçük kalsın diye buraya alınmaz.
 window.SITE_DATA = {
-  "version": 1791538321456,
+  "version": 1791703803447,
   "site": {
     "channelName": "Kurabiyeli Pişmaniye",
     "title": "Oyun Arşivi",
@@ -28,6 +28,27 @@ window.SITE_DATA = {
           "title": "🐷 BİR DOMUZDAN 4000$ ÇIKTI… PEKİ NASIL BORCA BATTIM?! 💸 | Bills Must Be Paid",
           "url": "https://youtu.be/KFc4ZydDplw",
           "date": "2026-10-09"
+        }
+      ]
+    },
+    {
+      "id": "minecraft",
+      "title": "Minecraft",
+      "category": "Açık Dünya",
+      "platform": "PC",
+      "description": "Minecraft'ta survival dünyasına yıllar önce adım atmıştım genelde creative oynuyordum. Şimdi sıfırdan zirveye doğru minecraft serisi başlatıyorum.",
+      "cover": "",
+      "steamUrl": "",
+      "rating": 0,
+      "played": false,
+      "playedAt": null,
+      "addedAt": "2026-10-11T07:08:36.554Z",
+      "episodes": [
+        {
+          "id": "mv3hdu65348pu",
+          "title": "DAHA EVİMİ BİLE YAPAMADIM! | Minecraft Survival #1",
+          "url": "https://www.youtube.com/watch?v=IZC1vqNsy34",
+          "date": "2026-10-10"
         }
       ]
     },
