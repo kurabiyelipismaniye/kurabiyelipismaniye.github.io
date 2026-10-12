@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-11T07:30:03.645Z",
+  "fetchedAt": "2026-10-12T07:36:02.210Z",
   "videos": [
+    {
+      "id": "ThV5OKvhu04",
+      "title": "Minecraft uzmanı 🪓 #minecraft",
+      "url": "https://www.youtube.com/watch?v=ThV5OKvhu04",
+      "published": "2026-10-12T05:00:24.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/ThV5OKvhu04/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "DKfzcOyPfG8",
       "title": "Ben korkmuyorum 🙂 #minecraft",
