@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-13T12:40:50.431Z",
+  "fetchedAt": "2026-10-14T15:48:03.858Z",
   "videos": [
+    {
+      "id": "LzCqY65nZCc",
+      "title": "Madende biri var... 😱 #shorts",
+      "url": "https://www.youtube.com/watch?v=LzCqY65nZCc",
+      "published": "2026-10-14T15:29:56.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/LzCqY65nZCc/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "QLzLtYoPTo0",
       "title": "\"Kedi yavrusu kadar zararsız\" dediler... 🐊💀 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-10-02T11:53:49.000Z",
       "thumbnail": "https://i.ytimg.com/vi/lFZ8Nyehka8/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "lDR791Kzrp4",
-      "title": "Krallığı Kurtarmak İçin Kızımı Feda Ettim! | Yes, Your Grace #1",
-      "url": "https://www.youtube.com/watch?v=lDR791Kzrp4",
-      "published": "2026-09-30T19:07:16.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/lDR791Kzrp4/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
