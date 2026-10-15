@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-15T07:48:19.697Z",
+  "fetchedAt": "2026-10-15T20:42:12.157Z",
   "videos": [
+    {
+      "id": "lm5vrgrf_I0",
+      "title": "EVİM NEREDE?! | Minecraft Survival #2",
+      "url": "https://www.youtube.com/watch?v=lm5vrgrf_I0",
+      "published": "2026-10-15T19:58:03.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/lm5vrgrf_I0/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "BCD-LcnyrsA",
       "title": "Loot'umu alırım öyle giderim... 💀 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-10-02T17:36:09.000Z",
       "thumbnail": "https://i.ytimg.com/vi/-WP6UNyuPyA/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "9id4JDGosco",
-      "title": "Kral Zehirlendi, Ordum Yok Oldu! | Yes, Your Grace #2",
-      "url": "https://www.youtube.com/watch?v=9id4JDGosco",
-      "published": "2026-10-02T15:15:39.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/9id4JDGosco/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
