@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-14T15:48:03.858Z",
+  "fetchedAt": "2026-10-15T07:48:19.697Z",
   "videos": [
+    {
+      "id": "BCD-LcnyrsA",
+      "title": "Loot'umu alırım öyle giderim... 💀 #shorts",
+      "url": "https://www.youtube.com/watch?v=BCD-LcnyrsA",
+      "published": "2026-10-15T06:17:07.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/BCD-LcnyrsA/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "LzCqY65nZCc",
       "title": "Madende biri var... 😱 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-10-02T15:15:39.000Z",
       "thumbnail": "https://i.ytimg.com/vi/9id4JDGosco/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "lFZ8Nyehka8",
-      "title": "Kral askerlerine cesaret ve umut aşılıyor!",
-      "url": "https://www.youtube.com/watch?v=lFZ8Nyehka8",
-      "published": "2026-10-02T11:53:49.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/lFZ8Nyehka8/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
