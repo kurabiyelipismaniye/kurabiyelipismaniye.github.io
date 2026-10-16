@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-15T20:42:12.157Z",
+  "fetchedAt": "2026-10-16T07:46:18.767Z",
   "videos": [
+    {
+      "id": "osOy1mlxZ4U",
+      "title": "Çok kolay... 🙂 #shorts",
+      "url": "https://www.youtube.com/watch?v=osOy1mlxZ4U",
+      "published": "2026-10-16T05:17:39.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/osOy1mlxZ4U/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "lm5vrgrf_I0",
       "title": "EVİM NEREDE?! | Minecraft Survival #2",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=6lsBbMaYWVk",
       "published": "2026-10-04T07:27:28.000Z",
       "thumbnail": "https://i.ytimg.com/vi/6lsBbMaYWVk/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "-WP6UNyuPyA",
-      "title": "Bir Kadeh Her Şeyi Değiştirdi… | Yes, Your Grace #Shorts",
-      "url": "https://www.youtube.com/watch?v=-WP6UNyuPyA",
-      "published": "2026-10-02T17:36:09.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/-WP6UNyuPyA/hqdefault.jpg",
       "isShort": true
     }
   ]
