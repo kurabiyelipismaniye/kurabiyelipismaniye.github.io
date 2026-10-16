@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-16T07:46:18.767Z",
+  "fetchedAt": "2026-10-16T08:44:59.770Z",
   "videos": [
+    {
+      "id": "-amgs_hil1Q",
+      "title": "3 Creeper birden... 💥 #minecraft",
+      "url": "https://www.youtube.com/watch?v=-amgs_hil1Q",
+      "published": "2026-10-16T08:16:19.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/-amgs_hil1Q/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "-nbT4KRavE8",
+      "title": "\"Ben yine öleceğim gibi\" dedim... 💀 #minecraft",
+      "url": "https://www.youtube.com/watch?v=-nbT4KRavE8",
+      "published": "2026-10-16T08:15:42.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/-nbT4KRavE8/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "osOy1mlxZ4U",
       "title": "Çok kolay... 🙂 #shorts",
@@ -106,22 +122,6 @@
       "url": "https://www.youtube.com/watch?v=DZq1jjc4uUE",
       "published": "2026-10-09T09:14:31.000Z",
       "thumbnail": "https://i.ytimg.com/vi/DZq1jjc4uUE/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "oYz5CR3vPp0",
-      "title": "14 YAŞINDA EVDE TEK BAŞINA KALDIM 😱 | Fears To Fathom #1",
-      "url": "https://www.youtube.com/watch?v=oYz5CR3vPp0",
-      "published": "2026-10-04T16:00:34.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/oYz5CR3vPp0/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "6lsBbMaYWVk",
-      "title": "Oyun korkunç değil dedim... 💀 #fearstofathom #korkusuzkorkak",
-      "url": "https://www.youtube.com/watch?v=6lsBbMaYWVk",
-      "published": "2026-10-04T07:27:28.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/6lsBbMaYWVk/hqdefault.jpg",
       "isShort": true
     }
   ]
