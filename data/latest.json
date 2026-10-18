@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-16T08:44:59.770Z",
+  "fetchedAt": "2026-10-18T15:37:59.250Z",
   "videos": [
+    {
+      "id": "C7xMW4H11cs",
+      "title": "TEK BİR EV İÇİN 879 TUĞLA TAŞIDIM! | Brick by Brick #1",
+      "url": "https://www.youtube.com/watch?v=C7xMW4H11cs",
+      "published": "2026-10-18T15:25:31.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/C7xMW4H11cs/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "-amgs_hil1Q",
       "title": "3 Creeper birden... 💥 #minecraft",
@@ -115,14 +123,6 @@
       "published": "2026-10-09T09:16:20.000Z",
       "thumbnail": "https://i.ytimg.com/vi/KFc4ZydDplw/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "DZq1jjc4uUE",
-      "title": "Faturaları Ödeyecektim, Bütün Parayı Kaybettim! 💀🐷 #shorts",
-      "url": "https://www.youtube.com/watch?v=DZq1jjc4uUE",
-      "published": "2026-10-09T09:14:31.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/DZq1jjc4uUE/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
