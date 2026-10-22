@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-18T15:37:59.250Z",
+  "fetchedAt": "2026-10-22T09:45:44.192Z",
   "videos": [
+    {
+      "id": "1LMrG-MVqxk",
+      "title": "Anlatıcıyla Kavga Ettim! | The Stanley Parable",
+      "url": "https://www.youtube.com/watch?v=1LMrG-MVqxk",
+      "published": "2026-10-22T09:00:31.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/1LMrG-MVqxk/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "C7xMW4H11cs",
       "title": "TEK BİR EV İÇİN 879 TUĞLA TAŞIDIM! | Brick by Brick #1",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=IZC1vqNsy34",
       "published": "2026-10-10T09:05:12.000Z",
       "thumbnail": "https://i.ytimg.com/vi/IZC1vqNsy34/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "KFc4ZydDplw",
-      "title": "🐷 BİR DOMUZDAN 4000$ ÇIKTI… PEKİ NASIL BORCA BATTIM?! 💸 | Bills Must Be Paid",
-      "url": "https://www.youtube.com/watch?v=KFc4ZydDplw",
-      "published": "2026-10-09T09:16:20.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/KFc4ZydDplw/hqdefault.jpg",
       "isShort": false
     }
   ]
