@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-24T15:40:35.364Z",
+  "fetchedAt": "2026-10-24T20:37:53.892Z",
   "videos": [
+    {
+      "id": "7XTkJxBbtVM",
+      "title": "İLK DEFA HİÇ ÖLMEDİM! | Minecraft Survival #4",
+      "url": "https://www.youtube.com/watch?v=7XTkJxBbtVM",
+      "published": "2026-10-24T20:37:32.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/7XTkJxBbtVM/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "OqX2t0_OXcg",
       "title": "Lamalara güven olmaz 🦙 #minecraft",
@@ -115,14 +123,6 @@
       "published": "2026-10-13T05:00:37.000Z",
       "thumbnail": "https://i.ytimg.com/vi/iuZFV2nu430/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "ThV5OKvhu04",
-      "title": "Minecraft uzmanı 🪓 #minecraft",
-      "url": "https://www.youtube.com/watch?v=ThV5OKvhu04",
-      "published": "2026-10-12T05:00:24.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/ThV5OKvhu04/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
