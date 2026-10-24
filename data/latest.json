@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-24T11:40:01.883Z",
+  "fetchedAt": "2026-10-24T15:40:35.364Z",
   "videos": [
+    {
+      "id": "OqX2t0_OXcg",
+      "title": "Lamalara güven olmaz 🦙 #minecraft",
+      "url": "https://www.youtube.com/watch?v=OqX2t0_OXcg",
+      "published": "2026-10-24T15:00:23.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/OqX2t0_OXcg/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "KGP5nTdE55s",
       "title": "Bu ticaret nasıl oluyor arkadaşlar yardımcı olur musunuz #minecraft",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=ThV5OKvhu04",
       "published": "2026-10-12T05:00:24.000Z",
       "thumbnail": "https://i.ytimg.com/vi/ThV5OKvhu04/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "DKfzcOyPfG8",
-      "title": "Ben korkmuyorum 🙂 #minecraft",
-      "url": "https://www.youtube.com/watch?v=DKfzcOyPfG8",
-      "published": "2026-10-11T05:00:36.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/DKfzcOyPfG8/hqdefault.jpg",
       "isShort": true
     }
   ]
