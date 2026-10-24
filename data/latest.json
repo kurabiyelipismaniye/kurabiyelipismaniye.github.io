@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-23T14:49:11.712Z",
+  "fetchedAt": "2026-10-24T11:40:01.883Z",
   "videos": [
+    {
+      "id": "KGP5nTdE55s",
+      "title": "Bu ticaret nasıl oluyor arkadaşlar yardımcı olur musunuz #minecraft",
+      "url": "https://www.youtube.com/watch?v=KGP5nTdE55s",
+      "published": "2026-10-24T11:20:27.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/KGP5nTdE55s/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "WwcGBN5bW1w",
       "title": "LAMALARA GÜVEN OLMAZ! | Minecraft Survival #3",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=DKfzcOyPfG8",
       "published": "2026-10-11T05:00:36.000Z",
       "thumbnail": "https://i.ytimg.com/vi/DKfzcOyPfG8/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "gQi49MqT-Yc",
-      "title": "\"Ev olmazsa ölürüz\" dedim... 💀 #minecraft",
-      "url": "https://www.youtube.com/watch?v=gQi49MqT-Yc",
-      "published": "2026-10-10T20:49:44.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/gQi49MqT-Yc/hqdefault.jpg",
       "isShort": true
     }
   ]
