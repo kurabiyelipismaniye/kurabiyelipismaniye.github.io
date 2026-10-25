@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-25T12:47:41.076Z",
+  "fetchedAt": "2026-10-25T16:41:30.455Z",
   "videos": [
+    {
+      "id": "URpVxLzWlss",
+      "title": "\"Gayet Güzel Olacak\" Dedim, Restoran Kapandı #plateup",
+      "url": "https://www.youtube.com/watch?v=URpVxLzWlss",
+      "published": "2026-10-25T16:00:38.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/URpVxLzWlss/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "xkvXzuTwE8w",
       "title": "\"Biftek Kolay\" Dedim, 7 Dakika Sonra... #plateup",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=BCD-LcnyrsA",
       "published": "2026-10-15T06:17:07.000Z",
       "thumbnail": "https://i.ytimg.com/vi/BCD-LcnyrsA/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "LzCqY65nZCc",
-      "title": "Madende biri var... 😱 #shorts",
-      "url": "https://www.youtube.com/watch?v=LzCqY65nZCc",
-      "published": "2026-10-14T15:29:56.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/LzCqY65nZCc/hqdefault.jpg",
       "isShort": true
     }
   ]
