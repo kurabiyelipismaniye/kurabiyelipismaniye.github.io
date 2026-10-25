@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-25T11:39:25.088Z",
+  "fetchedAt": "2026-10-25T12:47:41.076Z",
   "videos": [
+    {
+      "id": "xkvXzuTwE8w",
+      "title": "\"Biftek Kolay\" Dedim, 7 Dakika Sonra... #plateup",
+      "url": "https://www.youtube.com/watch?v=xkvXzuTwE8w",
+      "published": "2026-10-25T11:36:05.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/xkvXzuTwE8w/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "oT-iebeeczQ",
       "title": "“Biftek Kolay” Dedim, Restoranı Batırdık | PlateUp!",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=LzCqY65nZCc",
       "published": "2026-10-14T15:29:56.000Z",
       "thumbnail": "https://i.ytimg.com/vi/LzCqY65nZCc/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "QLzLtYoPTo0",
-      "title": "\"Kedi yavrusu kadar zararsız\" dediler... 🐊💀 #shorts",
-      "url": "https://www.youtube.com/watch?v=QLzLtYoPTo0",
-      "published": "2026-10-13T11:48:19.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/QLzLtYoPTo0/hqdefault.jpg",
       "isShort": true
     }
   ]
