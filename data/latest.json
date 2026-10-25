@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-24T20:37:53.892Z",
+  "fetchedAt": "2026-10-25T07:44:29.105Z",
   "videos": [
+    {
+      "id": "-DIJzlNicJc",
+      "title": "Minecraft uzmanı 2 🪓 #minecraft",
+      "url": "https://www.youtube.com/watch?v=-DIJzlNicJc",
+      "published": "2026-10-25T05:00:29.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/-DIJzlNicJc/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "7XTkJxBbtVM",
       "title": "İLK DEFA HİÇ ÖLMEDİM! | Minecraft Survival #4",
@@ -115,14 +123,6 @@
       "published": "2026-10-13T05:30:04.000Z",
       "thumbnail": "https://i.ytimg.com/vi/4dcwdQyxqJg/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "iuZFV2nu430",
-      "title": "BU ADADA HER ŞEY BENİ ÖLDÜRMEYE ÇALIŞIYOR! | Choo-Choo Charles #1",
-      "url": "https://www.youtube.com/watch?v=iuZFV2nu430",
-      "published": "2026-10-13T05:00:37.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/iuZFV2nu430/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
