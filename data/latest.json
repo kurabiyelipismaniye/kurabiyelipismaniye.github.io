@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-25T07:44:29.105Z",
+  "fetchedAt": "2026-10-25T11:39:25.088Z",
   "videos": [
+    {
+      "id": "oT-iebeeczQ",
+      "title": "“Biftek Kolay” Dedim, Restoranı Batırdık | PlateUp!",
+      "url": "https://www.youtube.com/watch?v=oT-iebeeczQ",
+      "published": "2026-10-25T11:05:07.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/oT-iebeeczQ/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "-DIJzlNicJc",
       "title": "Minecraft uzmanı 2 🪓 #minecraft",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=QLzLtYoPTo0",
       "published": "2026-10-13T11:48:19.000Z",
       "thumbnail": "https://i.ytimg.com/vi/QLzLtYoPTo0/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "4dcwdQyxqJg",
-      "title": "Maymun turşusu?! 🐒🥒 #shorts",
-      "url": "https://www.youtube.com/watch?v=4dcwdQyxqJg",
-      "published": "2026-10-13T05:30:04.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/4dcwdQyxqJg/hqdefault.jpg",
       "isShort": true
     }
   ]
