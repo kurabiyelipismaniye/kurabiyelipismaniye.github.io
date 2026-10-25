@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-18T00:53:09.510Z",
+  "updatedAt": "2026-10-25T00:50:07.279Z",
   "games": {
     "bills-must-be-paid": {
       "title": "Bills Must Be Paid",
@@ -9,7 +9,7 @@
     "minecraft": {
       "title": "Minecraft",
       "appid": null,
-      "checkedAt": "2026-10-18"
+      "checkedAt": "2026-10-25"
     },
     "mouthwashing": {
       "title": "Mouthwashing",
