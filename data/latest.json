@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-26T07:58:42.263Z",
+  "fetchedAt": "2026-10-26T15:13:03.405Z",
   "videos": [
+    {
+      "id": "Ox3dU6_BvJE",
+      "title": "\"Bu Havada Müşteri Gelmez\" Dedim...",
+      "url": "https://www.youtube.com/watch?v=Ox3dU6_BvJE",
+      "published": "2026-10-26T15:00:11.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/Ox3dU6_BvJE/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "aW4wsQRcZvo",
       "title": "Salata Yapmak Bu Kadar Basit (Değilmiş) #plateup",
@@ -115,14 +123,6 @@
       "published": "2026-10-16T05:17:39.000Z",
       "thumbnail": "https://i.ytimg.com/vi/osOy1mlxZ4U/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "lm5vrgrf_I0",
-      "title": "EVİM NEREDE?! | Minecraft Survival #2",
-      "url": "https://www.youtube.com/watch?v=lm5vrgrf_I0",
-      "published": "2026-10-15T19:58:03.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/lm5vrgrf_I0/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
