@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-25T16:41:30.455Z",
+  "fetchedAt": "2026-10-26T07:58:42.263Z",
   "videos": [
+    {
+      "id": "aW4wsQRcZvo",
+      "title": "Salata Yapmak Bu Kadar Basit (Değilmiş) #plateup",
+      "url": "https://www.youtube.com/watch?v=aW4wsQRcZvo",
+      "published": "2026-10-26T05:00:08.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/aW4wsQRcZvo/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "URpVxLzWlss",
       "title": "\"Gayet Güzel Olacak\" Dedim, Restoran Kapandı #plateup",
@@ -115,14 +123,6 @@
       "published": "2026-10-15T19:58:03.000Z",
       "thumbnail": "https://i.ytimg.com/vi/lm5vrgrf_I0/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "BCD-LcnyrsA",
-      "title": "Loot'umu alırım öyle giderim... 💀 #shorts",
-      "url": "https://www.youtube.com/watch?v=BCD-LcnyrsA",
-      "published": "2026-10-15T06:17:07.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/BCD-LcnyrsA/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
