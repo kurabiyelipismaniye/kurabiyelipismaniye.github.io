@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-27T02:42:04.904Z",
+  "fetchedAt": "2026-10-27T07:54:01.187Z",
   "videos": [
+    {
+      "id": "3_8WbaZlE6w",
+      "title": "İkimiz de Tecrübeliydik... Sözde #plateup",
+      "url": "https://www.youtube.com/watch?v=3_8WbaZlE6w",
+      "published": "2026-10-27T05:00:10.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/3_8WbaZlE6w/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "qqVzxniCwXY",
       "title": "Benim Ölmeden Oynayabildiğim Bir Oyun Yok | Minecraft Co-op #1",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=-amgs_hil1Q",
       "published": "2026-10-16T08:16:19.000Z",
       "thumbnail": "https://i.ytimg.com/vi/-amgs_hil1Q/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "-nbT4KRavE8",
-      "title": "\"Ben yine öleceğim gibi\" dedim... 💀 #minecraft",
-      "url": "https://www.youtube.com/watch?v=-nbT4KRavE8",
-      "published": "2026-10-16T08:15:42.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/-nbT4KRavE8/hqdefault.jpg",
       "isShort": true
     }
   ]
