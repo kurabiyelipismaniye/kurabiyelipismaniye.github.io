@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-27T07:54:01.187Z",
+  "fetchedAt": "2026-10-27T15:53:51.215Z",
   "videos": [
+    {
+      "id": "ySyt2iw5OaU",
+      "title": "Şefimiz Kaçmaya Çalıştı #plateup",
+      "url": "https://www.youtube.com/watch?v=ySyt2iw5OaU",
+      "published": "2026-10-27T15:00:30.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/ySyt2iw5OaU/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "3_8WbaZlE6w",
       "title": "İkimiz de Tecrübeliydik... Sözde #plateup",
@@ -115,14 +123,6 @@
       "published": "2026-10-18T15:25:31.000Z",
       "thumbnail": "https://i.ytimg.com/vi/C7xMW4H11cs/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "-amgs_hil1Q",
-      "title": "3 Creeper birden... 💥 #minecraft",
-      "url": "https://www.youtube.com/watch?v=-amgs_hil1Q",
-      "published": "2026-10-16T08:16:19.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/-amgs_hil1Q/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
