@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-28T07:03:52.921Z",
+  "fetchedAt": "2026-10-28T14:06:20.674Z",
   "videos": [
+    {
+      "id": "9NaWJiBUbB8",
+      "title": "Müşteriler Garsonumu Dövdü (Okşadı) | PlateUp! #2",
+      "url": "https://www.youtube.com/watch?v=9NaWJiBUbB8",
+      "published": "2026-10-28T13:31:56.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/9NaWJiBUbB8/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "4kPP6h94E6E",
       "title": "Şef Kıyafeti Seçerken İşler Karıştı #plateup",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=WwcGBN5bW1w",
       "published": "2026-10-23T14:35:14.000Z",
       "thumbnail": "https://i.ytimg.com/vi/WwcGBN5bW1w/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "1LMrG-MVqxk",
-      "title": "Anlatıcıyla Kavga Ettim! | The Stanley Parable",
-      "url": "https://www.youtube.com/watch?v=1LMrG-MVqxk",
-      "published": "2026-10-22T09:00:31.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/1LMrG-MVqxk/hqdefault.jpg",
       "isShort": false
     }
   ]
