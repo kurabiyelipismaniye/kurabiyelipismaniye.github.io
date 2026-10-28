@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-27T15:53:51.215Z",
+  "fetchedAt": "2026-10-28T07:03:52.921Z",
   "videos": [
+    {
+      "id": "4kPP6h94E6E",
+      "title": "Şef Kıyafeti Seçerken İşler Karıştı #plateup",
+      "url": "https://www.youtube.com/watch?v=4kPP6h94E6E",
+      "published": "2026-10-28T05:00:14.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/4kPP6h94E6E/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "ySyt2iw5OaU",
       "title": "Şefimiz Kaçmaya Çalıştı #plateup",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=1LMrG-MVqxk",
       "published": "2026-10-22T09:00:31.000Z",
       "thumbnail": "https://i.ytimg.com/vi/1LMrG-MVqxk/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "C7xMW4H11cs",
-      "title": "TEK BİR EV İÇİN 879 TUĞLA TAŞIDIM! | Brick by Brick #1",
-      "url": "https://www.youtube.com/watch?v=C7xMW4H11cs",
-      "published": "2026-10-18T15:25:31.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/C7xMW4H11cs/hqdefault.jpg",
       "isShort": false
     }
   ]
