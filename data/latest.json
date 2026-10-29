@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-29T13:05:30.363Z",
+  "fetchedAt": "2026-10-29T16:01:44.281Z",
   "videos": [
+    {
+      "id": "A72tQIKnVJg",
+      "title": "Bu Sefer Restoranı Ben Batırdım | PlateUp! #3",
+      "url": "https://www.youtube.com/watch?v=A72tQIKnVJg",
+      "published": "2026-10-29T15:22:14.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/A72tQIKnVJg/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "bmFRmutOEE4",
       "title": "Bir civciv buldum, adını Alican koydum #minecraft #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-10-24T20:37:32.000Z",
       "thumbnail": "https://i.ytimg.com/vi/7XTkJxBbtVM/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "OqX2t0_OXcg",
-      "title": "Lamalara güven olmaz 🦙 #minecraft",
-      "url": "https://www.youtube.com/watch?v=OqX2t0_OXcg",
-      "published": "2026-10-24T15:00:23.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/OqX2t0_OXcg/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
