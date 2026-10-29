@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-28T14:06:20.674Z",
+  "fetchedAt": "2026-10-29T09:00:06.168Z",
   "videos": [
+    {
+      "id": "M-VPWD4pdG4",
+      "title": "Restoranı tek hamlede batırdım #plateup #shorts",
+      "url": "https://www.youtube.com/watch?v=M-VPWD4pdG4",
+      "published": "2026-10-29T08:23:58.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/M-VPWD4pdG4/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "9NaWJiBUbB8",
       "title": "Müşteriler Garsonumu Dövdü (Okşadı) | PlateUp! #2",
@@ -115,14 +123,6 @@
       "published": "2026-10-24T11:20:27.000Z",
       "thumbnail": "https://i.ytimg.com/vi/KGP5nTdE55s/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "WwcGBN5bW1w",
-      "title": "LAMALARA GÜVEN OLMAZ! | Minecraft Survival #3",
-      "url": "https://www.youtube.com/watch?v=WwcGBN5bW1w",
-      "published": "2026-10-23T14:35:14.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/WwcGBN5bW1w/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
