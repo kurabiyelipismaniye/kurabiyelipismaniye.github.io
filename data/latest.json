@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-29T16:01:44.281Z",
+  "fetchedAt": "2026-10-29T17:56:02.201Z",
   "videos": [
+    {
+      "id": "ZeXUgCVrSgc",
+      "title": "İLK KEZ Resident Evil 2 Oynuyorum! 😱 | #1",
+      "url": "https://www.youtube.com/watch?v=ZeXUgCVrSgc",
+      "published": "2026-10-29T17:38:08.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/ZeXUgCVrSgc/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "A72tQIKnVJg",
       "title": "Bu Sefer Restoranı Ben Batırdım | PlateUp! #3",
@@ -115,14 +123,6 @@
       "published": "2026-10-25T05:00:29.000Z",
       "thumbnail": "https://i.ytimg.com/vi/-DIJzlNicJc/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "7XTkJxBbtVM",
-      "title": "İLK DEFA HİÇ ÖLMEDİM! | Minecraft Survival #4",
-      "url": "https://www.youtube.com/watch?v=7XTkJxBbtVM",
-      "published": "2026-10-24T20:37:32.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/7XTkJxBbtVM/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
