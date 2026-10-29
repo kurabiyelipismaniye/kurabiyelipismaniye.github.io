@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-29T09:00:06.168Z",
+  "fetchedAt": "2026-10-29T13:05:30.363Z",
   "videos": [
+    {
+      "id": "bmFRmutOEE4",
+      "title": "Bir civciv buldum, adını Alican koydum #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=bmFRmutOEE4",
+      "published": "2026-10-29T12:48:54.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/bmFRmutOEE4/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "M-VPWD4pdG4",
       "title": "Restoranı tek hamlede batırdım #plateup #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=OqX2t0_OXcg",
       "published": "2026-10-24T15:00:23.000Z",
       "thumbnail": "https://i.ytimg.com/vi/OqX2t0_OXcg/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "KGP5nTdE55s",
-      "title": "Bu ticaret nasıl oluyor arkadaşlar yardımcı olur musunuz #minecraft",
-      "url": "https://www.youtube.com/watch?v=KGP5nTdE55s",
-      "published": "2026-10-24T11:20:27.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/KGP5nTdE55s/hqdefault.jpg",
       "isShort": true
     }
   ]
