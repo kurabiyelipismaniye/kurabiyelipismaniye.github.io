@@ -2,22 +2,22 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-30T19:53:42.820Z",
+  "fetchedAt": "2026-10-30T21:46:26.664Z",
   "videos": [
+    {
+      "id": "xWGIsIRXocA",
+      "title": "Leon Bitti, Sıra Claire’de | Resident Evil 2 #2",
+      "url": "https://www.youtube.com/watch?v=xWGIsIRXocA",
+      "published": "2026-10-30T21:33:10.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/xWGIsIRXocA/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "L1270TLEW5A",
       "title": "Herkesi Kurtarabilecek miyim? | The Quarry #1",
       "url": "https://www.youtube.com/watch?v=L1270TLEW5A",
       "published": "2026-10-30T19:27:15.000Z",
       "thumbnail": "https://i.ytimg.com/vi/L1270TLEW5A/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "xWGIsIRXocA",
-      "title": "Leon Bitti, Sıra Claire’de | Resident Evil 2 #2",
-      "url": "https://www.youtube.com/watch?v=xWGIsIRXocA",
-      "published": "2026-10-30T07:36:15.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/xWGIsIRXocA/hqdefault.jpg",
       "isShort": false
     },
     {
