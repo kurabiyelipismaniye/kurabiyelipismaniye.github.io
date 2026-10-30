@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-30T07:05:21.691Z",
+  "fetchedAt": "2026-10-30T08:08:56.583Z",
   "videos": [
+    {
+      "id": "xWGIsIRXocA",
+      "title": "İLK KEZ Resident Evil 2 Oynuyorum! 😱 | #1",
+      "url": "https://www.youtube.com/watch?v=xWGIsIRXocA",
+      "published": "2026-10-30T07:36:15.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/xWGIsIRXocA/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "ZeXUgCVrSgc",
       "title": "İLK KEZ Resident Evil 2 Oynuyorum! 😱 | #1",
@@ -115,14 +123,6 @@
       "published": "2026-10-25T11:05:07.000Z",
       "thumbnail": "https://i.ytimg.com/vi/oT-iebeeczQ/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "-DIJzlNicJc",
-      "title": "Minecraft uzmanı 2 🪓 #minecraft",
-      "url": "https://www.youtube.com/watch?v=-DIJzlNicJc",
-      "published": "2026-10-25T05:00:29.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/-DIJzlNicJc/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
