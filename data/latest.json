@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-30T18:54:09.528Z",
+  "fetchedAt": "2026-10-30T19:53:42.820Z",
   "videos": [
+    {
+      "id": "L1270TLEW5A",
+      "title": "Herkesi Kurtarabilecek miyim? | The Quarry #1",
+      "url": "https://www.youtube.com/watch?v=L1270TLEW5A",
+      "published": "2026-10-30T19:27:15.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/L1270TLEW5A/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "xWGIsIRXocA",
       "title": "Leon Bitti, Sıra Claire’de | Resident Evil 2 #2",
@@ -115,14 +123,6 @@
       "published": "2026-10-25T11:36:05.000Z",
       "thumbnail": "https://i.ytimg.com/vi/xkvXzuTwE8w/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "oT-iebeeczQ",
-      "title": "“Biftek Kolay” Dedim, Restoranı Batırdık | PlateUp!",
-      "url": "https://www.youtube.com/watch?v=oT-iebeeczQ",
-      "published": "2026-10-25T11:05:07.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/oT-iebeeczQ/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
