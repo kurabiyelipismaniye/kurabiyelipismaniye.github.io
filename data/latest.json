@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-31T07:57:34.210Z",
+  "fetchedAt": "2026-10-31T16:45:12.597Z",
   "videos": [
+    {
+      "id": "pYX6u4_MhnE",
+      "title": "Kurabiyeli Pişmaniye'ye Hoş Geldin! | Kanal Fragmanı",
+      "url": "https://www.youtube.com/watch?v=pYX6u4_MhnE",
+      "published": "2026-10-31T16:06:18.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/pYX6u4_MhnE/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "L1270TLEW5A",
       "title": "Herkesi Kurtarabilecek miyim? | The Quarry #1",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=URpVxLzWlss",
       "published": "2026-10-25T16:00:38.000Z",
       "thumbnail": "https://i.ytimg.com/vi/URpVxLzWlss/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "xkvXzuTwE8w",
-      "title": "\"Biftek Kolay\" Dedim, 7 Dakika Sonra... #plateup",
-      "url": "https://www.youtube.com/watch?v=xkvXzuTwE8w",
-      "published": "2026-10-25T11:36:05.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/xkvXzuTwE8w/hqdefault.jpg",
       "isShort": true
     }
   ]
