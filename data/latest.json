@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-10-31T16:45:12.597Z",
+  "fetchedAt": "2026-10-31T17:40:44.189Z",
   "videos": [
+    {
+      "id": "9JnkplY5kQ0",
+      "title": "Hâlâ Herkesi Kurtarabilir miyim? | The Quarry #2",
+      "url": "https://www.youtube.com/watch?v=9JnkplY5kQ0",
+      "published": "2026-10-31T16:54:26.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/9JnkplY5kQ0/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "pYX6u4_MhnE",
       "title": "Kurabiyeli Pişmaniye'ye Hoş Geldin! | Kanal Fragmanı",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=aW4wsQRcZvo",
       "published": "2026-10-26T05:00:08.000Z",
       "thumbnail": "https://i.ytimg.com/vi/aW4wsQRcZvo/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "URpVxLzWlss",
-      "title": "\"Gayet Güzel Olacak\" Dedim, Restoran Kapandı #plateup",
-      "url": "https://www.youtube.com/watch?v=URpVxLzWlss",
-      "published": "2026-10-25T16:00:38.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/URpVxLzWlss/hqdefault.jpg",
       "isShort": true
     }
   ]
