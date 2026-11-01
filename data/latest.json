@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-01T10:47:58.406Z",
+  "fetchedAt": "2026-11-01T13:52:46.424Z",
   "videos": [
+    {
+      "id": "lmQ2ZbgP4Sc",
+      "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız 👑 Enshrouded",
+      "url": "https://www.youtube.com/watch?v=lmQ2ZbgP4Sc",
+      "published": "2026-11-01T13:21:57.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/lmQ2ZbgP4Sc/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "_kjM2yoZmAY",
+      "title": "\"Yine öleceğim\" dedim… kafama ok saplanmış #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=_kjM2yoZmAY",
+      "published": "2026-11-01T13:00:17.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/_kjM2yoZmAY/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "9JnkplY5kQ0",
       "title": "Kim Hayatta Kalacak? | The Quarry + Valorant (Canlı Yayın 2)",
@@ -107,22 +123,6 @@
       "published": "2026-10-26T22:46:35.000Z",
       "thumbnail": "https://i.ytimg.com/vi/qqVzxniCwXY/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "Ox3dU6_BvJE",
-      "title": "\"Bu Havada Müşteri Gelmez\" Dedim...",
-      "url": "https://www.youtube.com/watch?v=Ox3dU6_BvJE",
-      "published": "2026-10-26T15:00:11.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/Ox3dU6_BvJE/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "aW4wsQRcZvo",
-      "title": "Salata Yapmak Bu Kadar Basit (Değilmiş) #plateup",
-      "url": "https://www.youtube.com/watch?v=aW4wsQRcZvo",
-      "published": "2026-10-26T05:00:08.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/aW4wsQRcZvo/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
