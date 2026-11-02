@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-01T16:44:58.852Z",
+  "fetchedAt": "2026-11-02T09:13:18.999Z",
   "videos": [
+    {
+      "id": "YOVOJgs6o24",
+      "title": "Arkadaşım beni ezdi #pubg #shorts",
+      "url": "https://www.youtube.com/watch?v=YOVOJgs6o24",
+      "published": "2026-11-02T09:00:36.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/YOVOJgs6o24/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "lmQ2ZbgP4Sc",
+      "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız 👑 Enshrouded",
+      "url": "https://www.youtube.com/watch?v=lmQ2ZbgP4Sc",
+      "published": "2026-11-01T22:45:38.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/lmQ2ZbgP4Sc/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "Eo6-EaWkckA",
       "title": "Kendimi iyi bir oyuncu sanıyordum #minecraft #shorts",
@@ -11,14 +27,6 @@
       "published": "2026-11-01T16:00:03.000Z",
       "thumbnail": "https://i.ytimg.com/vi/Eo6-EaWkckA/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "lmQ2ZbgP4Sc",
-      "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız 👑 Enshrouded",
-      "url": "https://www.youtube.com/watch?v=lmQ2ZbgP4Sc",
-      "published": "2026-11-01T13:21:57.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/lmQ2ZbgP4Sc/hqdefault.jpg",
-      "isShort": false
     },
     {
       "id": "_kjM2yoZmAY",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=ySyt2iw5OaU",
       "published": "2026-10-27T15:00:30.000Z",
       "thumbnail": "https://i.ytimg.com/vi/ySyt2iw5OaU/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "3_8WbaZlE6w",
-      "title": "İkimiz de Tecrübeliydik... Sözde #plateup",
-      "url": "https://www.youtube.com/watch?v=3_8WbaZlE6w",
-      "published": "2026-10-27T05:00:10.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/3_8WbaZlE6w/hqdefault.jpg",
       "isShort": true
     }
   ]
