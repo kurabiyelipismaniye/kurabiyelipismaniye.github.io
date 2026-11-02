@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-02T09:13:18.999Z",
+  "fetchedAt": "2026-11-02T15:01:37.537Z",
   "videos": [
+    {
+      "id": "ZCc4gPRX5M8",
+      "title": "10 Mermi Sıktım, Ölmedi | Resident Evil 2 #1",
+      "url": "https://www.youtube.com/watch?v=ZCc4gPRX5M8",
+      "published": "2026-11-02T14:00:20.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/ZCc4gPRX5M8/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "YOVOJgs6o24",
       "title": "Arkadaşım beni ezdi #pubg #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=4kPP6h94E6E",
       "published": "2026-10-28T05:00:14.000Z",
       "thumbnail": "https://i.ytimg.com/vi/4kPP6h94E6E/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "ySyt2iw5OaU",
-      "title": "Şefimiz Kaçmaya Çalıştı #plateup",
-      "url": "https://www.youtube.com/watch?v=ySyt2iw5OaU",
-      "published": "2026-10-27T15:00:30.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/ySyt2iw5OaU/hqdefault.jpg",
       "isShort": true
     }
   ]
