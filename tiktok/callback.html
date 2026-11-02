@@ -1,0 +1,15 @@
+<!DOCTYPE html><html lang="tr"><meta charset="utf-8"><title>TikTok giriş</title>
+<body style="font-family:sans-serif;max-width:720px;margin:40px auto;line-height:1.5">
+<h2>TikTok girişi tamam</h2>
+<p id="m">Bilgisayardaki araca aktarılıyor…</p>
+<script>
+var q = location.search;
+var p = new URLSearchParams(q);
+if (p.get("code")) {
+  document.getElementById("m").textContent = "Aktarılıyor. Sayfa açılmazsa bu kodu Claude'a yapıştır: " + p.get("code");
+  setTimeout(function(){ location.href = "http://localhost:8765/callback" + q; }, 800);
+} else {
+  document.getElementById("m").textContent = "Kod gelmedi: " + (p.get("error_description") || p.get("error") || "bilinmiyor");
+}
+</script>
+</body></html>
