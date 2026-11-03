@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-03T13:12:21.087Z",
+  "fetchedAt": "2026-11-03T15:59:17.798Z",
   "videos": [
+    {
+      "id": "qty72R6Dcm0",
+      "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız | Enshrouded #1",
+      "url": "https://www.youtube.com/watch?v=qty72R6Dcm0",
+      "published": "2026-11-03T15:00:03.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/qty72R6Dcm0/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "spQEPsVVFb0",
       "title": "Kafasına 10 mermi sıktım, ölmüyor #residentevil2 #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=bmFRmutOEE4",
       "published": "2026-10-29T12:48:54.000Z",
       "thumbnail": "https://i.ytimg.com/vi/bmFRmutOEE4/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "M-VPWD4pdG4",
-      "title": "Restoranı tek hamlede batırdım #plateup #shorts",
-      "url": "https://www.youtube.com/watch?v=M-VPWD4pdG4",
-      "published": "2026-10-29T08:23:58.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/M-VPWD4pdG4/hqdefault.jpg",
       "isShort": true
     }
   ]
