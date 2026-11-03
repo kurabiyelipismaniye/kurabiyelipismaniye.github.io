@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-03T10:00:19.486Z",
+  "fetchedAt": "2026-11-03T13:12:21.087Z",
   "videos": [
+    {
+      "id": "spQEPsVVFb0",
+      "title": "Kafasına 10 mermi sıktım, ölmüyor #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=spQEPsVVFb0",
+      "published": "2026-11-03T13:00:12.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/spQEPsVVFb0/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "iF7WPZGb3es",
       "title": "Bir ev ne kadar sürer? 3576 blok #brickbybrick #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-10-29T08:23:58.000Z",
       "thumbnail": "https://i.ytimg.com/vi/M-VPWD4pdG4/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "9NaWJiBUbB8",
-      "title": "Müşteriler Garsonumu Dövdü (Okşadı) | PlateUp! #2",
-      "url": "https://www.youtube.com/watch?v=9NaWJiBUbB8",
-      "published": "2026-10-28T13:31:56.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/9NaWJiBUbB8/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
