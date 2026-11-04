@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-04T09:03:54.886Z",
+  "fetchedAt": "2026-11-04T11:23:51.521Z",
   "videos": [
+    {
+      "id": "Cd5bg3Nyb6w",
+      "title": "Hiçbir şeyim yok, madene giriyorum #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=Cd5bg3Nyb6w",
+      "published": "2026-11-04T11:00:14.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/Cd5bg3Nyb6w/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "MWC8CIZ2mok",
       "title": "Kırmızı mı mavi mi? #thestanleyparable #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=ZeXUgCVrSgc",
       "published": "2026-10-30T00:20:30.000Z",
       "thumbnail": "https://i.ytimg.com/vi/ZeXUgCVrSgc/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "A72tQIKnVJg",
-      "title": "Bu Sefer Restoranı Ben Batırdım | PlateUp! #3",
-      "url": "https://www.youtube.com/watch?v=A72tQIKnVJg",
-      "published": "2026-10-29T15:22:14.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/A72tQIKnVJg/hqdefault.jpg",
       "isShort": false
     }
   ]
