@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-03T15:59:17.798Z",
+  "fetchedAt": "2026-11-04T09:03:54.886Z",
   "videos": [
+    {
+      "id": "MWC8CIZ2mok",
+      "title": "Kırmızı mı mavi mi? #thestanleyparable #shorts",
+      "url": "https://www.youtube.com/watch?v=MWC8CIZ2mok",
+      "published": "2026-11-04T09:00:16.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/MWC8CIZ2mok/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "qty72R6Dcm0",
       "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız | Enshrouded #1",
@@ -115,14 +123,6 @@
       "published": "2026-10-29T15:22:14.000Z",
       "thumbnail": "https://i.ytimg.com/vi/A72tQIKnVJg/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "bmFRmutOEE4",
-      "title": "Bir civciv buldum, adını Alican koydum #minecraft #shorts",
-      "url": "https://www.youtube.com/watch?v=bmFRmutOEE4",
-      "published": "2026-10-29T12:48:54.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/bmFRmutOEE4/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
