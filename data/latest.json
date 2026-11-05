@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-05T11:14:23.732Z",
+  "fetchedAt": "2026-11-05T13:20:42.916Z",
   "videos": [
+    {
+      "id": "FXCKn2mVJdI",
+      "title": "\"Hiçbir sorunumuz kalmadı\" dedim #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=FXCKn2mVJdI",
+      "published": "2026-11-05T13:00:02.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/FXCKn2mVJdI/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "Qv9LhRZ-TrQ",
       "title": "Bu abi baya güçlü, beni eritti #enshrouded #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-01T13:00:17.000Z",
       "thumbnail": "https://i.ytimg.com/vi/_kjM2yoZmAY/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "9JnkplY5kQ0",
-      "title": "Kim Hayatta Kalacak? | The Quarry + Valorant (Canlı Yayın 2)",
-      "url": "https://www.youtube.com/watch?v=9JnkplY5kQ0",
-      "published": "2026-10-31T23:38:18.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/9JnkplY5kQ0/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
