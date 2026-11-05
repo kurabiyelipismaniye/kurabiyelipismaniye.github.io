@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-04T16:01:03.434Z",
+  "fetchedAt": "2026-11-05T09:09:18.337Z",
   "videos": [
+    {
+      "id": "czvNwXzyJsI",
+      "title": "\"Bu oyunda deneyimliyim\" dedi… #plateup #shorts",
+      "url": "https://www.youtube.com/watch?v=czvNwXzyJsI",
+      "published": "2026-11-05T09:00:27.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/czvNwXzyJsI/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "2NG6EdxAhAU",
       "title": "\"Mermi Sorunumuz Kalmadı\" Dedim, Dolaptan Zombi Çıktı | Resident Evil 2 #2",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=pYX6u4_MhnE",
       "published": "2026-10-31T16:06:18.000Z",
       "thumbnail": "https://i.ytimg.com/vi/pYX6u4_MhnE/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "L1270TLEW5A",
-      "title": "Herkesi Kurtarabilecek miyim? | The Quarry (Canlı Yayın 1)",
-      "url": "https://www.youtube.com/watch?v=L1270TLEW5A",
-      "published": "2026-10-30T23:06:02.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/L1270TLEW5A/hqdefault.jpg",
       "isShort": false
     }
   ]
