@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-06T13:14:16.879Z",
+  "fetchedAt": "2026-11-06T15:56:48.946Z",
   "videos": [
+    {
+      "id": "Zg0p_nTehRM",
+      "title": "\"Keşke Yalayıcı Olsa\" Dedim, Daha Kötüsü Geldi | Resident Evil 2 #3",
+      "url": "https://www.youtube.com/watch?v=Zg0p_nTehRM",
+      "published": "2026-11-06T15:00:04.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/Zg0p_nTehRM/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "B5eTotRFmKE",
       "title": "Bıçağım zombinin kafasında kaldı #residentevil2 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-02T09:00:36.000Z",
       "thumbnail": "https://i.ytimg.com/vi/YOVOJgs6o24/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "lmQ2ZbgP4Sc",
-      "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız 👑 Enshrouded",
-      "url": "https://www.youtube.com/watch?v=lmQ2ZbgP4Sc",
-      "published": "2026-11-01T22:45:38.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/lmQ2ZbgP4Sc/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
