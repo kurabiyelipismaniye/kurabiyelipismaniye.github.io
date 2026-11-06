@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-05T15:06:15.790Z",
+  "fetchedAt": "2026-11-06T13:14:16.879Z",
   "videos": [
+    {
+      "id": "B5eTotRFmKE",
+      "title": "Bıçağım zombinin kafasında kaldı #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=B5eTotRFmKE",
+      "published": "2026-11-06T13:00:21.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/B5eTotRFmKE/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "NR8IHzObs-I",
       "title": "Kulağıma Biri Fısıldadı | The Quarry #1",
@@ -115,14 +123,6 @@
       "published": "2026-11-01T22:45:38.000Z",
       "thumbnail": "https://i.ytimg.com/vi/lmQ2ZbgP4Sc/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "Eo6-EaWkckA",
-      "title": "Kendimi iyi bir oyuncu sanıyordum #minecraft #shorts",
-      "url": "https://www.youtube.com/watch?v=Eo6-EaWkckA",
-      "published": "2026-11-01T16:00:03.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/Eo6-EaWkckA/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
