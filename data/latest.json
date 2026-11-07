@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-07T14:01:23.149Z",
+  "fetchedAt": "2026-11-07T18:47:50.713Z",
   "videos": [
+    {
+      "id": "Xd6wnhmZLTg",
+      "title": "Kesin Kaybedeceğiz Dedim, Kaybettik | The Quarry #2",
+      "url": "https://www.youtube.com/watch?v=Xd6wnhmZLTg",
+      "published": "2026-11-07T15:00:20.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/Xd6wnhmZLTg/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "vmyNDWI3_tw",
+      "title": "Dünyanın En Güzel Evini Yaptım | Minecraft Co-op #2",
+      "url": "https://www.youtube.com/watch?v=vmyNDWI3_tw",
+      "published": "2026-11-07T15:00:13.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/vmyNDWI3_tw/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "rCwlPSkBnZU",
       "title": "Yalayıcı, yalama beni #residentevil2 #shorts",
@@ -107,22 +123,6 @@
       "published": "2026-11-03T15:00:03.000Z",
       "thumbnail": "https://i.ytimg.com/vi/qty72R6Dcm0/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "spQEPsVVFb0",
-      "title": "Kafasına 10 mermi sıktım, ölmüyor #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=spQEPsVVFb0",
-      "published": "2026-11-03T13:00:12.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/spQEPsVVFb0/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "iF7WPZGb3es",
-      "title": "Bir ev ne kadar sürer? 3576 blok #brickbybrick #shorts",
-      "url": "https://www.youtube.com/watch?v=iF7WPZGb3es",
-      "published": "2026-11-03T09:00:22.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/iF7WPZGb3es/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
