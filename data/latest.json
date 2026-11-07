@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-06T15:56:48.946Z",
+  "fetchedAt": "2026-11-07T14:01:23.149Z",
   "videos": [
+    {
+      "id": "rCwlPSkBnZU",
+      "title": "Yalayıcı, yalama beni #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=rCwlPSkBnZU",
+      "published": "2026-11-07T13:00:10.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/rCwlPSkBnZU/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "ZcU4TPBHmIA",
+      "title": "Gemide adamlar var kanka! #pubg #shorts",
+      "url": "https://www.youtube.com/watch?v=ZcU4TPBHmIA",
+      "published": "2026-11-07T09:00:09.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/ZcU4TPBHmIA/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "Zg0p_nTehRM",
       "title": "\"Keşke Yalayıcı Olsa\" Dedim, Daha Kötüsü Geldi | Resident Evil 2 #3",
@@ -106,22 +122,6 @@
       "url": "https://www.youtube.com/watch?v=iF7WPZGb3es",
       "published": "2026-11-03T09:00:22.000Z",
       "thumbnail": "https://i.ytimg.com/vi/iF7WPZGb3es/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "ZCc4gPRX5M8",
-      "title": "10 Mermi Sıktım, Ölmedi | Resident Evil 2 #1",
-      "url": "https://www.youtube.com/watch?v=ZCc4gPRX5M8",
-      "published": "2026-11-02T14:00:20.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/ZCc4gPRX5M8/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "YOVOJgs6o24",
-      "title": "Arkadaşım beni ezdi #pubg #shorts",
-      "url": "https://www.youtube.com/watch?v=YOVOJgs6o24",
-      "published": "2026-11-02T09:00:36.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/YOVOJgs6o24/hqdefault.jpg",
       "isShort": true
     }
   ]
