@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-07T18:47:50.713Z",
+  "fetchedAt": "2026-11-08T10:21:37.114Z",
   "videos": [
+    {
+      "id": "ZM5atcD6cNM",
+      "title": "Dünyanın en güzel evini yaptım #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=ZM5atcD6cNM",
+      "published": "2026-11-08T09:00:18.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/ZM5atcD6cNM/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "Xd6wnhmZLTg",
       "title": "Kesin Kaybedeceğiz Dedim, Kaybettik | The Quarry #2",
@@ -115,14 +123,6 @@
       "published": "2026-11-04T09:00:16.000Z",
       "thumbnail": "https://i.ytimg.com/vi/MWC8CIZ2mok/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "qty72R6Dcm0",
-      "title": "Sis Her Şeyi Yuttu, Krallığı Biz Kuracağız | Enshrouded #1",
-      "url": "https://www.youtube.com/watch?v=qty72R6Dcm0",
-      "published": "2026-11-03T15:00:03.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/qty72R6Dcm0/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
