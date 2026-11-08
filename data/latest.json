@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-08T10:21:37.114Z",
+  "fetchedAt": "2026-11-08T17:03:25.681Z",
   "videos": [
+    {
+      "id": "FaFbP2EyHXg",
+      "title": "\"Koşarsam Ölürüm, Koşmasam Çıkamam\" | Resident Evil 2 #4",
+      "url": "https://www.youtube.com/watch?v=FaFbP2EyHXg",
+      "published": "2026-11-08T15:00:29.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/FaFbP2EyHXg/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "LifMLzsRVy0",
+      "title": "\"Görüşürüz abi, saygılar\" #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=LifMLzsRVy0",
+      "published": "2026-11-08T13:00:35.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/LifMLzsRVy0/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "ZM5atcD6cNM",
       "title": "Dünyanın en güzel evini yaptım #minecraft #shorts",
@@ -106,22 +122,6 @@
       "url": "https://www.youtube.com/watch?v=Yu9m__CP9S0",
       "published": "2026-11-04T13:00:11.000Z",
       "thumbnail": "https://i.ytimg.com/vi/Yu9m__CP9S0/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "Cd5bg3Nyb6w",
-      "title": "Hiçbir şeyim yok, madene giriyorum #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=Cd5bg3Nyb6w",
-      "published": "2026-11-04T11:00:14.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/Cd5bg3Nyb6w/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "MWC8CIZ2mok",
-      "title": "Kırmızı mı mavi mi? #thestanleyparable #shorts",
-      "url": "https://www.youtube.com/watch?v=MWC8CIZ2mok",
-      "published": "2026-11-04T09:00:16.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/MWC8CIZ2mok/hqdefault.jpg",
       "isShort": true
     }
   ]
