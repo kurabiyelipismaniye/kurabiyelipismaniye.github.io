@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-08T17:03:25.681Z",
+  "fetchedAt": "2026-11-09T18:47:24.962Z",
   "videos": [
+    {
+      "id": "v89fU7YX20o",
+      "title": "Ölürüm Anlarım Ama Hani Kuyu? | Enshrouded #2",
+      "url": "https://www.youtube.com/watch?v=v89fU7YX20o",
+      "published": "2026-11-09T15:00:29.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/v89fU7YX20o/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "FnwruiOPXDE",
+      "title": "Koşarsam ölürüm, koşmasam çıkamam #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=FnwruiOPXDE",
+      "published": "2026-11-09T13:00:16.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/FnwruiOPXDE/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "jRfVg2cZIbg",
+      "title": "Bu rengi beğenmedim #brickbybrick #shorts",
+      "url": "https://www.youtube.com/watch?v=jRfVg2cZIbg",
+      "published": "2026-11-09T09:00:17.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/jRfVg2cZIbg/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "FaFbP2EyHXg",
       "title": "\"Koşarsam Ölürüm, Koşmasam Çıkamam\" | Resident Evil 2 #4",
@@ -98,30 +122,6 @@
       "url": "https://www.youtube.com/watch?v=Qv9LhRZ-TrQ",
       "published": "2026-11-05T11:00:01.000Z",
       "thumbnail": "https://i.ytimg.com/vi/Qv9LhRZ-TrQ/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "czvNwXzyJsI",
-      "title": "\"Bu oyunda deneyimliyim\" dedi… #plateup #shorts",
-      "url": "https://www.youtube.com/watch?v=czvNwXzyJsI",
-      "published": "2026-11-05T09:00:27.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/czvNwXzyJsI/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "2NG6EdxAhAU",
-      "title": "\"Mermi Sorunumuz Kalmadı\" Dedim, Dolaptan Zombi Çıktı | Resident Evil 2 #2",
-      "url": "https://www.youtube.com/watch?v=2NG6EdxAhAU",
-      "published": "2026-11-04T15:00:36.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/2NG6EdxAhAU/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "Yu9m__CP9S0",
-      "title": "\"O camdan gelemez\" dedim. Geldi. #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=Yu9m__CP9S0",
-      "published": "2026-11-04T13:00:11.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/Yu9m__CP9S0/hqdefault.jpg",
       "isShort": true
     }
   ]
