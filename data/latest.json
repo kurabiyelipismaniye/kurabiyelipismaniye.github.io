@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-11T14:30:08.829Z",
+  "fetchedAt": "2026-11-11T21:56:52.286Z",
   "videos": [
+    {
+      "id": "7ckgft34zyg",
+      "title": "Mr. X Geldi: \"Yeni Sapığımız Var\" | Resident Evil 2 #5",
+      "url": "https://www.youtube.com/watch?v=7ckgft34zyg",
+      "published": "2026-11-11T15:00:20.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/7ckgft34zyg/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "mVI5UDKrtG4",
       "title": "\"Kusura bakma, mermim yok\" #residentevil2 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-07T15:00:13.000Z",
       "thumbnail": "https://i.ytimg.com/vi/vmyNDWI3_tw/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "rCwlPSkBnZU",
-      "title": "Yalayıcı, yalama beni #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=rCwlPSkBnZU",
-      "published": "2026-11-07T13:00:10.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/rCwlPSkBnZU/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
