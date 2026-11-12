@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-12T11:05:56.580Z",
+  "fetchedAt": "2026-11-12T18:55:05.334Z",
   "videos": [
+    {
+      "id": "tgOZCmRBdGA",
+      "title": "Dayıya Ev Yaptım, Kabul Etmiyor! Metal Hurda Kampına Daldık | Enshrouded #3",
+      "url": "https://www.youtube.com/watch?v=tgOZCmRBdGA",
+      "published": "2026-11-12T15:00:35.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/tgOZCmRBdGA/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "8TgkXXnPoXg",
+      "title": "Mr. X'in şapkasını vurdum #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=8TgkXXnPoXg",
+      "published": "2026-11-12T13:00:08.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/8TgkXXnPoXg/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "sish--DOu_w",
       "title": "Dayıya ev yaptım, kabul etmiyor #enshrouded #shorts",
@@ -107,22 +123,6 @@
       "published": "2026-11-08T15:00:29.000Z",
       "thumbnail": "https://i.ytimg.com/vi/FaFbP2EyHXg/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "LifMLzsRVy0",
-      "title": "\"Görüşürüz abi, saygılar\" #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=LifMLzsRVy0",
-      "published": "2026-11-08T13:00:35.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/LifMLzsRVy0/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "ZM5atcD6cNM",
-      "title": "Dünyanın en güzel evini yaptım #minecraft #shorts",
-      "url": "https://www.youtube.com/watch?v=ZM5atcD6cNM",
-      "published": "2026-11-08T09:00:18.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/ZM5atcD6cNM/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
