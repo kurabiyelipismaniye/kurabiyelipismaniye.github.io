@@ -2,8 +2,24 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-11T21:56:52.286Z",
+  "fetchedAt": "2026-11-12T11:05:56.580Z",
   "videos": [
+    {
+      "id": "sish--DOu_w",
+      "title": "Dayıya ev yaptım, kabul etmiyor #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=sish--DOu_w",
+      "published": "2026-11-12T11:00:31.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/sish--DOu_w/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "sHGwn15jztQ",
+      "title": "Bu kadar büyük evi neden yaptık? #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=sHGwn15jztQ",
+      "published": "2026-11-12T09:00:01.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/sHGwn15jztQ/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "7ckgft34zyg",
       "title": "Mr. X Geldi: \"Yeni Sapığımız Var\" | Resident Evil 2 #5",
@@ -107,22 +123,6 @@
       "published": "2026-11-08T09:00:18.000Z",
       "thumbnail": "https://i.ytimg.com/vi/ZM5atcD6cNM/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "Xd6wnhmZLTg",
-      "title": "Kesin Kaybedeceğiz Dedim, Kaybettik | The Quarry #2",
-      "url": "https://www.youtube.com/watch?v=Xd6wnhmZLTg",
-      "published": "2026-11-07T15:00:20.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/Xd6wnhmZLTg/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "vmyNDWI3_tw",
-      "title": "Dünyanın En Güzel Evini Yaptım | Minecraft Co-op #2",
-      "url": "https://www.youtube.com/watch?v=vmyNDWI3_tw",
-      "published": "2026-11-07T15:00:13.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/vmyNDWI3_tw/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
