@@ -2,8 +2,40 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-12T18:55:05.334Z",
+  "fetchedAt": "2026-11-13T16:21:52.851Z",
   "videos": [
+    {
+      "id": "b1UKOx0Exbo",
+      "title": "Son 20 Dakikam Gitti | Resident Evil 2 #6",
+      "url": "https://www.youtube.com/watch?v=b1UKOx0Exbo",
+      "published": "2026-11-13T15:00:10.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/b1UKOx0Exbo/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "gQch-QXM0oY",
+      "title": "Son 20 dakikam gitti #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=gQch-QXM0oY",
+      "published": "2026-11-13T13:00:26.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/gQch-QXM0oY/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "8zVJnKsliFo",
+      "title": "Aşağıda kesin sandık vardır #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=8zVJnKsliFo",
+      "published": "2026-11-13T11:00:01.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/8zVJnKsliFo/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "KoxYOCz5sZY",
+      "title": "Zombi modunda lahana buldum #pubg #shorts",
+      "url": "https://www.youtube.com/watch?v=KoxYOCz5sZY",
+      "published": "2026-11-13T09:00:18.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/KoxYOCz5sZY/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "tgOZCmRBdGA",
       "title": "Dayıya Ev Yaptım, Kabul Etmiyor! Metal Hurda Kampına Daldık | Enshrouded #3",
@@ -91,38 +123,6 @@
       "published": "2026-11-11T09:00:05.000Z",
       "thumbnail": "https://i.ytimg.com/vi/jPfyBELZCWk/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "v89fU7YX20o",
-      "title": "Ölürüm Anlarım Ama Hani Kuyu? | Enshrouded #2",
-      "url": "https://www.youtube.com/watch?v=v89fU7YX20o",
-      "published": "2026-11-09T15:00:29.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/v89fU7YX20o/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "FnwruiOPXDE",
-      "title": "Koşarsam ölürüm, koşmasam çıkamam #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=FnwruiOPXDE",
-      "published": "2026-11-09T13:00:16.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/FnwruiOPXDE/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "jRfVg2cZIbg",
-      "title": "Bu rengi beğenmedim #brickbybrick #shorts",
-      "url": "https://www.youtube.com/watch?v=jRfVg2cZIbg",
-      "published": "2026-11-09T09:00:17.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/jRfVg2cZIbg/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "FaFbP2EyHXg",
-      "title": "\"Koşarsam Ölürüm, Koşmasam Çıkamam\" | Resident Evil 2 #4",
-      "url": "https://www.youtube.com/watch?v=FaFbP2EyHXg",
-      "published": "2026-11-08T15:00:29.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/FaFbP2EyHXg/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
