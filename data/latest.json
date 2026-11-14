@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-13T16:21:52.851Z",
+  "fetchedAt": "2026-11-14T10:27:38.285Z",
   "videos": [
+    {
+      "id": "HDjWQ9HqbNs",
+      "title": "Tarlaya basmadım (biraz bastım) #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=HDjWQ9HqbNs",
+      "published": "2026-11-14T09:00:08.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/HDjWQ9HqbNs/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "b1UKOx0Exbo",
       "title": "Son 20 Dakikam Gitti | Resident Evil 2 #6",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=gTIKCvauuD8",
       "published": "2026-11-11T09:00:18.000Z",
       "thumbnail": "https://i.ytimg.com/vi/gTIKCvauuD8/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "jPfyBELZCWk",
-      "title": "Şefimizin tek önceliği terlikleri #plateup #shorts",
-      "url": "https://www.youtube.com/watch?v=jPfyBELZCWk",
-      "published": "2026-11-11T09:00:05.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/jPfyBELZCWk/hqdefault.jpg",
       "isShort": true
     }
   ]
