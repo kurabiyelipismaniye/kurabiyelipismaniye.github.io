@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-14T10:27:38.285Z",
+  "fetchedAt": "2026-11-14T17:06:39.525Z",
   "videos": [
+    {
+      "id": "REtP-zE7nu0",
+      "title": "Çukur Değilse Kuyu Nerede? Elixir Kuyusu Temizliği | Enshrouded #4",
+      "url": "https://www.youtube.com/watch?v=REtP-zE7nu0",
+      "published": "2026-11-14T15:00:15.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/REtP-zE7nu0/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "07iY5FaLWiA",
+      "title": "\"Düğmeyle açılıyor araba\" #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=07iY5FaLWiA",
+      "published": "2026-11-14T13:00:22.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/07iY5FaLWiA/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "vDGhisS-N0c",
+      "title": "Kaya kaya ineriz dedik, öldük #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=vDGhisS-N0c",
+      "published": "2026-11-14T11:00:38.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/vDGhisS-N0c/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "HDjWQ9HqbNs",
       "title": "Tarlaya basmadım (biraz bastım) #minecraft #shorts",
@@ -98,30 +122,6 @@
       "url": "https://www.youtube.com/watch?v=5YeeLkdvr9w",
       "published": "2026-11-11T13:00:21.000Z",
       "thumbnail": "https://i.ytimg.com/vi/5YeeLkdvr9w/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "Q8zNUXwBSNk",
-      "title": "Arazi üreteyim derken yok ettim #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=Q8zNUXwBSNk",
-      "published": "2026-11-11T11:00:22.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/Q8zNUXwBSNk/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "x48TKQQzmp8",
-      "title": "Ölürüm, onu anlarım. Ama hani kuyu? #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=x48TKQQzmp8",
-      "published": "2026-11-11T11:00:09.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/x48TKQQzmp8/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "gTIKCvauuD8",
-      "title": "\"Ölmeyeceğim\" dedim… #thestanleyparable #shorts",
-      "url": "https://www.youtube.com/watch?v=gTIKCvauuD8",
-      "published": "2026-11-11T09:00:18.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/gTIKCvauuD8/hqdefault.jpg",
       "isShort": true
     }
   ]
