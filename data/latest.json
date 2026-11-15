@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-15T09:24:23.966Z",
+  "fetchedAt": "2026-11-15T17:09:20.844Z",
   "videos": [
+    {
+      "id": "xje5FE3bbzg",
+      "title": "Kanalizasyonda Devasa Timsah | Resident Evil 2 #7",
+      "url": "https://www.youtube.com/watch?v=xje5FE3bbzg",
+      "published": "2026-11-15T15:00:14.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/xje5FE3bbzg/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "8f42Cy934vQ",
+      "title": "Bu ne lan, timsah mı? #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=8f42Cy934vQ",
+      "published": "2026-11-15T13:00:06.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/8f42Cy934vQ/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "OmwAKrw7KXQ",
+      "title": "Öleceğim, öleceğim... ölmedim #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=OmwAKrw7KXQ",
+      "published": "2026-11-15T11:00:09.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/OmwAKrw7KXQ/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "IDNamVl7-uQ",
       "title": "\"Beni dövüyorlar\" dedi, adam okşamış #plateup #shorts",
@@ -98,30 +122,6 @@
       "url": "https://www.youtube.com/watch?v=sish--DOu_w",
       "published": "2026-11-12T11:00:31.000Z",
       "thumbnail": "https://i.ytimg.com/vi/sish--DOu_w/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "sHGwn15jztQ",
-      "title": "Bu kadar büyük evi neden yaptık? #minecraft #shorts",
-      "url": "https://www.youtube.com/watch?v=sHGwn15jztQ",
-      "published": "2026-11-12T09:00:01.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/sHGwn15jztQ/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "7ckgft34zyg",
-      "title": "Mr. X Geldi: \"Yeni Sapığımız Var\" | Resident Evil 2 #5",
-      "url": "https://www.youtube.com/watch?v=7ckgft34zyg",
-      "published": "2026-11-11T15:00:20.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/7ckgft34zyg/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "mVI5UDKrtG4",
-      "title": "\"Kusura bakma, mermim yok\" #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=mVI5UDKrtG4",
-      "published": "2026-11-11T13:00:30.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/mVI5UDKrtG4/hqdefault.jpg",
       "isShort": true
     }
   ]
