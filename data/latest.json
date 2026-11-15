@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-14T17:06:39.525Z",
+  "fetchedAt": "2026-11-15T09:24:23.966Z",
   "videos": [
+    {
+      "id": "IDNamVl7-uQ",
+      "title": "\"Beni dövüyorlar\" dedi, adam okşamış #plateup #shorts",
+      "url": "https://www.youtube.com/watch?v=IDNamVl7-uQ",
+      "published": "2026-11-15T09:00:00.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/IDNamVl7-uQ/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "REtP-zE7nu0",
       "title": "Çukur Değilse Kuyu Nerede? Elixir Kuyusu Temizliği | Enshrouded #4",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=mVI5UDKrtG4",
       "published": "2026-11-11T13:00:30.000Z",
       "thumbnail": "https://i.ytimg.com/vi/mVI5UDKrtG4/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "5YeeLkdvr9w",
-      "title": "Kendimi kilitledim, kurtuldum… kurtulmadım #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=5YeeLkdvr9w",
-      "published": "2026-11-11T13:00:21.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/5YeeLkdvr9w/hqdefault.jpg",
       "isShort": true
     }
   ]
