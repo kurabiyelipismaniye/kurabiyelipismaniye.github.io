@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-15T17:09:20.844Z",
+  "fetchedAt": "2026-11-16T20:27:58.180Z",
   "videos": [
+    {
+      "id": "zU-8_OJ5xFw",
+      "title": "Kadim Kuleler'in Hikâyesi ve Sonunda Planör Üretildi | Enshrouded #5",
+      "url": "https://www.youtube.com/watch?v=zU-8_OJ5xFw",
+      "published": "2026-11-16T15:00:21.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/zU-8_OJ5xFw/hqdefault.jpg",
+      "isShort": false
+    },
+    {
+      "id": "z7IFRtPZK-A",
+      "title": "30 saniye kaldı #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=z7IFRtPZK-A",
+      "published": "2026-11-16T13:00:21.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/z7IFRtPZK-A/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "geNDIkZ682M",
+      "title": "Ölmedik de ölmekten beter olduk #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=geNDIkZ682M",
+      "published": "2026-11-16T11:00:39.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/geNDIkZ682M/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "xje5FE3bbzg",
       "title": "Kanalizasyonda Devasa Timsah | Resident Evil 2 #7",
@@ -98,30 +122,6 @@
       "url": "https://www.youtube.com/watch?v=KoxYOCz5sZY",
       "published": "2026-11-13T09:00:18.000Z",
       "thumbnail": "https://i.ytimg.com/vi/KoxYOCz5sZY/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "tgOZCmRBdGA",
-      "title": "Dayıya Ev Yaptım, Kabul Etmiyor! Metal Hurda Kampına Daldık | Enshrouded #3",
-      "url": "https://www.youtube.com/watch?v=tgOZCmRBdGA",
-      "published": "2026-11-12T15:00:35.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/tgOZCmRBdGA/hqdefault.jpg",
-      "isShort": false
-    },
-    {
-      "id": "8TgkXXnPoXg",
-      "title": "Mr. X'in şapkasını vurdum #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=8TgkXXnPoXg",
-      "published": "2026-11-12T13:00:08.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/8TgkXXnPoXg/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "sish--DOu_w",
-      "title": "Dayıya ev yaptım, kabul etmiyor #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=sish--DOu_w",
-      "published": "2026-11-12T11:00:31.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/sish--DOu_w/hqdefault.jpg",
       "isShort": true
     }
   ]
