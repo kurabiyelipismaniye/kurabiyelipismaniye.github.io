@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-17T13:24:27.194Z",
+  "fetchedAt": "2026-11-17T22:22:15.364Z",
   "videos": [
+    {
+      "id": "nkW72fcTyj8",
+      "title": "\"Keşke Yalayıcı Olsa\" (Yine) | Resident Evil 2 #8",
+      "url": "https://www.youtube.com/watch?v=nkW72fcTyj8",
+      "published": "2026-11-17T15:00:25.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/nkW72fcTyj8/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "VhGWEGveB0U",
       "title": "Keşke yalayıcı olsa (yine) #residentevil2 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-14T09:00:08.000Z",
       "thumbnail": "https://i.ytimg.com/vi/HDjWQ9HqbNs/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "b1UKOx0Exbo",
-      "title": "Son 20 Dakikam Gitti | Resident Evil 2 #6",
-      "url": "https://www.youtube.com/watch?v=b1UKOx0Exbo",
-      "published": "2026-11-13T15:00:10.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/b1UKOx0Exbo/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
