@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-16T20:27:58.180Z",
+  "fetchedAt": "2026-11-17T13:24:27.194Z",
   "videos": [
+    {
+      "id": "VhGWEGveB0U",
+      "title": "Keşke yalayıcı olsa (yine) #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=VhGWEGveB0U",
+      "published": "2026-11-17T13:00:10.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/VhGWEGveB0U/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "9naGQVegYYM",
+      "title": "Neye öldüm lan ben? #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=9naGQVegYYM",
+      "published": "2026-11-17T11:00:04.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/9naGQVegYYM/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "OOOjtmcyb7Q",
+      "title": "\"Sakin bir oyun\" dediler #brickbybrick #shorts",
+      "url": "https://www.youtube.com/watch?v=OOOjtmcyb7Q",
+      "published": "2026-11-17T09:00:34.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/OOOjtmcyb7Q/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "zU-8_OJ5xFw",
       "title": "Kadim Kuleler'in Hikâyesi ve Sonunda Planör Üretildi | Enshrouded #5",
@@ -99,30 +123,6 @@
       "published": "2026-11-13T15:00:10.000Z",
       "thumbnail": "https://i.ytimg.com/vi/b1UKOx0Exbo/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "gQch-QXM0oY",
-      "title": "Son 20 dakikam gitti #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=gQch-QXM0oY",
-      "published": "2026-11-13T13:00:26.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/gQch-QXM0oY/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "8zVJnKsliFo",
-      "title": "Aşağıda kesin sandık vardır #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=8zVJnKsliFo",
-      "published": "2026-11-13T11:00:01.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/8zVJnKsliFo/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "KoxYOCz5sZY",
-      "title": "Zombi modunda lahana buldum #pubg #shorts",
-      "url": "https://www.youtube.com/watch?v=KoxYOCz5sZY",
-      "published": "2026-11-13T09:00:18.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/KoxYOCz5sZY/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
