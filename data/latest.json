@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-17T22:22:15.364Z",
+  "fetchedAt": "2026-11-18T13:57:07.474Z",
   "videos": [
+    {
+      "id": "YJWZ5qJpOwI",
+      "title": "Ölür müsünüz beyefendi? #residentevil2 #shorts",
+      "url": "https://www.youtube.com/watch?v=YJWZ5qJpOwI",
+      "published": "2026-11-18T13:00:27.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/YJWZ5qJpOwI/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "hWwUXEclf4Y",
+      "title": "Emote yapabiliyoruz! #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=hWwUXEclf4Y",
+      "published": "2026-11-18T11:00:26.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/hWwUXEclf4Y/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "G9pBdRXIt-4",
+      "title": "Kimin hatası? Siz karar verin #plateup #shorts",
+      "url": "https://www.youtube.com/watch?v=G9pBdRXIt-4",
+      "published": "2026-11-18T09:00:06.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/G9pBdRXIt-4/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "nkW72fcTyj8",
       "title": "\"Keşke Yalayıcı Olsa\" (Yine) | Resident Evil 2 #8",
@@ -99,30 +123,6 @@
       "published": "2026-11-14T15:00:15.000Z",
       "thumbnail": "https://i.ytimg.com/vi/REtP-zE7nu0/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "07iY5FaLWiA",
-      "title": "\"Düğmeyle açılıyor araba\" #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=07iY5FaLWiA",
-      "published": "2026-11-14T13:00:22.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/07iY5FaLWiA/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "vDGhisS-N0c",
-      "title": "Kaya kaya ineriz dedik, öldük #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=vDGhisS-N0c",
-      "published": "2026-11-14T11:00:38.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/vDGhisS-N0c/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "HDjWQ9HqbNs",
-      "title": "Tarlaya basmadım (biraz bastım) #minecraft #shorts",
-      "url": "https://www.youtube.com/watch?v=HDjWQ9HqbNs",
-      "published": "2026-11-14T09:00:08.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/HDjWQ9HqbNs/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
