@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-18T13:57:07.474Z",
+  "fetchedAt": "2026-11-18T21:55:40.696Z",
   "videos": [
+    {
+      "id": "W0o51SvXoL8",
+      "title": "183 Metrelik Kuleye Tırmandık, Sonunda Bütün Eşyayı Kaybettik | Enshrouded #6",
+      "url": "https://www.youtube.com/watch?v=W0o51SvXoL8",
+      "published": "2026-11-18T15:00:39.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/W0o51SvXoL8/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "YJWZ5qJpOwI",
       "title": "Ölür müsünüz beyefendi? #residentevil2 #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-15T09:00:00.000Z",
       "thumbnail": "https://i.ytimg.com/vi/IDNamVl7-uQ/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "REtP-zE7nu0",
-      "title": "Çukur Değilse Kuyu Nerede? Elixir Kuyusu Temizliği | Enshrouded #4",
-      "url": "https://www.youtube.com/watch?v=REtP-zE7nu0",
-      "published": "2026-11-14T15:00:15.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/REtP-zE7nu0/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
