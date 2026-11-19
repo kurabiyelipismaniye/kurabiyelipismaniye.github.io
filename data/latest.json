@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-19T13:03:57.578Z",
+  "fetchedAt": "2026-11-19T21:32:08.973Z",
   "videos": [
+    {
+      "id": "InzPz7VufeY",
+      "title": "Bu İşte Bir Şeyler Çok Yanlış... | Crack #1",
+      "url": "https://www.youtube.com/watch?v=InzPz7VufeY",
+      "published": "2026-11-19T18:36:31.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/InzPz7VufeY/hqdefault.jpg",
+      "isShort": false
+    },
     {
       "id": "d0qfZoEPaLQ",
       "title": "\"Ben ölmem\" dedim… #minecraft #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-16T11:00:39.000Z",
       "thumbnail": "https://i.ytimg.com/vi/geNDIkZ682M/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "xje5FE3bbzg",
-      "title": "Kanalizasyonda Devasa Timsah | Resident Evil 2 #7",
-      "url": "https://www.youtube.com/watch?v=xje5FE3bbzg",
-      "published": "2026-11-15T15:00:14.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/xje5FE3bbzg/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
