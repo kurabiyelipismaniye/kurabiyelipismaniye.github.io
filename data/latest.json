@@ -2,8 +2,32 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-18T21:55:40.696Z",
+  "fetchedAt": "2026-11-19T13:03:57.578Z",
   "videos": [
+    {
+      "id": "d0qfZoEPaLQ",
+      "title": "\"Ben ölmem\" dedim… #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=d0qfZoEPaLQ",
+      "published": "2026-11-19T13:00:24.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/d0qfZoEPaLQ/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "zVPtlRfpHI0",
+      "title": "1 milyon kez öldüm, 1 milyon kez yandım #enshrouded #shorts",
+      "url": "https://www.youtube.com/watch?v=zVPtlRfpHI0",
+      "published": "2026-11-19T11:00:08.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/zVPtlRfpHI0/hqdefault.jpg",
+      "isShort": true
+    },
+    {
+      "id": "E6KjdL6O6HM",
+      "title": "Bu asansör hiç çıkmayacak mı? #thestanleyparable #shorts",
+      "url": "https://www.youtube.com/watch?v=E6KjdL6O6HM",
+      "published": "2026-11-19T09:00:33.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/E6KjdL6O6HM/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "W0o51SvXoL8",
       "title": "183 Metrelik Kuleye Tırmandık, Sonunda Bütün Eşyayı Kaybettik | Enshrouded #6",
@@ -99,30 +123,6 @@
       "published": "2026-11-15T15:00:14.000Z",
       "thumbnail": "https://i.ytimg.com/vi/xje5FE3bbzg/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "8f42Cy934vQ",
-      "title": "Bu ne lan, timsah mı? #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=8f42Cy934vQ",
-      "published": "2026-11-15T13:00:06.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/8f42Cy934vQ/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "OmwAKrw7KXQ",
-      "title": "Öleceğim, öleceğim... ölmedim #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=OmwAKrw7KXQ",
-      "published": "2026-11-15T11:00:09.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/OmwAKrw7KXQ/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "IDNamVl7-uQ",
-      "title": "\"Beni dövüyorlar\" dedi, adam okşamış #plateup #shorts",
-      "url": "https://www.youtube.com/watch?v=IDNamVl7-uQ",
-      "published": "2026-11-15T09:00:00.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/IDNamVl7-uQ/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
