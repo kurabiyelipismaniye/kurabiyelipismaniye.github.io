@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-19T21:32:08.973Z",
+  "fetchedAt": "2026-11-20T11:41:40.356Z",
   "videos": [
+    {
+      "id": "gr6Nl8yMpyY",
+      "title": "\"Ben düşer miyim abi?\" #pubg #shorts",
+      "url": "https://www.youtube.com/watch?v=gr6Nl8yMpyY",
+      "published": "2026-11-20T09:00:34.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/gr6Nl8yMpyY/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "InzPz7VufeY",
       "title": "Bu İşte Bir Şeyler Çok Yanlış... | Crack #1",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=z7IFRtPZK-A",
       "published": "2026-11-16T13:00:21.000Z",
       "thumbnail": "https://i.ytimg.com/vi/z7IFRtPZK-A/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "geNDIkZ682M",
-      "title": "Ölmedik de ölmekten beter olduk #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=geNDIkZ682M",
-      "published": "2026-11-16T11:00:39.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/geNDIkZ682M/hqdefault.jpg",
       "isShort": true
     }
   ]
