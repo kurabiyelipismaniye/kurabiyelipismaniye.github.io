@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-20T11:41:40.356Z",
+  "fetchedAt": "2026-11-20T20:16:56.923Z",
   "videos": [
+    {
+      "id": "30IkMSEBGmc",
+      "title": "Evin yerini yine unuttum #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=30IkMSEBGmc",
+      "published": "2026-11-20T13:00:26.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/30IkMSEBGmc/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "gr6Nl8yMpyY",
       "title": "\"Ben düşer miyim abi?\" #pubg #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-16T15:00:21.000Z",
       "thumbnail": "https://i.ytimg.com/vi/zU-8_OJ5xFw/hqdefault.jpg",
       "isShort": false
-    },
-    {
-      "id": "z7IFRtPZK-A",
-      "title": "30 saniye kaldı #residentevil2 #shorts",
-      "url": "https://www.youtube.com/watch?v=z7IFRtPZK-A",
-      "published": "2026-11-16T13:00:21.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/z7IFRtPZK-A/hqdefault.jpg",
-      "isShort": true
     }
   ]
 }
