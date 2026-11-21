@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-21T09:48:35.231Z",
+  "fetchedAt": "2026-11-21T17:30:16.491Z",
   "videos": [
+    {
+      "id": "hVTMnOpWKwk",
+      "title": "Şimdi fark ettim… #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=hVTMnOpWKwk",
+      "published": "2026-11-21T13:00:21.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/hVTMnOpWKwk/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "fnRCan4Lp9M",
       "title": "Restorana isim koymak 7 deneme sürdü #plateup #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=9naGQVegYYM",
       "published": "2026-11-17T11:00:04.000Z",
       "thumbnail": "https://i.ytimg.com/vi/9naGQVegYYM/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "OOOjtmcyb7Q",
-      "title": "\"Sakin bir oyun\" dediler #brickbybrick #shorts",
-      "url": "https://www.youtube.com/watch?v=OOOjtmcyb7Q",
-      "published": "2026-11-17T09:00:34.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/OOOjtmcyb7Q/hqdefault.jpg",
       "isShort": true
     }
   ]
