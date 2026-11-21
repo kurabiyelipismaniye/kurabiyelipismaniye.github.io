@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-20T20:16:56.923Z",
+  "fetchedAt": "2026-11-21T09:48:35.231Z",
   "videos": [
+    {
+      "id": "fnRCan4Lp9M",
+      "title": "Restorana isim koymak 7 deneme sürdü #plateup #shorts",
+      "url": "https://www.youtube.com/watch?v=fnRCan4Lp9M",
+      "published": "2026-11-21T09:00:22.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/fnRCan4Lp9M/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "30IkMSEBGmc",
       "title": "Evin yerini yine unuttum #minecraft #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-17T09:00:34.000Z",
       "thumbnail": "https://i.ytimg.com/vi/OOOjtmcyb7Q/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "zU-8_OJ5xFw",
-      "title": "Kadim Kuleler'in Hikâyesi ve Sonunda Planör Üretildi | Enshrouded #5",
-      "url": "https://www.youtube.com/watch?v=zU-8_OJ5xFw",
-      "published": "2026-11-16T15:00:21.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/zU-8_OJ5xFw/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
