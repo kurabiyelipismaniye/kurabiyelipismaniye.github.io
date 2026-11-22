@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-21T17:30:16.491Z",
+  "fetchedAt": "2026-11-22T11:25:26.716Z",
   "videos": [
+    {
+      "id": "xqOBMnSZ0-I",
+      "title": "Tek şansımız: bana koş! #pubg #shorts",
+      "url": "https://www.youtube.com/watch?v=xqOBMnSZ0-I",
+      "published": "2026-11-22T09:00:02.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/xqOBMnSZ0-I/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "hVTMnOpWKwk",
       "title": "Şimdi fark ettim… #minecraft #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=VhGWEGveB0U",
       "published": "2026-11-17T13:00:10.000Z",
       "thumbnail": "https://i.ytimg.com/vi/VhGWEGveB0U/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "9naGQVegYYM",
-      "title": "Neye öldüm lan ben? #enshrouded #shorts",
-      "url": "https://www.youtube.com/watch?v=9naGQVegYYM",
-      "published": "2026-11-17T11:00:04.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/9naGQVegYYM/hqdefault.jpg",
       "isShort": true
     }
   ]
