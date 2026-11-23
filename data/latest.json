@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-23T09:03:04.737Z",
+  "fetchedAt": "2026-11-23T21:22:23.092Z",
   "videos": [
+    {
+      "id": "q8GUq4E5pzs",
+      "title": "Ölüm derlemem #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=q8GUq4E5pzs",
+      "published": "2026-11-23T13:00:29.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/q8GUq4E5pzs/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "QzKoH9S28T0",
       "title": "Bu oyunu çözene kadar yaşlanacağım #minecraft #shorts",
@@ -114,14 +122,6 @@
       "url": "https://www.youtube.com/watch?v=hWwUXEclf4Y",
       "published": "2026-11-18T11:00:26.000Z",
       "thumbnail": "https://i.ytimg.com/vi/hWwUXEclf4Y/hqdefault.jpg",
-      "isShort": true
-    },
-    {
-      "id": "G9pBdRXIt-4",
-      "title": "Kimin hatası? Siz karar verin #plateup #shorts",
-      "url": "https://www.youtube.com/watch?v=G9pBdRXIt-4",
-      "published": "2026-11-18T09:00:06.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/G9pBdRXIt-4/hqdefault.jpg",
       "isShort": true
     }
   ]
