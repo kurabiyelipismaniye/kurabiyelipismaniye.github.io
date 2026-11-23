@@ -2,8 +2,16 @@
   "channelId": "UC3ZHsbrk7vNL1UPB0T639ow",
   "channelTitle": "Kurabiyeli Pişmaniye",
   "channelUrl": "https://www.youtube.com/@kurabiyelipismaniye",
-  "fetchedAt": "2026-11-22T19:38:02.841Z",
+  "fetchedAt": "2026-11-23T09:03:04.737Z",
   "videos": [
+    {
+      "id": "QzKoH9S28T0",
+      "title": "Bu oyunu çözene kadar yaşlanacağım #minecraft #shorts",
+      "url": "https://www.youtube.com/watch?v=QzKoH9S28T0",
+      "published": "2026-11-23T09:00:17.000Z",
+      "thumbnail": "https://i.ytimg.com/vi/QzKoH9S28T0/hqdefault.jpg",
+      "isShort": true
+    },
     {
       "id": "ta5kSHxCGvU",
       "title": "İskelete binmiş örümcek?! #minecraft #shorts",
@@ -115,14 +123,6 @@
       "published": "2026-11-18T09:00:06.000Z",
       "thumbnail": "https://i.ytimg.com/vi/G9pBdRXIt-4/hqdefault.jpg",
       "isShort": true
-    },
-    {
-      "id": "nkW72fcTyj8",
-      "title": "\"Keşke Yalayıcı Olsa\" (Yine) | Resident Evil 2 #8",
-      "url": "https://www.youtube.com/watch?v=nkW72fcTyj8",
-      "published": "2026-11-17T15:00:25.000Z",
-      "thumbnail": "https://i.ytimg.com/vi/nkW72fcTyj8/hqdefault.jpg",
-      "isShort": false
     }
   ]
 }
